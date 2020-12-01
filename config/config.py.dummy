@@ -1,0 +1,35 @@
+import logging
+
+sqlite_db = 'fgq.r6.2.db'
+
+basic_info_file = 'genotype_browser_dummy_data_50k_1.txt.gz'
+
+vcf_files = [
+    '1.vcf.gz',
+    '2.vcf.gz',
+    '3.vcf.gz',
+    '4.vcf.gz',
+    '5.vcf.gz',
+    '6.vcf.gz',
+    '7.vcf.gz',
+    '8.vcf.gz',
+    '9.vcf.gz',
+    '10.vcf.gz',
+    '11.vcf.gz',
+    '12.vcf.gz',
+    '13.vcf.gz',
+    '14.vcf.gz',
+    '15.vcf.gz',
+    '16.vcf.gz',
+    '17.vcf.gz',
+    '18.vcf.gz',
+    '19.vcf.gz',
+    '20.vcf.gz',
+    '21.vcf.gz',
+    '22.vcf.gz',
+    '23.vcf.gz'
+]
+
+write_dir = 'out'
+
+log_level = logging.INFO

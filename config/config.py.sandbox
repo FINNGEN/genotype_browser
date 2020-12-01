@@ -1,0 +1,35 @@
+import logging
+
+sqlite_db = '/finngen/red/fgq/data/fgq.r6.2.db'
+
+basic_info_file = '/finngen/red/fgq/data/finngen_R6_gt_samples_info_2.txt.gz'
+
+vcf_files = [
+    '/finngen/library-red/finngen_R6/genotype_1.0/data/finngen_R6_chr1.vcf.gz',
+    '/finngen/library-red/finngen_R6/genotype_1.0/data/finngen_R6_chr2.vcf.gz',
+    '/finngen/library-red/finngen_R6/genotype_1.0/data/finngen_R6_chr3.vcf.gz',
+    '/finngen/library-red/finngen_R6/genotype_1.0/data/finngen_R6_chr4.vcf.gz',
+    '/finngen/library-red/finngen_R6/genotype_1.0/data/finngen_R6_chr5.vcf.gz',
+    '/finngen/library-red/finngen_R6/genotype_1.0/data/finngen_R6_chr6.vcf.gz',
+    '/finngen/library-red/finngen_R6/genotype_1.0/data/finngen_R6_chr7.vcf.gz',
+    '/finngen/library-red/finngen_R6/genotype_1.0/data/finngen_R6_chr8.vcf.gz',
+    '/finngen/library-red/finngen_R6/genotype_1.0/data/finngen_R6_chr9.vcf.gz',
+    '/finngen/library-red/finngen_R6/genotype_1.0/data/finngen_R6_chr10.vcf.gz',
+    '/finngen/library-red/finngen_R6/genotype_1.0/data/finngen_R6_chr11.vcf.gz',
+    '/finngen/library-red/finngen_R6/genotype_1.0/data/finngen_R6_chr12.vcf.gz',
+    '/finngen/library-red/finngen_R6/genotype_1.0/data/finngen_R6_chr13.vcf.gz',
+    '/finngen/library-red/finngen_R6/genotype_1.0/data/finngen_R6_chr14.vcf.gz',
+    '/finngen/library-red/finngen_R6/genotype_1.0/data/finngen_R6_chr15.vcf.gz',
+    '/finngen/library-red/finngen_R6/genotype_1.0/data/finngen_R6_chr16.vcf.gz',
+    '/finngen/library-red/finngen_R6/genotype_1.0/data/finngen_R6_chr17.vcf.gz',
+    '/finngen/library-red/finngen_R6/genotype_1.0/data/finngen_R6_chr18.vcf.gz',
+    '/finngen/library-red/finngen_R6/genotype_1.0/data/finngen_R6_chr19.vcf.gz',
+    '/finngen/library-red/finngen_R6/genotype_1.0/data/finngen_R6_chr20.vcf.gz',
+    '/finngen/library-red/finngen_R6/genotype_1.0/data/finngen_R6_chr21.vcf.gz',
+    '/finngen/library-red/finngen_R6/genotype_1.0/data/finngen_R6_chr22.vcf.gz',
+    '/finngen/library-red/finngen_R6/genotype_1.0/data/finngen_R6_chr23.vcf.gz'
+]
+
+write_dir = '/finngen/red/fgq/out'
+
+log_level = logging.INFO

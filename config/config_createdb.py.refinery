@@ -1,0 +1,5 @@
+sqlite_db = '/mnt/nfs/juha/FGQ/fgq.r6.2.db'
+
+basic_info_file = '/mnt/nfs/r6/pheno/finngen_R6_gt_samples_info_2.txt.gz'
+variant_annotation_file = '/mnt/nfs/r6/annotations/r6.fg.gnomad21.imp.anno2.gz'
+variant_chip_file = '/mnt/nfs/r6/annotations/R6_chipvars.txt.gz'
