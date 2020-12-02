@@ -21,7 +21,7 @@ class Search(object):
         if len(res) > 0:
             return res[0][0]
         else:
-            raise utils.NotFoundException(chr + '-' + pos + '-' + ref + '-' + alt)
+            raise utils.NotFoundException(str(chr) + '-' + str(pos) + '-' + ref + '-' + alt)
         
     def _get_variants_by_rsid(self, rsid):
         c = self.conn[threading.get_ident()].cursor()
