@@ -22,8 +22,7 @@ export const geneSlice = createSlice({
     },
     reducers: {
 	setData: (state, action) => {
-	    console.log('setting data')
-	    state.data = action.payload.data
+	    //console.log('setting data')
 	    state.data = action.payload.data
 	    state.gene = action.payload.gene
 	    state.columns = action.payload.columns
