@@ -68,7 +68,7 @@ def write_variants(variants):
         abort(400, 'could not parse given variant(s)')
     except NotFoundException as e:
         abort(404, 'variant(s) not in data')
-    return jsonify(status)
+    return status
 
 if __name__ == '__main__':
     app.run()
