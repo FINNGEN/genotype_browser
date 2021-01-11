@@ -243,13 +243,13 @@ class Datafetch(object):
                 vars_data.append(var_data)
         chips = self._get_chips(chr, pos, ref, alt) if len(vars_data) == 1 else set()
         data = self._count_gt_for_write(variants.split(','), vars_data, filters, chips)
-        filename = variants.replace(',', '_') + '__' + '_'.join([k+'_'+v for k,v in filters.items()]) + '.txt'
+        filename = variants.replace(',', '_') + '__' + '_'.join([k+'_'+v for k,v in filters.items()]) + '.tsv'
         try:
             data.to_csv(sep='\t', index=False, na_rep='NA')
             output = make_response(data.to_csv(sep='\t', index=False, na_rep='NA'))
 
             output.headers["Content-Disposition"] = "attachment; filename=" + filename
-            output.headers["Content-type"] = "text/csv"
+            output.headers["Content-type"] = "text/tab-separated-values"
             return output
 
         except Exception as e:
