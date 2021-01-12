@@ -70,5 +70,15 @@ def write_variants(variants):
         abort(404, 'variant(s) not in data')
     return jsonify(status)
 
+@app.route('/api/v1/range/<range>')
+def range(range):
+    try:
+        data = fetch.get_genomic_range_variants(range)
+    except ParseException as e:
+        abort(400, 'could not parse given genomic range')
+    except NotFoundException as e:
+        abort(404, 'genomic range not in data')
+    return jsonify(data)
+
 if __name__ == '__main__':
     app.run()

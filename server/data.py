@@ -49,7 +49,8 @@ class Datafetch(object):
             raise utils.NotFoundException(str(chr) + '-' + str(pos) + '-' + ref + '-' + alt)
         
     def _get_genotype_data(self, chr, pos, ref, alt):
-        tabix_iter = self.tabix_files[threading.get_ident()][chr-1].fetch('chr'+str(chr), pos-1, pos)
+        chr_var = chr if chr != 23 else 'X'
+        tabix_iter = self.tabix_files[threading.get_ident()][chr-1].fetch('chr'+str(chr_var), pos-1, pos)
         var_data = None
         for row in tabix_iter:
             data = row.split('\t')
@@ -265,6 +266,35 @@ class Datafetch(object):
         cols = [col for col in res[0].keys() if col != 'gene_most_severe' and col != 'consequence_gnomad']
         return {
             'gene': gene,
+            'columns': cols,
+            'data': res
+        }
+
+    def get_genomic_range_variants(self, genomic_range):
+        if self.conn[threading.get_ident()].row_factory is None:
+            self.conn[threading.get_ident()].row_factory = sqlite3.Row
+        c = self.conn[threading.get_ident()].cursor()        
+        chr, start, end = utils.parse_region(genomic_range)
+        
+        query = """
+        SELECT * FROM anno 
+        WHERE abs(substr(variant, 0, instr(variant, ':')))=%s 
+        AND abs(substr(substr(variant,instr(variant, ':')+1),0, instr(substr(variant,instr(variant, ':')+1), ':')))>=%s
+        AND abs(substr(substr(variant,instr(variant, ':')+1),0, instr(substr(variant,instr(variant, ':')+1), ':')))<=%s;
+        """ % (chr, start, end)
+        
+        c.execute(query)
+        res = [dict(row) for row in c.fetchall()]
+        if len(res) == 0:
+            raise utils.NotFoundException()
+        cols = [col for col in res[0].keys() if col != 'gene_most_severe' and col != 'consequence_gnomad']
+        # data = []
+        # for item in res:
+        #         item['variant'] = '-'.join(item['variant'].split(':'))
+        #         data.append(item)
+                
+        return {
+            'range': genomic_range,
             'columns': cols,
             'data': res
         }
