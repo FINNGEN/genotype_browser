@@ -288,13 +288,12 @@ class Datafetch(object):
         if len(res) == 0:
             raise utils.NotFoundException()
         cols = [col for col in res[0].keys() if col != 'gene_most_severe' and col != 'consequence_gnomad']
-        # data = []
-        # for item in res:
-        #         item['variant'] = '-'.join(item['variant'].split(':'))
-        #         data.append(item)
-                
+        data = []
+        for item in res:
+            item['variant'] = '-'.join(item['variant'].split(':'))
+            data.append(item)                
         return {
             'range': genomic_range,
             'columns': cols,
-            'data': res
+            'data': data
         }
