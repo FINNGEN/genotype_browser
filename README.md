@@ -12,9 +12,10 @@ gsutil -mq cp gs://to_solita/genotype_browser/1/* .
 curl https://raw.githubusercontent.com/FINNGEN/genotype_browser/main/config/config.py.dummy -o config.py
 ```
 
-Run container from the above directory
+Build and run container from the above directory
 
 ```
+docker build -t finngen/genotype_browser:6373448 -f docker/Dockerfile .
 docker run -it -p 0.0.0.0:8080:8080/tcp -v `pwd`:/config finngen/genotype_browser:6373448
 ```
 
