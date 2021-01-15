@@ -34,20 +34,13 @@ class Search(object):
 
     def _get_variants_in_range(self, chr, start, end):
         c = self.conn[threading.get_ident()].cursor()
-        query = """
-        SELECT variant FROM anno 
-        WHERE abs(substr(variant, 0, instr(variant, ':')))=%s 
-        AND abs(substr(substr(variant,instr(variant, ':')+1),0, instr(substr(variant,instr(variant, ':')+1), ':')))>=%s
-        AND abs(substr(substr(variant,instr(variant, ':')+1),0, instr(substr(variant,instr(variant, ':')+1), ':')))<=%s
-        LIMIT 1;
-        """ % (chr, start, end)
+        query = 'SELECT variant FROM anno WHERE chr=%s AND pos>=%s AND pos<=%s LIMIT 1;' % (chr, start, end)
         c.execute(query)
         res = c.fetchall()
         res_formatted = []
         if len(res) > 0:
             for tup in res:
                 res_formatted.append(str(tup).replace("('", "").replace("',)", ""))
-
         if len(res_formatted) > 0:
             return res_formatted
         else:
@@ -55,12 +48,19 @@ class Search(object):
 
     def _search_gene(self, query):
         c = self.conn[threading.get_ident()].cursor()
-        c.execute('SELECT gene_most_severe FROM anno WHERE gene_most_severe = ? COLLATE NOCASE LIMIT 1', [query])
-        res = c.fetchall()
-        if len(res) > 0:
-            return res[0][0]
+        c.execute('SELECT * FROM genes WHERE gene_name = ? LIMIT 1', [query])
+        res_gene = c.fetchall()
+        if len(res_gene) > 0:
+            gene = res_gene[0]
         else:
             raise utils.NotFoundException(query)
+        try:
+            res = self._get_variants_in_range(gene[0], gene[1], gene[2])
+        except utils.NotFoundException as e:
+            raise utils.NotFoundException(query)
+        else:
+            return query
+        return res
     
     def _search_variants(self, query):
         var_ids = []
