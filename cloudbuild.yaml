@@ -1,0 +1,22 @@
+substitutions:
+  _DST_PROJECT: $DST_PROJECT
+  _WORK_DIR: .
+
+steps:
+# build genotype browser Docker container
+- name: 'gcr.io/cloud-builders/docker'
+  dir: ${_WORK_DIR}
+  args:
+  - build
+  - -t
+  - eu.gcr.io/${_DST_PROJECT}/genotype_browser
+  - -f
+  - ./docker/Dockerfile
+  - .
+
+images:
+# push following images to docker registry
+- eu.gcr.io/${_DST_PROJECT}/genotype_browser
+
+timeout: 900s
+# eof

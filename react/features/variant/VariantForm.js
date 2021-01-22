@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import { setFilter, setOption, setServerOption, writeData } from '../data/dataSlice'
+import { setFilter, setOption, setServerOption } from '../data/dataSlice'
 import validator from 'validator'
 
 export const VariantForm = () => {
@@ -38,17 +38,10 @@ export const VariantForm = () => {
     const hethomChanged = event => {
 	dispatch(setServerOption({opt: 'hethom', content: event.target.checked}))
     }
-    
-    const writeRequested = event => {
-	dispatch(writeData(`/api/v1/write_variants/${variants.join(',')}?${new URLSearchParams(filters)}`))
-    }
 
-    const write_message = write_result ?
-	  write_result.status == 'done' ?
-	  <div>data written to {write_result.path}<br/>select the path, hit ctrl+c to copy, in a terminal hit ctrl+shift+v to paste</div> :
-	  <div>could not write data to {write_result.path}</div> :
-	  write_status == 'writing' ? <div>please wait</div> :
-	  write_status == 'failed' ? <div>request failed</div> : null
+    const downloadRequested = event => {
+      window.open(`/api/v1/write_variants/${variants.join(',')}?${new URLSearchParams(filters)}`, "_blank")
+    }
 
     const hethom = variants && variants.length > 1 ?
 	  <div>
@@ -187,8 +180,7 @@ export const VariantForm = () => {
 	    </div>
 	    </div>
 	    <div style={{flexShrink: 1}}>
-	    <button type="button" className="button" onClick={writeRequested}>write data to file</button>
-	    <div>{write_message}</div>
+	    <button type="button" className="button" onClick={downloadRequested}>Download data</button>
 	    </div>
 	    </div>
 	    {hethom}
