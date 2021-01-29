@@ -20,3 +20,18 @@ def parse_variant(variant):
     except ValueError:
         raise ParseException()
     return (chr, pos, s[2].upper(), s[3].upper())
+
+def parse_region(region):
+    s = re.compile('-|:').split(region)
+    if len(s) != 3:
+        raise ParseException()
+    chr = parse_chr(s[0])
+    try:
+        start = int(s[1])
+    except ValueError:
+        raise ParseException()
+    try:
+        end = int(s[2])
+    except ValueError:
+        raise ParseException()
+    return (chr, start, end)

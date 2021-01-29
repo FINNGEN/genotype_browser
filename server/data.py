@@ -50,7 +50,8 @@ class Datafetch(object):
             raise utils.NotFoundException(str(chr) + '-' + str(pos) + '-' + ref + '-' + alt)
         
     def _get_genotype_data(self, chr, pos, ref, alt):
-        tabix_iter = self.tabix_files[threading.get_ident()][chr-1].fetch('chr'+str(chr), pos-1, pos)
+        chr_var = chr if chr != 23 else 'X'
+        tabix_iter = self.tabix_files[threading.get_ident()][chr-1].fetch('chr'+str(chr_var), pos-1, pos)
         var_data = None
         for row in tabix_iter:
             data = row.split('\t')
@@ -260,14 +261,38 @@ class Datafetch(object):
         if self.conn[threading.get_ident()].row_factory is None:
             self.conn[threading.get_ident()].row_factory = sqlite3.Row
         c = self.conn[threading.get_ident()].cursor()
-        c.execute('SELECT * FROM anno WHERE gene_most_severe = ? COLLATE NOCASE', [gene])
-        res = [dict(row) for row in c.fetchall()]
-        if len(res) == 0:
+        c.execute('SELECT * FROM genes WHERE gene_name = ?', [gene])
+        gene_db = [dict(row) for row in c.fetchall()]
+        if len(gene_db) == 0:
             raise utils.NotFoundException()
+        else:
+            vars_db = self.get_genomic_range_variants(gene_db[0]['chr'], gene_db[0]['start'], gene_db[0]['end'])
+            res_vars = vars_db['data']
         # drop columns we don't show
-        cols = [col for col in res[0].keys() if col != 'gene_most_severe' and col != 'consequence_gnomad']
+        cols = [col for col in res_vars[0].keys() if col != 'gene_most_severe' and col != 'consequence_gnomad' and col != 'chr' and col != 'pos']
         return {
             'gene': gene,
             'columns': cols,
-            'data': res
+            'data': res_vars
+        }
+
+    def get_genomic_range_variants(self, chr, start, end):
+        if self.conn[threading.get_ident()].row_factory is None:
+            self.conn[threading.get_ident()].row_factory = sqlite3.Row
+        c = self.conn[threading.get_ident()].cursor()
+        query = "SELECT * FROM anno WHERE chr=%s AND pos>=%s AND pos<=%s;" % (chr, start, end)
+        c.execute(query)
+        res = [dict(row) for row in c.fetchall()]
+        if len(res) == 0:
+            raise utils.NotFoundException()
+        cols = [col for col in res[0].keys() if col != 'gene_most_severe' and col != 'consequence_gnomad' and col != 'chr' and col != 'pos']
+        data = []
+        for item in res:
+            item['variant'] = '-'.join(item['variant'].split(':'))
+            data.append(item)   
+        genomic_range = "%s:%s-%s" % (chr, start, end)             
+        return {
+            'range': genomic_range,
+            'columns': cols,
+            'data': data
         }

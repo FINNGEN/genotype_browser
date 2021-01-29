@@ -2,7 +2,7 @@ from flask import Flask, jsonify, request, abort, render_template
 from flask_compress import Compress
 import imp, logging
 
-from utils import parse_chr, ParseException, NotFoundException
+from utils import parse_chr, parse_region, ParseException, NotFoundException
 from data import Datafetch
 from search import Search
 
@@ -69,6 +69,17 @@ def write_variants(variants):
     except NotFoundException as e:
         abort(404, 'variant(s) not in data')
     return status
+
+@app.route('/api/v1/range/<range>')
+def range(range):
+    try:
+        chr, start, end = parse_region(range)
+        data = fetch.get_genomic_range_variants(chr, start, end)
+    except ParseException as e:
+        abort(400, 'could not parse given genomic range')
+    except NotFoundException as e:
+        abort(404, 'genomic range not in data')
+    return jsonify(data)
 
 if __name__ == '__main__':
     app.run()

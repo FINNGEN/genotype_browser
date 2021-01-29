@@ -23,6 +23,9 @@ export const SearchForm = () => {
 	    if (result.type == 'gene') {
 		history.push(`/gene/${result.ids[0]}`)
 	    }
+	    if (result.type == 'range') {
+	    	history.push(`/range/${result.query}`)
+	    }
 	} else if (result.ids.length > 1) {
 	    if (result.type == 'variant') {
 		history.push(`/variants/${result.ids.join(',')}`)

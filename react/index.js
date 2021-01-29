@@ -14,6 +14,7 @@ import { SearchExamples } from './features/search/SearchExamples'
 import { VariantContainer } from './features/variant/VariantContainer'
 import { Variants } from './features/variants/Variants'
 import { Gene } from './features/gene/Gene'
+import { Range } from './features/range/Range'
 
 ReactDOM.render(
         <Provider store={store}>
@@ -26,6 +27,7 @@ ReactDOM.render(
 	<Route path='/variant/:variant' component={VariantContainer}/>
 	<Route path='/variants/:variants' component={Variants}/>
 	<Route path='/gene/:gene' component={Gene}/>
+    <Route path='/range/:range' component={Range}/>
         </div>
         </div>
         </BrowserRouter>

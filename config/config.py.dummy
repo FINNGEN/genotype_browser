@@ -1,6 +1,6 @@
 import logging
 
-sqlite_db = 'fgq.r6.2.db'
+sqlite_db = 'fgq.r6.3.db'
 
 basic_info_file = 'genotype_browser_dummy_data_50k_1.txt.gz'
 
