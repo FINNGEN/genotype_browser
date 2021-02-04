@@ -5,56 +5,77 @@ import numpy as np
 from collections import defaultdict, Counter
 
 import utils
+import re
 
 class Datafetch(object):
 
     def _init_tabix(self):
-        self.tabix_files = defaultdict(lambda: [pysam.TabixFile(file, parser=None) for file in self.conf['vcf_files']])
+        self.tabix_files_imputed = defaultdict(lambda: [pysam.TabixFile(file, parser=None) for file in self.conf['vcf_files']['imputed_data']])
+        self.tabix_files_chip = defaultdict(lambda: [pysam.TabixFile(file, parser=None) for file in self.conf['vcf_files']['chip_data']])
 
     def _init_db(self):
         self.conn = defaultdict(lambda: sqlite3.connect(self.conf['sqlite_db']))
 
-    def _init_info(self):
+    def _init_info(self, select_chip):
         info = pd.read_csv(self.conf['basic_info_file'], sep='\t').fillna('NA')
+        if select_chip:
+            info.index = info['FINNGENID']
+            tabix_iter = self.tabix_files_chip[threading.get_ident()][0]
+            h = tabix_iter.header[len(tabix_iter.header) - 1].split('\t')
+            chip_samples = h[9:]
+            info = info.loc[chip_samples, :]
+
         # make a copy for writing data out with male/female texts
-        self.info_orig = info.copy()
-        self.info_orig['SEX'] = np.where(self.info_orig['SEX'] == 1, 'female', 'male')
-        self.info_orig['DEATH'] = np.where(self.info_orig['DEATH']=="NA", np.nan, self.info_orig['DEATH'])
-        self.info_orig['DEATH'] = self.info_orig['DEATH'].astype('Int64')
+        info_orig = info.copy()
+        info_orig['SEX'] = np.where(info_orig['SEX'] == 1, 'female', 'male')
+        info_orig['DEATH'] = np.where(info_orig['DEATH']=="NA", np.nan, info_orig['DEATH'])
+        info_orig['DEATH'] = info_orig['DEATH'].astype('Int64')
+        
         # change cohort/region names to index
-        self.cohort_list = sorted(list(set(info['cohort'].tolist())))
-        cohort_idx = {cohort:i for i,cohort in enumerate(self.cohort_list)}
+        cohort_list = sorted(list(set(info['cohort'].tolist())))
+        cohort_idx = {cohort:i for i,cohort in enumerate(cohort_list)}
         info['cohort'] = info['cohort'].map(cohort_idx)
-        self.region_list = sorted(list(set(info['regionofbirthname'].tolist())))
-        region_idx = {region:i for i,region in enumerate(self.region_list)}
+        
+        region_list = sorted(list(set(info['regionofbirthname'].tolist())))
+        region_idx = {region:i for i,region in enumerate(region_list)}
         info['regionofbirth'] = info['regionofbirthname'].map(region_idx)
         info = info.drop(columns=['FINNGENID', 'regionofbirthname'])
-        self.info_columns = info.columns.tolist()
-        self.info = info
+        info.reset_index(drop=True, inplace=True)
+        info_columns = info.columns.tolist()
+
+        # remove index
+        info.reset_index(drop=True, inplace=True)
+        info_orig.reset_index(drop=True, inplace=True)
+        return info, info_orig, cohort_list, region_list, info_columns
 
     def __init__(self, conf):
         self.conf=conf
         self._init_tabix()
         self._init_db()
-        self._init_info()
+        self.info, self.info_orig, self.cohort_list, self.region_list, self.info_columns = self._init_info(select_chip=False)
+        self.info_chip, self.info_orig_chip, self.cohort_list_chip, self.region_list_chip, self.info_columns_chip = self._init_info(select_chip=True)
 
-    def _get_annotation(self, chr, pos, ref, alt):
+    def _get_annotation(self, chr, pos, ref, alt, data_type):
+        db = "anno" if data_type == 'imputed' else 'chip_anno'
         if self.conn[threading.get_ident()].row_factory is None:
             self.conn[threading.get_ident()].row_factory = sqlite3.Row
-        c = self.conn[threading.get_ident()].cursor()
-        c.execute('SELECT * FROM anno WHERE variant = ?', [str(chr) + ':' + str(pos) + ':' + ref + ':' + alt])
+        c = self.conn[threading.get_ident()].cursor() 
+        c.execute('SELECT * FROM %s WHERE variant = "%s";' % (db, str(chr) + ':' + str(pos) + ':' + ref + ':' + alt))
         res = c.fetchone()
         if len(res) > 0:
             return dict(res)
         else:
             raise utils.NotFoundException(str(chr) + '-' + str(pos) + '-' + ref + '-' + alt)
         
-    def _get_genotype_data(self, chr, pos, ref, alt):
+    def _get_genotype_data(self, chr, pos, ref, alt, data_type):
         chr_var = chr if chr != 23 else 'X'
-        tabix_iter = self.tabix_files[threading.get_ident()][chr-1].fetch('chr'+str(chr_var), pos-1, pos)
+        if data_type == 'imputed':
+            tabix_iter = self.tabix_files_imputed[threading.get_ident()][chr-1].fetch('chr'+str(chr), pos-1, pos)
+        else:
+            tabix_iter = self.tabix_files_chip[threading.get_ident()][chr-1].fetch('chr'+str(chr), pos-1, pos)
         var_data = None
         for row in tabix_iter:
-            data = row.split('\t')
+            data = row.split('\t')            
             if data[3] == ref and data[4] == alt:
                 var_data = data
                 break
@@ -131,9 +152,16 @@ class Datafetch(object):
             info = -1
         return (het_i, hom_alt_i, info)
     
-    def _aggregate_het_hom(self, het, hom, full):
+    def _aggregate_het_hom(self, het, hom, full, data_type):
         agg = {'regions': {}, 'cohorts': {}}
-        for type in [('regions', 'regionofbirth', self.region_list), ('cohorts', 'cohort', self.cohort_list)]:
+        if data_type == 'imputed':
+            cohort_list = self.cohort_list
+            region_list = self.region_list
+        else:
+            cohort_list = self.cohort_list_chip
+            region_list = self.region_list_chip
+
+        for type in [('regions', 'regionofbirth', region_list), ('cohorts', 'cohort', cohort_list)]:
             # gt_count: list of length 2 (het/hom), each is a dict from region/cohort index to het/hom count
             gt_count = [het.groupby(type[1]).size().to_dict(), hom.groupby(type[1]).size().to_dict()]
             # add zeros
@@ -148,8 +176,13 @@ class Datafetch(object):
             agg[type[0]] = {'names': type[2], 'gt_counts': gt_count, 'num_indiv': num_indiv, 'af': af}
         return agg
     
-    def _count_gt(self, data, filters, chips):
-        filtered_basic_info = self._filter(self.info, filters, chips)
+    def _count_gt(self, data, filters, chips, data_type):
+        if data_type == 'imputed':
+            filtered_basic_info = self._filter(self.info, filters, chips)
+            info_columns = self.info_columns
+        else:
+            filtered_basic_info = self._filter(self.info_chip, filters, chips)
+            info_columns = self.info_columns_chip
         id_index = list(filtered_basic_info.index)
         het_i = []
         hom_i = []
@@ -167,14 +200,14 @@ class Datafetch(object):
         # if an individual is homozygous for a variant, don't count as heterozygous for other variants
         het = self.info.iloc[[i for i in het_i if i not in hom_i]]
         hom = self.info.iloc[list(hom_i)]
-        agg = self._aggregate_het_hom(het, hom, filtered_basic_info)
+        agg = self._aggregate_het_hom(het, hom, filtered_basic_info, data_type)
         total_af = (len(het) + 2*len(hom))/len(filtered_basic_info)/2 if len(filtered_basic_info) > 0 else -1
         het = het.to_numpy().T.tolist()
         hom = hom.to_numpy().T.tolist()
         return {
-            'het': het if len(het) > 0 else [[] for i in self.info_columns],
-            'hom_alt': hom if len(hom) > 0 else [[] for i in self.info_columns],
-            'columns': self.info_columns,
+            'het': het if len(het) > 0 else [[] for i in info_columns],
+            'hom_alt': hom if len(hom) > 0 else [[] for i in info_columns],
+            'columns': info_columns,
             'agg': agg,
             'total_af': total_af,
             'info': info,
@@ -182,11 +215,14 @@ class Datafetch(object):
             'filters': filters
         }
     
-    def _count_gt_for_write(self, variants, data, filters, chips):
+    def _count_gt_for_write(self, variants, data, filters, chips, data_type):
         start_time = timeit.default_timer()
         df_list = []
-        filtered_basic_info = self._filter(self.info, filters, chips)
-        id_index = list(filtered_basic_info.index)
+        if data_type == 'imputed':
+            filtered_basic_info = self._filter(self.info, filters, chips)
+        else:
+            filtered_basic_info = self._filter(self.info_chip, filters, chips)
+        id_index = list(filtered_basic_info.index) 
         for i, d in enumerate(data):
             # get indices of het/hom individuals in genotype data
             het_i, hom_alt_i, info = self._get_het_hom_index(d, id_index, filters['gtgp'] == 'gt', filters['gpThres'], len(data) == 1)
@@ -202,7 +238,7 @@ class Datafetch(object):
         elapsed = timeit.default_timer() - start_time
         return pd.concat(df_list)
 
-    def get_variants(self, variants, filters):
+    def get_variants(self, variants, filters, data_type):
         start_time = timeit.default_timer()
         filters = {k:(True if v=="true" else v) for k,v in filters.items()}
         filters = {k:(False if v=="false" else v) for k,v in filters.items()}
@@ -213,17 +249,20 @@ class Datafetch(object):
         vars = []
         for variant in variants.split(','):
             chr, pos, ref, alt = utils.parse_variant(variant)
-            var_data = self._get_genotype_data(chr, pos, ref, alt)
+            var_data = self._get_genotype_data(chr, pos, ref, alt, data_type)
             if var_data is not None:
                 vars_data.append(var_data)
                 vars.append('-'.join([str(s) for s in [chr, pos, ref, alt]]))
-                anno.append(self._get_annotation(chr, pos, ref, alt))
+                anno.append(self._get_annotation(chr, pos, ref, alt, data_type))
         if len(vars_data) == 0:
             raise utils.NotFoundException()
         fetch_time = timeit.default_timer() - start_time
         start_time = timeit.default_timer()
         chips = self._get_chips(chr, pos, ref, alt) if len(vars_data) == 1 else set()
-        data = self._count_gt(vars_data, filters, chips)
+        if data_type == 'chip':
+            if 'impchip' in filters:
+                del filters['impchip']
+        data = self._count_gt(vars_data, filters, chips, data_type)
         munge_time = timeit.default_timer() - start_time
         return {
             'variants': vars,
@@ -232,19 +271,27 @@ class Datafetch(object):
             'time': {
                 'fetch': fetch_time,
                 'munge': munge_time
-            }
+            },
+            'data_type': data_type
         }
     
-    def write_variants(self, variants, filters):
+    def write_variants(self, variants, filters, data_type):
         vars_data = []
         for variant in variants.split(','):
             chr, pos, ref, alt = utils.parse_variant(variant)
-            var_data = self._get_genotype_data(chr, pos, ref, alt)
+            var_data = self._get_genotype_data(chr, pos, ref, alt, data_type)
             if var_data is not None:
                 vars_data.append(var_data)
         chips = self._get_chips(chr, pos, ref, alt) if len(vars_data) == 1 else set()
-        data = self._count_gt_for_write(variants.split(','), vars_data, filters, chips)
-        filename = variants.replace(',', '_') + '__' + '_'.join([k+'_'+v for k,v in filters.items()]) + '.tsv'
+        data = self._count_gt_for_write(variants.split(','), vars_data, filters, chips, data_type)
+        if data_type == 'imputed':
+            del filters['data_type']
+            filename = variants.replace(',', '_') + '__imputed_panel__' + '_'.join([k+'_'+v for k,v in filters.items()]) + '.tsv'
+        else:
+            del filters['array']
+            del filters['impchip']
+            del filters['data_type']
+            filename = variants.replace(',', '_') + '__rawchip_panel__' + '_'.join([k+'_'+v for k,v in filters.items()]) + '.tsv'
         try:
             data.to_csv(sep='\t', index=False, na_rep='NA')
             output = make_response(data.to_csv(sep='\t', index=False, na_rep='NA'))
@@ -254,10 +301,10 @@ class Datafetch(object):
             return output
 
         except Exception as e:
-            # TODO should return non-200 maybe
+            # TODO should return non-200 maybes
             return {'status': 'failed', 'message': str(e)}
 
-    def get_gene_variants(self, gene):
+    def get_gene_variants(self, gene, data_type):
         if self.conn[threading.get_ident()].row_factory is None:
             self.conn[threading.get_ident()].row_factory = sqlite3.Row
         c = self.conn[threading.get_ident()].cursor()
@@ -266,33 +313,42 @@ class Datafetch(object):
         if len(gene_db) == 0:
             raise utils.NotFoundException()
         else:
-            vars_db = self.get_genomic_range_variants(gene_db[0]['chr'], gene_db[0]['start'], gene_db[0]['end'])
+            vars_db = self.get_genomic_range_variants(gene_db[0]['chr'], gene_db[0]['start'], gene_db[0]['end'], data_type)
             res_vars = vars_db['data']
         # drop columns we don't show
-        cols = [col for col in res_vars[0].keys() if col != 'gene_most_severe' and col != 'consequence_gnomad' and col != 'chr' and col != 'pos']
+        exclude_cols = ['gene_most_severe', 'consequence_gnomad', 
+                        'consequence_genomes', 'consequence_exomes',
+                        'chr', 'pos']
+        cols = [col for col in res_vars[0].keys() if col not in exclude_cols]
         return {
             'gene': gene,
             'columns': cols,
-            'data': res_vars
+            'data': res_vars,
+            'data_type': data_type
         }
 
-    def get_genomic_range_variants(self, chr, start, end):
+    def get_genomic_range_variants(self, chr, start, end, data_type):
+        db = "anno" if data_type == 'imputed' else 'chip_anno'
         if self.conn[threading.get_ident()].row_factory is None:
             self.conn[threading.get_ident()].row_factory = sqlite3.Row
         c = self.conn[threading.get_ident()].cursor()
-        query = "SELECT * FROM anno WHERE chr=%s AND pos>=%s AND pos<=%s;" % (chr, start, end)
+        query = 'SELECT * FROM %s WHERE chr=%s AND pos>=%s AND pos<=%s;' % (db, chr, start, end)
         c.execute(query)
         res = [dict(row) for row in c.fetchall()]
         if len(res) == 0:
             raise utils.NotFoundException()
-        cols = [col for col in res[0].keys() if col != 'gene_most_severe' and col != 'consequence_gnomad' and col != 'chr' and col != 'pos']
         data = []
         for item in res:
             item['variant'] = '-'.join(item['variant'].split(':'))
-            data.append(item)   
-        genomic_range = "%s:%s-%s" % (chr, start, end)             
+            data.append(item)
+        genomic_range = "%s:%s-%s" % (chr, start, end)                     
+        exclude_cols = ['gene_most_severe', 'consequence_gnomad', 
+                        'consequence_genomes', 'consequence_exomes',
+                        'chr', 'pos']
+        cols = [col for col in data[0].keys() if col not in exclude_cols]
         return {
             'range': genomic_range,
             'columns': cols,
-            'data': data
+            'data': data,
+            'data_type': data_type
         }

@@ -32,7 +32,8 @@ def index(path):
 @app.route('/api/v1/find/<query>')
 def find(query):
     try:
-        result = search.search(query)
+        data_type = request.args.get('data_type')
+        result = search.search(query, data_type)
     except ParseException as e:
         abort(400, 'could not parse given query to anything useful')
     except NotFoundException as e:
@@ -43,7 +44,8 @@ def find(query):
 def variants(variants):
     #print(request.args.to_dict())
     try:
-        data = fetch.get_variants(variants, request.args.to_dict())
+        data_type = request.args.get('data_type')
+        data = fetch.get_variants(variants, request.args.to_dict(), data_type)
     except ParseException as e:
         abort(400, 'could not parse given variant(s)')
     except NotFoundException as e:
@@ -53,7 +55,8 @@ def variants(variants):
 @app.route('/api/v1/gene_variants/<gene>')
 def gene_variants(gene):
     try:
-        data = fetch.get_gene_variants(gene)
+        data_type = request.args.get('data_type')
+        data = fetch.get_gene_variants(gene, data_type)
     except ParseException as e:
         abort(400, 'could not parse given gene')
     except NotFoundException as e:
@@ -63,7 +66,8 @@ def gene_variants(gene):
 @app.route('/api/v1/write_variants/<variants>')
 def write_variants(variants):
     try:
-        status = fetch.write_variants(variants, request.args.to_dict())
+        data_type = request.args.get('data_type')
+        status = fetch.write_variants(variants, request.args.to_dict(), data_type)
     except ParseException as e:
         abort(400, 'could not parse given variant(s)')
     except NotFoundException as e:
@@ -73,8 +77,9 @@ def write_variants(variants):
 @app.route('/api/v1/range/<range>')
 def range(range):
     try:
+        data_type = request.args.get('data_type')
         chr, start, end = parse_region(range)
-        data = fetch.get_genomic_range_variants(chr, start, end)
+        data = fetch.get_genomic_range_variants(chr, start, end, data_type)
     except ParseException as e:
         abort(400, 'could not parse given genomic range')
     except NotFoundException as e:
