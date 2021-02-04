@@ -11,18 +11,19 @@ export const Gene = (props) => {
     const [filt, setFilt] = useState([])
     const [checked, setChecked] = useState([])
     const reactTable = useRef(null)
+    const dtype = useSelector(state => state.search.result.data_type)
     //const columns = useMemo(() => getColumns(gene, checked, handleCheck, handleCheckAll), [gene, checked])
     
     useEffect(() => {
 	if (gene.status == 'idle') {
-	    dispatch(fetchData(`/api/v1/gene_variants/${props.match.params.gene}`))
+	    dispatch(fetchData(`/api/v1/gene_variants/${props.match.params.gene}?` + new URLSearchParams({...{'data_type': dtype}})))
 	} else {
-	    const stored = sessionStorage.getItem(`${props.match.params.gene}`)
+	    const stored = sessionStorage.getItem(`${props.match.params.gene}_${dtype}`)
 	    if (stored) {
-		//console.log('cache hit')
+		    // console.log('cache hit')
 	    	dispatch(setData(JSON.parse(stored)))
 	    } else if (gene.status != 'loading') {
-		dispatch(fetchData(`/api/v1/gene_variants/${props.match.params.gene}`))
+		dispatch(fetchData(`/api/v1/gene_variants/${props.match.params.gene}?` + new URLSearchParams({...{'data_type': dtype}})))
 	    }
 	}
     }, [props])

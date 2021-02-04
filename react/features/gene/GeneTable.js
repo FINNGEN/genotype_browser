@@ -108,13 +108,31 @@ export const getColumns = (gene, checked, handleCheck, handleCheckAll) => {
 		Cell: props => +(props.value).toExponential(2),
 		filterMethod: afFilter
 	    }
+	} else if (c == 'af_genomes') {
+	    return {
+	    Header: c.replace('af_', 'fin af gnomad2 '),
+		accessor: c,
+		style: {textAlign: 'right'},
+		headerStyle: {textAlign: 'right'},
+		Cell: props => props.value == 'NA' ? 'NA' : (props.value).toExponential(2),
+		filterMethod: afFilter
+	    }
+	} else if (c == 'af_exomes') {
+	    return {
+	    Header: c.replace('af_', 'fin af gnomad2 '),
+		accessor: c,
+		style: {textAlign: 'right'},
+		headerStyle: {textAlign: 'right'},
+		Cell: props => props.value == 'NA' ? 'NA' : (props.value).toExponential(2),
+		filterMethod: afFilter
+	    }
 	} else if (c == 'info') {
 	    return {
 		Header: c,
 		accessor: c,
 		style: {textAlign: 'right'},
 		headerStyle: {textAlign: 'right'},
-		Cell: props => +(props.value).toPrecision(3),
+		Cell: props => props.value == 'NA' ? 'NA' : (props.value).toPrecision(3) ,
 		filterMethod: numFilter
 	    }
 	} else if (c.startsWith('enrichment_nfsee')) {
@@ -123,7 +141,15 @@ export const getColumns = (gene, checked, handleCheck, handleCheckAll) => {
 		accessor: c,
 		style: {textAlign: 'right'},
 		headerStyle: {textAlign: 'right'},
-		Cell: props => props.value == 'NA' ? props.value : props.value == 1e6 ? 'inf' : props.value.toPrecision(3),
+		Cell: props => {
+			if (props.value == 'NA'){
+				return 'NA'
+			} else if (props.value == 1e6 || props.value == 'Inf') {
+				return 'inf'
+			} else {
+				return props.value.toPrecision(3)
+			}
+		},
 		filterMethod: numFilter
 	    }
 	} else {

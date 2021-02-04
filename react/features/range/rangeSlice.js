@@ -37,7 +37,7 @@ export const rangeSlice = createSlice({
 	    state.data = action.payload.data
 	    state.range = action.payload.range
 	    state.columns = action.payload.columns
-	    sessionStorage.setItem(`${action.payload.range}`, JSON.stringify(action.payload))
+	    sessionStorage.setItem(`${action.payload.range}_${action.payload.range.data_type}`, JSON.stringify(action.payload))
 	},
 	[fetchData.rejected]: (state, action) => {
 	    state.status = 'failed'

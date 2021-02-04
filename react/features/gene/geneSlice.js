@@ -38,7 +38,7 @@ export const geneSlice = createSlice({
 	    state.data = action.payload.data
 	    state.gene = action.payload.gene
 	    state.columns = action.payload.columns
-	    sessionStorage.setItem(`${action.payload.gene}`, JSON.stringify(action.payload))
+	    sessionStorage.setItem(`${action.payload.gene}_${action.payload.gene.data_type}`, JSON.stringify(action.payload))
 	},
 	[fetchData.rejected]: (state, action) => {
 	    state.status = 'failed'

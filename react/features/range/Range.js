@@ -11,16 +11,17 @@ export const Range = (props) => {
     const [filt, setFilt] = useState([])
     const [checked, setChecked] = useState([])
     const reactTable = useRef(null)
+    const dtype = useSelector(state => state.search.result.data_type)
 
     useEffect(() => {
 	if (range.status == 'idle') {
-	    dispatch(fetchData(`/api/v1/range/${props.match.params.range}`))
+	    dispatch(fetchData(`/api/v1/range/${props.match.params.range}?` + new URLSearchParams({...{'data_type': dtype}})))
 	} else {
-	    const stored = sessionStorage.getItem(`${props.match.params.range}`)
+	    const stored = sessionStorage.getItem(`${props.match.params.range}_${dtype}`)
 	    if (stored) {
 			dispatch(setData(JSON.parse(stored)))
 	    } else if (range.status != 'loading') {
-		dispatch(fetchData(`/api/v1/range/${props.match.params.range}`))
+		dispatch(fetchData(`/api/v1/range/${props.match.params.range}?` + new URLSearchParams({...{'data_type': dtype}})))
 	    }
 	}
     }, [props])

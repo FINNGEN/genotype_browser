@@ -110,7 +110,7 @@ export const dataSlice = createSlice({
 	    const ordered = {}
 	    Object.keys(action.payload.data.filters).sort().forEach(key => { ordered[key] = action.payload.data.filters[key] })
 	    try {
-		sessionStorage.setItem(`${action.payload.variants.join(',')}+${JSON.stringify(ordered)}`, JSON.stringify(action.payload.data))
+		sessionStorage.setItem(`${action.payload.variants.join(',')}+${JSON.stringify(ordered)}+${action.payload.data_type}`, JSON.stringify(action.payload.data))
 	    } catch(e) {
 		if (isQuotaExceeded(e)) {
 		    console.warn('sessionstorage quota exceeded')

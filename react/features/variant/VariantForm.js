@@ -12,6 +12,10 @@ export const VariantForm = () => {
     const write_status = useSelector(state => state.data.write_status)
     const write_result = useSelector(state => state.data.write_result)
     const [gp, setGP] = useState(filters.gpThres)
+    var dtype = useSelector(state => state.search.result.data_type)
+    if (dtype == undefined) {
+    	dtype = sessionStorage.getItem('data_type')
+    }
 
     const filterChanged = (filt, value, event) => {
 	if (event.target.type !== 'text') {
@@ -40,7 +44,7 @@ export const VariantForm = () => {
     }
 
     const downloadRequested = event => {
-      window.open(`/api/v1/write_variants/${variants.join(',')}?${new URLSearchParams(filters)}`, "_blank")
+		window.open(`/api/v1/write_variants/${variants.join(',')}?${new URLSearchParams(Object.assign({}, filters, {'data_type': dtype}))}`, "_blank")
     }
 
     const hethom = variants && variants.length > 1 ?
@@ -56,11 +60,11 @@ export const VariantForm = () => {
     const gene_tag = annotation && annotation[0].gene_most_severe != 'NA' ?
 	  <span style={{paddingLeft: '20px'}}>{annotation[0].gene_most_severe}</span> :
 	  null
-    
+
     const enr_exomes = annotation && annotation.length == 1 ?
 	  annotation[0].enrichment_nfsee_exomes == 'NA' ?
 	  'NA' :
-	  annotation[0].enrichment_nfsee_exomes == 1e6 ?
+	  annotation[0].enrichment_nfsee_exomes == 1e6 || annotation[0].enrichment_nfsee_genomes == 'Inf' ?
 	  'inf' :
 	  annotation[0].enrichment_nfsee_exomes.toPrecision(3) :
 	  null
@@ -68,18 +72,80 @@ export const VariantForm = () => {
     const enr_genomes = annotation && annotation.length == 1 ?
 	  annotation[0].enrichment_nfsee_genomes == 'NA' ?
 	  'NA' :
-	  annotation[0].enrichment_nfsee_genomes == 1e6 ?
+	  annotation[0].enrichment_nfsee_genomes == 1e6 || annotation[0].enrichment_nfsee_genomes == 'Inf'?
 	  'inf' :
 	  annotation[0].enrichment_nfsee_genomes.toPrecision(3) :
 	  null
-    
+
+	const annotation_info = annotation != undefined ?
+		annotation[0].info == 'NA' ? 'NA': annotation[0].info.toPrecision(3)
+	: null
+
+	var af = ''
+	if (annotation != undefined) {
+		if ('af' in annotation[0]){
+			const annotation_af = annotation[0].af == 'NA' ? 'NA': annotation[0].af.toPrecision(3)
+			af = (
+				<span style={{paddingLeft: '20px'}}>af {annotation_af}</span>
+			)
+		}
+		else {
+			const annotation_af_genomes = annotation[0].af_genomes == 'NA' ? 'NA': annotation[0].af_genomes.toPrecision(3)
+			const annotation_af_exomes = annotation[0].af_exomes == 'NA' ? 'NA': annotation[0].af_exomes.toPrecision(3)
+			af = (
+			 	<span style={{paddingLeft: '20px'}}>fin af gnomad2 genomes/exomes {annotation_af_genomes}/{annotation_af_exomes}</span>
+			)
+		}
+	}
+
+	const hide_imputchip_radio = dtype != undefined ?
+		dtype == 'chip' ? true : false
+	: false
+
+	var render_imputchip_radio = ''
+	var render_chiptype_radio = ''
+	if (!hide_imputchip_radio){
+		render_imputchip_radio = (
+			<div className="buttonGroup">
+			<div>
+		    <input type="radio" value="all" disabled={(variants && variants.length > 1)} name="impchip" checked={filters.impchip == 'all'} onChange={filterChanged.bind(this, 'impchip', 'all')}/>
+		    <span>all</span>
+		    </div>
+		    <div>
+		    <input type="radio" value="imp" disabled={(variants && variants.length > 1)} name="impchip" checked={filters.impchip == 'imp'} onChange={filterChanged.bind(this, 'impchip', 'imp')}/>
+		    <span>imputed</span>
+		    </div>
+		    <div>
+		    <input type="radio" value="chip" disabled={(variants && variants.length > 1)} name="impchip" checked={filters.impchip == 'chip'} onChange={filterChanged.bind(this, 'impchip', 'chip')}/>
+		    <span>chip genotyped</span>
+		    </div>
+		    </div>
+		)
+		render_chiptype_radio = (
+			<div className="buttonGroup">
+			<div>
+		    <input type="radio" value="all" name="array" checked={filters.array == 'all'} onChange={filterChanged.bind(this, 'array', 'all')}/>
+		    <span>all</span>
+		    </div>
+		    <div>
+		    <input type="radio" value="finngen" name="array" checked={filters.array == 'finngen'} onChange={filterChanged.bind(this, 'array', 'finngen')}/>
+		    <span>finngen chip</span>
+		    </div>
+		    <div>
+		    <input type="radio" value="legacy" name="array" checked={filters.array == 'legacy'} onChange={filterChanged.bind(this, 'array', 'legacy')}/>
+		    <span>legacy data</span>
+		    </div>
+		    </div>
+		)
+	}
+
     const anno = annotation && annotation.length == 1 ?
 	  <div style={{paddingBottom: '10px'}}>
 	  {rsid_tag}
 	  {gene_tag}
 	  <span style={{paddingLeft: '20px'}}>{annotation[0].most_severe.replace(/_/g, ' ')}</span>
-	  <span style={{paddingLeft: '20px'}}>af {annotation[0].af.toPrecision(3)}</span>
-	  <span style={{paddingLeft: '20px'}}>info {annotation[0].info.toPrecision(3)}</span>
+	  {af}
+	  <span style={{paddingLeft: '20px'}}>info {annotation_info}</span>
 	  <span style={{paddingLeft: '20px'}}>
 	  fin enr gnomad2 genomes/exomes {enr_genomes}/{enr_exomes}
     </span>
@@ -120,34 +186,8 @@ export const VariantForm = () => {
 	    <span>male</span>
 	    </div>
 	    </div>
-	    <div className="buttonGroup">
-	    <div>
-	    <input type="radio" value="all" name="array" checked={filters.array == 'all'} onChange={filterChanged.bind(this, 'array', 'all')}/>
-	    <span>all</span>
-	    </div>
-	    <div>
-	    <input type="radio" value="finngen" name="array" checked={filters.array == 'finngen'} onChange={filterChanged.bind(this, 'array', 'finngen')}/>
-	    <span>finngen chip</span>
-	    </div>
-	    <div>
-	    <input type="radio" value="legacy" name="array" checked={filters.array == 'legacy'} onChange={filterChanged.bind(this, 'array', 'legacy')}/>
-	    <span>legacy data</span>
-	    </div>
-	    </div>
-	    <div className="buttonGroup">
-	    <div>
-	    <input type="radio" value="all" disabled={variants && variants.length > 1} name="impchip" checked={filters.impchip == 'all'} onChange={filterChanged.bind(this, 'impchip', 'all')}/>
-	    <span>all</span>
-	    </div>
-	    <div>
-	    <input type="radio" value="imp" disabled={variants && variants.length > 1} name="impchip" checked={filters.impchip == 'imp'} onChange={filterChanged.bind(this, 'impchip', 'imp')}/>
-	    <span>imputed</span>
-	    </div>
-	    <div>
-	    <input type="radio" value="chip" disabled={variants && variants.length > 1} name="impchip" checked={filters.impchip == 'chip'} onChange={filterChanged.bind(this, 'impchip', 'chip')}/>
-	    <span>chip genotyped</span>
-	    </div>
-	    </div>
+	    {render_chiptype_radio}
+	    {render_imputchip_radio}
 	    <div className="buttonGroup">
 	    <div>
 	    <input type="radio" value="gt" name="gtgp" checked={filters.gtgp == 'gt'} onChange={filterChanged.bind(this, 'gtgp', 'gt')} />

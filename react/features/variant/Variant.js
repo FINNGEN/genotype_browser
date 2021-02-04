@@ -12,21 +12,25 @@ export const Variant = (props) => {
     const gtCnt = useSelector(gtCount)
     const dispatch = useDispatch()
     const data = useSelector(state => state.data)
+    var dtype = useSelector(state => state.search.result.data_type)
+    if (dtype == undefined) {
+    	dtype = sessionStorage.getItem('data_type')
+    }
 
     useEffect(() => {
 	if (data.status == 'idle') { //fetch by default
-	    dispatch(fetchData(`/api/v1/variants/${props.props.variant}?` + new URLSearchParams({...data.filters, ...data.serverOptions})))
+	    dispatch(fetchData(`/api/v1/variants/${props.props.variant}?` + new URLSearchParams({...data.filters, ...data.serverOptions, ...{'data_type': dtype}})))
 	} else {
-	    const unordered = {...data.filters, ...data.serverOptions}
+	    const unordered = {...data.filters, ...data.serverOptions, ...{'data_type': dtype}}
 	    const ordered = {}
 	    Object.keys(unordered).sort().forEach(key => { ordered[key] = unordered[key] })
-	    //console.log(`${props.props.variant}+${JSON.stringify(ordered)}`)
+	    console.log('Variant.js:', `${props.props.variant}+${JSON.stringify(ordered)}`)
 	    const stored = sessionStorage.getItem(`${props.props.variant}+${JSON.stringify(ordered)}`)
 	    if (stored) {
-		console.log('cache hit')
+			// console.log('cache hit')
 	    	dispatch(setData(JSON.parse(stored)))
 	    } else if (data.status != 'loading') {
-	    	dispatch(fetchData(`/api/v1/variants/${props.props.variant}?` + new URLSearchParams({...data.filters, ...data.serverOptions})))
+	    	dispatch(fetchData(`/api/v1/variants/${props.props.variant}?` + new URLSearchParams({...data.filters, ...data.serverOptions, ...{'data_type': dtype}})))
 	    }
 	}
     }, [data.filters, data.serverOptions, props])
@@ -45,6 +49,13 @@ export const Variant = (props) => {
     if (data.status == 'done') {
 	//after info score, there's a bug though that this doesn't currently update because it's not in data.data
 	//<tr><td>wall time</td><td style={{textAlign: 'right'}}>{`${data.time.fetch.toPrecision(3)}+${data.time.munge.toPrecision(3)}`}</td></tr>
+	
+	// console.log("dtype:", dtype)
+	var impscore = ''
+	if (dtype == 'imputed') {
+		impscore = (<tr><td>imputation info score</td><td style={{textAlign: 'right'}}>{data.data.info < 0 ? 'NA' : data.data.info.toPrecision(3)}</td></tr>)
+	} 
+
 	content = (<div>
 		   <div style={{display: 'flex'}}>
 		   <table style={{width: '200px'}}>
@@ -57,7 +68,7 @@ export const Variant = (props) => {
 		   <table style={{paddingLeft: '20px'}}>
 		   <tbody>
 		   <tr><td>allele frequency</td><td style={{textAlign: 'right'}}>{data.data.total_af < 0 ? 'NA' : data.data.total_af.toPrecision(3)}</td></tr>
-		   <tr><td>imputation info score</td><td style={{textAlign: 'right'}}>{data.data.info < 0 ? 'NA' : data.data.info.toPrecision(3)}</td></tr>
+		   {impscore}
 		   </tbody>
 		   </table>
 		   </div>

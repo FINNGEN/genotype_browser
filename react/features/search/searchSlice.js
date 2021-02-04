@@ -34,6 +34,7 @@ export const searchSlice = createSlice({
 	    state.status = 'done'
 	    state.result = action.payload
 	    state.error = null
+	    sessionStorage.setItem('data_type', action.payload.data_type)
 	},
 	[search.rejected]: (state, action) => {
 	    state.status = 'failed'
