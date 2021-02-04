@@ -64,7 +64,8 @@ export const dataSlice = createSlice({
 	    array: 'all', // 'all', 'finngen' or 'legacy'
 	    impchip: 'all', // 'all', 'imp' or 'chip'
 	    gtgp: 'gt', // 'gt' or 'gp'
-	    gpThres: 0.95 // if you change this, change also in VariantForm to allow caching
+	    gpThres: 0.95, // if you change this, change also in VariantForm to allow caching
+	    hethom: 'all' // 'all', 'het', 'hom': specify individuals with which type of variant should be downloaded
 	},
 	options: {
 	    bbreg: 'biobank', // 'biobank' or 'region'

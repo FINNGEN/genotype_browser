@@ -190,7 +190,7 @@ class Datafetch(object):
             het_i_d, hom_i_d, info = self._get_het_hom_index(d, id_index, filters['gtgp'] == 'gt', filters['gpThres'], len(data) == 1)
             het_i.extend(het_i_d)
             hom_i.extend(hom_i_d)
-        het_cnt = Counter(het_i)
+        het_cnt = Counter(het_i)        
         het_i = set(het_i)
         hom_i = set(hom_i)
         # maybe treat multiheterozygotes as homozygotes
@@ -226,15 +226,44 @@ class Datafetch(object):
         for i, d in enumerate(data):
             # get indices of het/hom individuals in genotype data
             het_i, hom_alt_i, info = self._get_het_hom_index(d, id_index, filters['gtgp'] == 'gt', filters['gpThres'], len(data) == 1)
+            
+            # extract gt probs and gts
+            gt_probs = [element.split(':')[2] for element in d ]
+            gt = [element.split(':')[0] for element in d ]
+            gt_probs_arr = np.array(gt_probs)
+            gt_probs_het = list(gt_probs_arr[het_i])
+            gt_probs_hom = list(gt_probs_arr[hom_alt_i])
+            gt_arr = np.array(gt)
+            gt_het = list(gt_arr[het_i])
+            gt_hom = list(gt_arr[hom_alt_i])
+
             # subset dataframe for het/hom individuals, copy needed as this will be mutated
             het = self.info_orig.iloc[het_i].copy()
             hom_alt = self.info_orig.iloc[hom_alt_i].copy()
-            het['het_hom'] = 'het'
-            hom_alt['het_hom'] = 'hom'
-            df = hom_alt.append(het, ignore_index=True)
+
+            # add main gt and probs for three genotypes
+            het['gt'] = gt_het
+            hom_alt['gt'] = gt_hom
+            het['three_gt_probs'] = gt_probs_het
+            hom_alt['three_gt_probs'] = gt_probs_hom
+            # het['het_hom'] = 'het'
+            # hom_alt['het_hom'] = 'hom'
+
+            # if specified the type of variants to be saved
+            if 'hethom' in filters:
+                if filters['hethom'] == 'hom':
+                    df = hom_alt
+                elif filters['hethom'] == 'het':
+                    df = het
+                else:
+                    # append two data frames
+                    df = hom_alt.append(het, ignore_index=True)
+
+            # append data frames
             df = self._filter(df, filters, chips)
             df['variant'] = variants[i].replace('-', ':')
             df_list.append(df)
+            
         elapsed = timeit.default_timer() - start_time
         return pd.concat(df_list)
 
@@ -288,9 +317,8 @@ class Datafetch(object):
             del filters['data_type']
             filename = variants.replace(',', '_') + '__imputed_panel__' + '_'.join([k+'_'+v for k,v in filters.items()]) + '.tsv'
         else:
-            del filters['array']
-            del filters['impchip']
-            del filters['data_type']
+            for key in ['array', 'impchip', 'data_type']:
+                del filters[key]
             filename = variants.replace(',', '_') + '__rawchip_panel__' + '_'.join([k+'_'+v for k,v in filters.items()]) + '.tsv'
         try:
             data.to_csv(sep='\t', index=False, na_rep='NA')

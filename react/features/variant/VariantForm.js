@@ -219,6 +219,23 @@ export const VariantForm = () => {
 	    </div>
 	    </div>
 	    </div>
+
+	   	<div className="buttonGroup">
+	    	<div>download</div>
+	    	<div>
+		    	<input type="radio" value="all" name="hethom" checked={filters.hethom == 'all'} onChange={filterChanged.bind(this, 'hethom', 'all')} />
+		    	<span>all</span>
+		    </div>
+		    <div>
+		    	<input type="radio" value="het" name="hethom" checked={filters.hethom == 'het'} onChange={filterChanged.bind(this, 'hethom', 'het')} />
+		    	<span>het</span>
+		    </div>
+		    <div>
+		    	<input type="radio" value="hom" name="hethom" checked={filters.hethom == 'hom'} onChange={filterChanged.bind(this, 'hethom', 'hom')} />
+		    	<span>hom</span>
+		    </div>
+	    </div>
+
 	    <div style={{flexShrink: 1}}>
 	    <button type="button" className="button" onClick={downloadRequested}>Download data</button>
 	    </div>
