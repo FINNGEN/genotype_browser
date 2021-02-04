@@ -1,34 +1,61 @@
 import logging
 
-sqlite_db = 'fgq.r6.3.db'
+sqlite_db = 'fgq.r6.4.db'
 
 basic_info_file = 'genotype_browser_dummy_data_50k_1.txt.gz'
 
-vcf_files = [
-    '1.vcf.gz',
-    '2.vcf.gz',
-    '3.vcf.gz',
-    '4.vcf.gz',
-    '5.vcf.gz',
-    '6.vcf.gz',
-    '7.vcf.gz',
-    '8.vcf.gz',
-    '9.vcf.gz',
-    '10.vcf.gz',
-    '11.vcf.gz',
-    '12.vcf.gz',
-    '13.vcf.gz',
-    '14.vcf.gz',
-    '15.vcf.gz',
-    '16.vcf.gz',
-    '17.vcf.gz',
-    '18.vcf.gz',
-    '19.vcf.gz',
-    '20.vcf.gz',
-    '21.vcf.gz',
-    '22.vcf.gz',
-    '23.vcf.gz'
-]
+vcf_files = {
+    "imputed_data": [
+        '1.vcf.gz',
+        '2.vcf.gz',
+        '3.vcf.gz',
+        '4.vcf.gz',
+        '5.vcf.gz',
+        '6.vcf.gz',
+        '7.vcf.gz',
+        '8.vcf.gz',
+        '9.vcf.gz',
+        '10.vcf.gz',
+        '11.vcf.gz',
+        '12.vcf.gz',
+        '13.vcf.gz',
+        '14.vcf.gz',
+        '15.vcf.gz',
+        '16.vcf.gz',
+        '17.vcf.gz',
+        '18.vcf.gz',
+        '19.vcf.gz',
+        '20.vcf.gz',
+        '21.vcf.gz',
+        '22.vcf.gz',
+        '23.vcf.gz'
+    ],
+    "chip_data": [
+        'chip_1.vcf.gz',
+        'chip_2.vcf.gz',
+        'chip_3.vcf.gz',
+        'chip_4.vcf.gz',
+        'chip_5.vcf.gz',
+        'chip_6.vcf.gz',
+        'chip_7.vcf.gz',
+        'chip_8.vcf.gz',
+        'chip_9.vcf.gz',
+        'chip_10.vcf.gz',
+        'chip_11.vcf.gz',
+        'chip_12.vcf.gz',
+        'chip_13.vcf.gz',
+        'chip_14.vcf.gz',
+        'chip_15.vcf.gz',
+        'chip_16.vcf.gz',
+        'chip_17.vcf.gz',
+        'chip_18.vcf.gz',
+        'chip_19.vcf.gz',
+        'chip_20.vcf.gz',
+        'chip_21.vcf.gz',
+        'chip_22.vcf.gz',
+        'chip_23.vcf.gz'
+    ]    
+}
 
 write_dir = 'out'
 
