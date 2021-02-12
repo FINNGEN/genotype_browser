@@ -59,11 +59,8 @@ class Datafetch(object):
         in_data = 1 if data_type == 'imputed' else 2
         if self.conn[threading.get_ident()].row_factory is None:
             self.conn[threading.get_ident()].row_factory = sqlite3.Row
-        c = self.conn[threading.get_ident()].cursor() 
-        
+        c = self.conn[threading.get_ident()].cursor()         
         query = 'SELECT * FROM anno WHERE variant = "%s" AND (in_data=%s OR in_data=3);' % (str(chr) + ':' + str(pos) + ':' + ref + ':' + alt, in_data)
-        print("DATA.py query:", query)
-
         c.execute(query)
         res = c.fetchone()
         if len(res) > 0:
