@@ -4,12 +4,6 @@ import { Variant } from './Variant'
 import { VariantForm } from './VariantForm'
 
 export const VariantContainer = ({ match: { params } }) => {
-
-	var dtype = useSelector(state => state.search.result.data_type)
-    if (dtype == undefined) {
-    	dtype = sessionStorage.getItem('data_type')
-    }
-    
     // external links after header
     // <div style={{paddingLeft: '20px'}}><a href={`https://results.finngen.fi/variant/${params.variant}`} target='_blank'>pheweb</a></div>
     // <div style={{paddingLeft: '10px'}}><a href={`https://gnomad.broadinstitute.org/variant/${params.variant}?dataset=gnomad_r3`} target='_blank'>gnomad</a></div>
@@ -17,10 +11,10 @@ export const VariantContainer = ({ match: { params } }) => {
     return (
 	    <div>
 	    <div style={{display: 'flex'}}>
-	    <div className="header">{params.variant || '...'} ({dtype})</div>
+	    <div className="header">{params.variant || '...'}</div>
 	    <div className="header"></div>
 	    </div>
-	    <VariantForm />
+	    <VariantForm props={params}/>
 	    <div style={{paddingTop: '10px'}}>
 	    <Variant props={params}/>
 	    </div>

@@ -14,9 +14,13 @@ class Search(object):
         self._init_db()
 
     def _get_variant(self, chr, pos, ref, alt, data_type):
-        db = "anno" if data_type == 'imputed' else 'chip_anno'
+        in_data = 1 if data_type == 'imputed' else 2
         c = self.conn[threading.get_ident()].cursor()
-        c.execute('SELECT variant FROM %s WHERE variant = "%s";' % (db, str(chr) + ':' + str(pos) + ':' + ref + ':' + alt))
+        
+        q = 'SELECT variant FROM anno WHERE variant = "%s" AND (in_data=%s OR in_data=3);' % (str(chr) + ':' + str(pos) + ':' + ref + ':' + alt, in_data)
+        print("query: ", q)
+        
+        c.execute(q)
         # c.execute('SELECT variant FROM %s WHERE variant = ?' % db, [str(chr) + ':' + str(pos) + ':' + ref + ':' + alt])
         res = c.fetchall()
         if len(res) > 0:
@@ -25,10 +29,13 @@ class Search(object):
             raise utils.NotFoundException(str(chr) + '-' + str(pos) + '-' + ref + '-' + alt)
         
     def _get_variants_by_rsid(self, rsid, data_type):
-        db = "anno" if data_type == 'imputed' else 'chip_anno'
+        in_data = 1 if data_type == 'imputed' else 2
         c = self.conn[threading.get_ident()].cursor()
-        c.execute('SELECT variant FROM %s WHERE rsid = "%s";' % (db, rsid.lower()))
-        # c.execute('SELECT variant FROM %s WHERE rsid = "%s";' % db, [rsid.lower()])
+
+        q = 'SELECT variant FROM anno WHERE rsid = "%s" AND (in_data=%s OR in_data=3);' % (rsid.lower(), in_data)
+        print("QUERY:", q)
+        
+        c.execute(q)
         res = c.fetchall()
         if len(res) > 0:
             return [r[0] for r in res]
@@ -36,10 +43,13 @@ class Search(object):
             raise utils.NotFoundException(rsid)
 
     def _get_variants_in_range(self, chr, start, end, data_type):
-        db = "anno" if data_type == 'imputed' else 'chip_anno'
+        in_data = 1 if data_type == 'imputed' else 2
         c = self.conn[threading.get_ident()].cursor()
-        query = 'SELECT variant FROM %s WHERE chr="%s" AND pos>=%s AND pos<=%s LIMIT 1;' % (db, chr, start, end)
-        c.execute(query)
+
+        q = 'SELECT variant FROM anno WHERE chr="%s" AND pos>=%s AND pos<=%s AND (in_data=%s OR in_data=3) LIMIT 1;' % (chr, start, end, in_data)
+        print("QUERY:", q)
+        
+        c.execute(q)
         res = c.fetchall()
         res_formatted = []
         if len(res) > 0:
@@ -107,8 +117,7 @@ class Search(object):
             return {
                 'query': query,
                 'type': 'variant',
-                'ids': var_ids,
-                'data_type': data_type
+                'ids': var_ids
             }
         except utils.NotFoundException as e:
             pass
@@ -117,8 +126,7 @@ class Search(object):
             return {
                 'query': query,
                 'type': 'gene',
-                'ids': [gene],
-                'data_type': data_type
+                'ids': [gene]
             }
         except utils.NotFoundException as e:
             pass
@@ -127,8 +135,7 @@ class Search(object):
             return {
                 'query': query,
                 'type': 'range',
-                'ids': var_ids,
-                'data_type': data_type
+                'ids': var_ids
             }
         except utils.NotFoundException as e:
             raise

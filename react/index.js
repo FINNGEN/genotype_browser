@@ -16,6 +16,7 @@ import { Variants } from './features/variants/Variants'
 import { Gene } from './features/gene/Gene'
 import { Range } from './features/range/Range'
 
+
 ReactDOM.render(
         <Provider store={store}>
         <BrowserRouter>
@@ -24,10 +25,10 @@ ReactDOM.render(
 	<Link to='/' style={{paddingBottom: '10px', textDecoration: 'none', color: 'black', width: '200px'}}>genotype browser</Link>
 	<Route path='/' component={SearchForm}/>
 	<Route exact path='/' component={SearchExamples}/>
-	<Route path='/variant/:variant' component={VariantContainer}/>
-    <Route path='/variants/:variants' component={Variants}/>
-	<Route path='/gene/:gene' component={Gene}/>
-    <Route path='/range/:range' component={Range}/>
+	<Route path='/variant/:variant/:data_type' component={VariantContainer}/>
+    <Route path='/variants/:variants/:data_type' component={Variants}/>
+	<Route path='/gene/:gene/:data_type' component={Gene}/>
+    <Route path='/range/:range/:data_type' component={Range}/>
         </div>
         </div>
         </BrowserRouter>

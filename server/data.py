@@ -56,11 +56,15 @@ class Datafetch(object):
         self.info_chip, self.info_orig_chip, self.cohort_list_chip, self.region_list_chip, self.info_columns_chip = self._init_info(select_chip=True)
 
     def _get_annotation(self, chr, pos, ref, alt, data_type):
-        db = "anno" if data_type == 'imputed' else 'chip_anno'
+        in_data = 1 if data_type == 'imputed' else 2
         if self.conn[threading.get_ident()].row_factory is None:
             self.conn[threading.get_ident()].row_factory = sqlite3.Row
         c = self.conn[threading.get_ident()].cursor() 
-        c.execute('SELECT * FROM %s WHERE variant = "%s";' % (db, str(chr) + ':' + str(pos) + ':' + ref + ':' + alt))
+        
+        query = 'SELECT * FROM anno WHERE variant = "%s" AND (in_data=%s OR in_data=3);' % (str(chr) + ':' + str(pos) + ':' + ref + ':' + alt, in_data)
+        print("DATA.py query:", query)
+
+        c.execute(query)
         res = c.fetchone()
         if len(res) > 0:
             return dict(res)
@@ -70,9 +74,9 @@ class Datafetch(object):
     def _get_genotype_data(self, chr, pos, ref, alt, data_type):
         chr_var = chr if chr != 23 else 'X'
         if data_type == 'imputed':
-            tabix_iter = self.tabix_files_imputed[threading.get_ident()][chr-1].fetch('chr'+str(chr), pos-1, pos)
+            tabix_iter = self.tabix_files_imputed[threading.get_ident()][chr-1].fetch('chr'+str(chr_var), pos-1, pos)
         else:
-            tabix_iter = self.tabix_files_chip[threading.get_ident()][chr-1].fetch('chr'+str(chr), pos-1, pos)
+            tabix_iter = self.tabix_files_chip[threading.get_ident()][chr-1].fetch('chr'+str(chr_var), pos-1, pos)
         var_data = None
         for row in tabix_iter:
             data = row.split('\t')            
@@ -99,8 +103,8 @@ class Datafetch(object):
                 _df = _df.loc[_df['DEATH'] == 0]
             elif filters['alive'] == 'dead':
                 _df = _df.loc[_df['DEATH'] == 1]
-            elif filters['alive'] == 'unknown':
-                _df = _df.loc[_df['DEATH'] == "NA"]
+            # elif filters['alive'] == 'unknown':
+            #     _df = _df.loc[_df['DEATH'] == "NA"]
         if 'sex' in filters:
             if filters['sex'] == 'female':
                 _df = _df.loc[_df['SEX'] == 1]
@@ -119,6 +123,40 @@ class Datafetch(object):
         return _df
 
     def _get_het_hom_index(self, data, index, use_gt, gp_thres, calc_info):
+        het_i = []
+        hom_alt_i = []
+        sum_eij = 0
+        sum_fij_minus_eij2 = 0
+        for i in index:
+            #GT:DS:GP
+            #0|0:0:1,0,0
+            s = data[i].split(':')
+            if not use_gt or calc_info:
+                gp = [float(p) for p in s[2].split(',')]
+            if calc_info:
+                dosage = float(s[1])
+                sum_eij = sum_eij + dosage
+                fij_minus_eij2 = 4*gp[2] + gp[1] - dosage*dosage
+                sum_fij_minus_eij2 = sum_fij_minus_eij2 + fij_minus_eij2
+            if use_gt:
+                gt = s[0]
+                if gt == '1|1' or gt == '1/1':
+                    hom_alt_i.append(i)
+                elif not (gt == '0|0' or gt == '0/0'):
+                    het_i.append(i)
+            else:
+                if gp[2] >= gp_thres:
+                    hom_alt_i.append(i)
+                elif gp[1] >= gp_thres:
+                    het_i.append(i)
+        if calc_info and len(index)>0:
+            theta_hat = sum_eij / (2*len(index))
+            info = 1 if theta_hat == 0 or theta_hat == 1 else 1 - sum_fij_minus_eij2 / (2*len(index)*theta_hat*(1-theta_hat))
+        else:
+            info = -1
+        return (het_i, hom_alt_i, info)
+
+    def _get_het_hom_chip_index(self, data, index):
         het_i = []
         hom_alt_i = []
         sum_eij = 0
@@ -187,7 +225,10 @@ class Datafetch(object):
         het_i = []
         hom_i = []
         for d in data:
-            het_i_d, hom_i_d, info = self._get_het_hom_index(d, id_index, filters['gtgp'] == 'gt', filters['gpThres'], len(data) == 1)
+            if data_type == 'imputed':
+                het_i_d, hom_i_d, info = self._get_het_hom_index(d, id_index, filters['gtgp'] == 'gt', filters['gpThres'], len(data) == 1)
+            else:
+                het_i_d, hom_i_d, info = self._get_het_hom_index(d, id_index, True, None, False)
             het_i.extend(het_i_d)
             hom_i.extend(hom_i_d)
         het_cnt = Counter(het_i)        
@@ -225,8 +266,11 @@ class Datafetch(object):
         id_index = list(filtered_basic_info.index) 
         for i, d in enumerate(data):
             # get indices of het/hom individuals in genotype data
-            het_i, hom_alt_i, info = self._get_het_hom_index(d, id_index, filters['gtgp'] == 'gt', filters['gpThres'], len(data) == 1)
-            
+            # het_i, hom_alt_i, info = self._get_het_hom_index(d, id_index, filters['gtgp'] == 'gt', filters['gpThres'], len(data) == 1)
+            if data_type == 'imputed':
+                het_i, hom_alt_i, info = self._get_het_hom_index(d, id_index, filters['gtgp'] == 'gt', filters['gpThres'], len(data) == 1)
+            else:
+                het_i, hom_alt_i, info = self._get_het_hom_index(d, id_index, True, None, False)
             # extract gt probs and gts
             gt_probs = [element.split(':')[2] for element in d ]
             gt = [element.split(':')[0] for element in d ]
@@ -291,6 +335,8 @@ class Datafetch(object):
         if data_type == 'chip':
             if 'impchip' in filters:
                 del filters['impchip']
+            if 'gtgp' in filters:
+                del filters['gtgp']
         data = self._count_gt(vars_data, filters, chips, data_type)
         munge_time = timeit.default_timer() - start_time
         return {
@@ -315,11 +361,12 @@ class Datafetch(object):
         data = self._count_gt_for_write(variants.split(','), vars_data, filters, chips, data_type)
         if data_type == 'imputed':
             del filters['data_type']
-            filename = variants.replace(',', '_') + '__imputed_panel__' + '_'.join([k+'_'+v for k,v in filters.items()]) + '.tsv'
+            filename = variants.replace(',', '_') + '__imputed_data__' + '_'.join([k+'_'+v for k,v in filters.items()]) + '.tsv'
         else:
             for key in ['array', 'impchip', 'data_type']:
                 del filters[key]
-            filename = variants.replace(',', '_') + '__rawchip_panel__' + '_'.join([k+'_'+v for k,v in filters.items()]) + '.tsv'
+            filename = variants.replace(',', '_') + '__rawchip_data__' + '_'.join([k+'_'+v for k,v in filters.items()]) + '.tsv'
+        data = data.drop(columns=['AGE_AT_DEATH_OR_NOW'])
         try:
             data.to_csv(sep='\t', index=False, na_rep='NA')
             output = make_response(data.to_csv(sep='\t', index=False, na_rep='NA'))
@@ -344,9 +391,7 @@ class Datafetch(object):
             vars_db = self.get_genomic_range_variants(gene_db[0]['chr'], gene_db[0]['start'], gene_db[0]['end'], data_type)
             res_vars = vars_db['data']
         # drop columns we don't show
-        exclude_cols = ['gene_most_severe', 'consequence_gnomad', 
-                        'consequence_genomes', 'consequence_exomes',
-                        'chr', 'pos']
+        exclude_cols = ['gene_most_severe', 'consequence_gnomad', 'chr', 'pos', 'in_data']
         cols = [col for col in res_vars[0].keys() if col not in exclude_cols]
         return {
             'gene': gene,
@@ -356,11 +401,11 @@ class Datafetch(object):
         }
 
     def get_genomic_range_variants(self, chr, start, end, data_type):
-        db = "anno" if data_type == 'imputed' else 'chip_anno'
+        in_data = 1 if data_type == 'imputed' else 2
         if self.conn[threading.get_ident()].row_factory is None:
             self.conn[threading.get_ident()].row_factory = sqlite3.Row
         c = self.conn[threading.get_ident()].cursor()
-        query = 'SELECT * FROM %s WHERE chr=%s AND pos>=%s AND pos<=%s;' % (db, chr, start, end)
+        query = 'SELECT * FROM anno WHERE chr=%s AND pos>=%s AND pos<=%s AND (in_data=%s OR in_data=3);' % (chr, start, end, in_data)
         c.execute(query)
         res = [dict(row) for row in c.fetchall()]
         if len(res) == 0:
@@ -370,9 +415,7 @@ class Datafetch(object):
             item['variant'] = '-'.join(item['variant'].split(':'))
             data.append(item)
         genomic_range = "%s:%s-%s" % (chr, start, end)                     
-        exclude_cols = ['gene_most_severe', 'consequence_gnomad', 
-                        'consequence_genomes', 'consequence_exomes',
-                        'chr', 'pos']
+        exclude_cols = ['gene_most_severe', 'consequence_gnomad', 'chr', 'pos', 'in_data']
         cols = [col for col in data[0].keys() if col not in exclude_cols]
         return {
             'range': genomic_range,

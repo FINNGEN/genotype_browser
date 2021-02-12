@@ -19,7 +19,7 @@ const afFilter = (filter, row) => {
     }
 }
 
-export const getColumns = (gene, checked, handleCheck, handleCheckAll) => {
+export const getColumns = (gene, checked, handleCheck, handleCheckAll, dtype) => {
     if (!gene || !gene.columns) return []
     const cols = [
 	{
@@ -47,7 +47,7 @@ export const getColumns = (gene, checked, handleCheck, handleCheckAll) => {
 		accessor: c,
 		style: {textAlign: 'right'},
 		headerStyle: {textAlign: 'right'},
-		Cell: props => <Link to={`/variant/${props.value.replace(/:/g, '-')}`} target="_blank">{props.value}</Link>
+		Cell: props => <Link to={`/variant/${props.value.replace(/:/g, '-')}/${dtype}`} target="_blank">{props.value}</Link>
 	    }
 	} else if (c == 'rsid') {
 	    return {
@@ -105,7 +105,7 @@ export const getColumns = (gene, checked, handleCheck, handleCheckAll) => {
 		accessor: c,
 		style: {textAlign: 'right'},
 		headerStyle: {textAlign: 'right'},
-		Cell: props => +(props.value).toExponential(2),
+		Cell: props => props.value == 'NA' ? 'NA' : (props.value).toExponential(2),
 		filterMethod: afFilter
 	    }
 	} else if (c == 'af_genomes') {

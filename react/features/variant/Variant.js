@@ -6,16 +6,21 @@ import {
     gtCount,
     setData
 } from '../data/dataSlice'
+import { setDataType } from '../search/searchSlice'
+
 
 export const Variant = (props) => {
 
     const gtCnt = useSelector(gtCount)
     const dispatch = useDispatch()
     const data = useSelector(state => state.data)
-    var dtype = useSelector(state => state.search.result.data_type)
-    if (dtype == undefined) {
-    	dtype = sessionStorage.getItem('data_type')
-    }
+   	var dtype = props.props.data_type	
+
+   	// update state if variant was open in a separate window and thus the
+    // data type is obtained from the url params
+    useEffect(() => {
+		dispatch(setDataType({content: dtype}))
+    }, [])
 
     useEffect(() => {
 	if (data.status == 'idle') { //fetch by default
@@ -50,27 +55,29 @@ export const Variant = (props) => {
 	//after info score, there's a bug though that this doesn't currently update because it's not in data.data
 	//<tr><td>wall time</td><td style={{textAlign: 'right'}}>{`${data.time.fetch.toPrecision(3)}+${data.time.munge.toPrecision(3)}`}</td></tr>
 	
-	// console.log("dtype:", dtype)
 	var impscore = ''
 	if (dtype == 'imputed') {
 		impscore = (<tr><td>imputation info score</td><td style={{textAlign: 'right'}}>{data.data.info < 0 ? 'NA' : data.data.info.toPrecision(3)}</td></tr>)
 	} 
 
 	content = (<div>
-		   <div style={{display: 'flex'}}>
-		   <table style={{width: '200px'}}>
-		   <tbody>
-		   <tr><td style={{textAlign: 'right'}}>{data.data.total_indiv}</td><td>individual{data.data.total_indiv == 1 ? '' : 's'}</td></tr>
-		   <tr><td style={{textAlign: 'right'}}>{gtCnt[0]}</td><td>heterozygote{gtCnt[0] == 1 ? '' : 's'}</td></tr>
-		   <tr><td style={{textAlign: 'right'}}>{gtCnt[1]}</td><td>homozygote{gtCnt[1] == 1 ? '' : 's'}</td></tr>
-		   </tbody>
-		   </table>
-		   <table style={{paddingLeft: '20px'}}>
-		   <tbody>
-		   <tr><td>allele frequency</td><td style={{textAlign: 'right'}}>{data.data.total_af < 0 ? 'NA' : data.data.total_af.toPrecision(3)}</td></tr>
-		   {impscore}
-		   </tbody>
-		   </table>
+		   <div style={{display: 'flex', flexDirection: 'column'}}>
+		   <div><h3 style={{marginTop: "20px", marginBottom: "10px"}}>Result summary statistics</h3></div>
+		   <div style={{display: 'flex', flexDirection: 'row'}}>
+			   <table style={{width: '200px'}}>
+			   <tbody>
+			   <tr><td style={{textAlign: 'right'}}>{data.data.total_indiv}</td><td>individual{data.data.total_indiv == 1 ? '' : 's'}</td></tr>
+			   <tr><td style={{textAlign: 'right'}}>{gtCnt[0]}</td><td>heterozygote{gtCnt[0] == 1 ? '' : 's'}</td></tr>
+			   <tr><td style={{textAlign: 'right'}}>{gtCnt[1]}</td><td>homozygote{gtCnt[1] == 1 ? '' : 's'}</td></tr>
+			   </tbody>
+			   </table>
+			   <table style={{paddingLeft: '20px'}}>
+			   <tbody>
+			   <tr><td>allele frequency</td><td style={{textAlign: 'right'}}>{data.data.total_af < 0 ? 'NA' : data.data.total_af.toPrecision(3)}</td></tr>
+			   {impscore}
+			   </tbody>
+			   </table>
+		   </div>
 		   </div>
 		   <VariantPlots />
 		   </div>)

@@ -115,7 +115,7 @@ export const dataSlice = createSlice({
 	    } catch(e) {
 		if (isQuotaExceeded(e)) {
 		    console.warn('sessionstorage quota exceeded')
-		    //sessionStorage.clear()
+		    sessionStorage.clear()
 		} else {
 		    alert(e)
 		}

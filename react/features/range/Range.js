@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from 'react-redux'
 import ReactTable from 'react-table-v6'
 import { fetchData, setData } from './rangeSlice'
 import { getColumns } from '../gene/GeneTable'
+import { setDataType } from '../search/searchSlice'
 
 export const Range = (props) => {
 
@@ -11,7 +12,12 @@ export const Range = (props) => {
     const [filt, setFilt] = useState([])
     const [checked, setChecked] = useState([])
     const reactTable = useRef(null)
-    const dtype = useSelector(state => state.search.result.data_type)
+
+    // const dtype = useSelector(state => state.search.result.data_type)
+    var dtype = props.match.params.data_type
+    useEffect(() => {
+		dispatch(setDataType({content: dtype}))
+    }, [])
 
     useEffect(() => {
 	if (range.status == 'idle') {
@@ -49,7 +55,7 @@ export const Range = (props) => {
 
     const goToVariant = event => {
 	const variants = checked.map((c, i) => c ? range.data[i].variant.replace(/:/g, '-') : null).filter(d => d!==null).join(',')
-	window.open(`${window.location.origin}/variant/${variants}`, '_blank')
+	window.open(`${window.location.origin}/variant/${variants}/${dtype}`, '_blank')
     }
     
     let content = (<div>loading...</div>)
@@ -65,7 +71,7 @@ export const Range = (props) => {
     }
     if (range.status == 'done') {// && checked.length > 0) {
 	// maybe need to get every time because checkboxes are react-controlled
-	const columns = getColumns(range, checked, handleCheck, handleCheckAll)
+	const columns = getColumns(range, checked, handleCheck, handleCheckAll, dtype)
 	const numShown = (reactTable.current && reactTable.current.getResolvedState().sortedData.length) || range.data.length
 	const numSelected = checked.filter(c => c).length
 	content =  (

@@ -17,11 +17,15 @@ export const searchSlice = createSlice({
     name: 'search',
     initialState: {
 	status: 'idle',
-	result: {}
+	result: {},
+	data_type: 'imputed'
     },
     reducers: {
 	setResult: (state, action) => {
 	    state.result = action.payload
+	},
+	setDataType: (state, action) => {
+	    state.data_type = action.payload.content
 	}
     },
     extraReducers: {
@@ -34,7 +38,6 @@ export const searchSlice = createSlice({
 	    state.status = 'done'
 	    state.result = action.payload
 	    state.error = null
-	    sessionStorage.setItem('data_type', action.payload.data_type)
 	},
 	[search.rejected]: (state, action) => {
 	    state.status = 'failed'
@@ -43,6 +46,6 @@ export const searchSlice = createSlice({
     }
 })
 
-export const { setResult } = searchSlice.actions
+export const { setResult, setDataType } = searchSlice.actions
 
 export default searchSlice.reducer

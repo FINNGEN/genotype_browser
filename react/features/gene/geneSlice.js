@@ -1,5 +1,29 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 
+// http://crocodillon.com/blog/always-catch-localstorage-security-and-quota-exceeded-errors
+function isQuotaExceeded(e) {
+  var quotaExceeded = false;
+  if (e) {
+    if (e.code) {
+      switch (e.code) {
+        case 22:
+          quotaExceeded = true;
+          break;
+        case 1014:
+          // Firefox
+          if (e.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
+            quotaExceeded = true;
+          }
+          break;
+      }
+    } else if (e.number === -2147024882) {
+      // Internet Explorer 8
+      quotaExceeded = true;
+    }
+  }
+  return quotaExceeded;
+}
+
 export const fetchData = createAsyncThunk('gene/fetchData', async (url, { rejectWithValue }) => {
     try {
 	const response = await fetch(url)
@@ -38,7 +62,19 @@ export const geneSlice = createSlice({
 	    state.data = action.payload.data
 	    state.gene = action.payload.gene
 	    state.columns = action.payload.columns
-	    sessionStorage.setItem(`${action.payload.gene}_${action.payload.gene.data_type}`, JSON.stringify(action.payload))
+	    // console.log("geneSlice.js, action.payload:", action.payload, action.payload.data.length)
+	    if (action.payload.data.length < 5000){
+	    	try {
+				sessionStorage.setItem(`, ${action.payload.gene}_${action.payload.data_type}`, JSON.stringify(action.payload))
+			    } catch(e) {
+				if (isQuotaExceeded(e)) {
+				    console.warn('sessionstorage quota exceeded, clear storage!')
+				    sessionStorage.clear()
+				} else {
+				    alert(e)
+				}
+			}
+	    }
 	},
 	[fetchData.rejected]: (state, action) => {
 	    state.status = 'failed'

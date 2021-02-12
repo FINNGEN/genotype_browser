@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, request, abort, render_template
 from flask_compress import Compress
 import imp, logging
+import re
 
 from utils import parse_chr, parse_region, ParseException, NotFoundException
 from data import Datafetch
@@ -85,6 +86,22 @@ def range(range):
     except NotFoundException as e:
         abort(404, 'genomic range not in data')
     return jsonify(data)
+
+@app.route('/api/v1/clusterplot/<plot_type>/<variant>')
+def clusterplot(plot_type, variant):
+    var = re.sub('-', '_', variant)
+    arr = var.split('_')
+    arr[0] = 'X' if arr[0] == '23' else arr[0]    
+    filename = config['cluster_plots_location'] + '/' + plot_type + '/' + '_'.join(arr) + '.png'
+    try:
+        with open(filename, 'rb') as f:
+            blob = f.read()
+    except ParseException as e:
+        abort(400, 'could not parse request for the given variant')
+    except FileNotFoundError as e:
+        abort(404, 'could not find SNP plot for the given variant')
+    return blob
+
 
 if __name__ == '__main__':
     app.run()

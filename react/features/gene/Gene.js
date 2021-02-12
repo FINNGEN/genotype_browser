@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from 'react-redux'
 import ReactTable from 'react-table-v6'
 import { fetchData, setData } from './geneSlice'
 import { getColumns } from './GeneTable'
+import { setDataType } from '../search/searchSlice'
 
 export const Gene = (props) => {
 
@@ -11,9 +12,13 @@ export const Gene = (props) => {
     const [filt, setFilt] = useState([])
     const [checked, setChecked] = useState([])
     const reactTable = useRef(null)
-    const dtype = useSelector(state => state.search.result.data_type)
+
     //const columns = useMemo(() => getColumns(gene, checked, handleCheck, handleCheckAll), [gene, checked])
-    
+    var dtype = props.match.params.data_type
+    useEffect(() => {
+		dispatch(setDataType({content: dtype}))
+    }, [])
+
     useEffect(() => {
 	if (gene.status == 'idle') {
 	    dispatch(fetchData(`/api/v1/gene_variants/${props.match.params.gene}?` + new URLSearchParams({...{'data_type': dtype}})))
@@ -53,7 +58,7 @@ export const Gene = (props) => {
 	const variants = checked.map((c, i) => c ? gene.data[i].variant.replace(/:/g, '-') : null).filter(d => d!==null).join(',')
 	//get won't work for a large number of variants
 	//maybe put variant list to localstorage and read in the opened tab or hash variant list
-	window.open(`${window.location.origin}/variant/${variants}`, '_blank')
+	window.open(`${window.location.origin}/variant/${variants}/${dtype}`, '_blank')
     }
     
     let content = (<div>loading...</div>)
@@ -69,7 +74,7 @@ export const Gene = (props) => {
     }
     if (gene.status == 'done') {// && checked.length > 0) {
 	// maybe need to get every time because checkboxes are react-controlled
-	const columns = getColumns(gene, checked, handleCheck, handleCheckAll)
+	const columns = getColumns(gene, checked, handleCheck, handleCheckAll, dtype)
 	const numShown = (reactTable.current && reactTable.current.getResolvedState().sortedData.length) || gene.data.length
 	const numSelected = checked.filter(c => c).length
 	content =  (
