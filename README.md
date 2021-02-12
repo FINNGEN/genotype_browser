@@ -9,7 +9,8 @@ Get dummy data, annotation db and configuration file, e.g.
 mkdir data && cd data
 gsutil -mq cp gs://to_solita/genotype_50k/vcf/* .
 gsutil -mq cp gs://to_solita/genotype_20k_chip/vcf/* .
-gsutil -mq cp gs://to_solita/genotype_browser/1/* .
+gsutil -mq cp gs://to_solita/genotype_browser/1/fgq.r6.4.db . 
+gsutil -mq cp gs://to_solita/genotype_browser/1/genotype_browser_dummy_data_50k_1.txt.gz . 
 curl https://raw.githubusercontent.com/FINNGEN/genotype_browser/main/config/config.py.dummy -o config.py
 ```
 
