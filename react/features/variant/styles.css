@@ -1,0 +1,19 @@
+
+table.anno {
+	border-collapse: collapse;
+}
+
+table.anno th {
+	border-collapse: collapse;
+	padding-top: 12px;
+	padding-bottom: 12px;
+	text-align: center;
+	border: 1px solid #ddd;
+	padding: 8px;
+}
+
+table.anno td {
+	border: 1px solid #ddd;
+	padding: 8px;
+	text-align: center;
+}

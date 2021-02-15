@@ -43,11 +43,11 @@ export const Variant = (props) => {
     let content = (<div>loading...</div>)
     if (data.status == 'failed') {
 	const errorMsg = data.error.status == 400 ?
-	      '400 bad request, did you format the variant correctly? e.g. 7-5397122-C-T' :
+	      'Bad request, did you format the variant correctly? e.g. 7-5397122-C-T' :
 	      data.error.status == 404 ?
-	      '404 variant not found, sorry' :
+	      'Variant not found.' :
 	      data.error.status == 500 ?
-	      '500 internal server error, let us know' :
+	      'Internal server error, let us know.' :
 	      `${data.error.status} oh no, something went wrong`
 	content = (<div>{errorMsg}</div>)
     }

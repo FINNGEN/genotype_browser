@@ -97,6 +97,8 @@ class Search(object):
             pass
         except utils.NotFoundException as e:
             pass
+        except ValueError as e:
+            pass
         if len(var_ids) > 0:
             return var_ids
         else:

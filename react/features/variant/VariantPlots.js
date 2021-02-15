@@ -5,7 +5,6 @@ import { VariantPlotAge } from './VariantPlotAge'
 import { VariantClusterPlot } from './VariantClusterPlot'
 
 export const VariantPlots = () => {
-
     return (
 	    <div>
 	    <VariantPlotCohort />

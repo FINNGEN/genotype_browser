@@ -42,6 +42,7 @@ export const searchSlice = createSlice({
 	[search.rejected]: (state, action) => {
 	    state.status = 'failed'
 	    state.error = action.payload
+	    // console.log("searchSlice.js state.error:", action.payload)
 	}
     }
 })

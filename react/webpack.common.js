@@ -16,18 +16,22 @@ module.exports = {
 		// use: ['style-loader', 'css-loader'],
                 query: {
                     presets: [
-			['@babel/preset-env',
-			 {
-			     targets: {
-				 esmodules: true,
-			     }
-			 }],
-			'@babel/preset-react'
-		    ]
+            			['@babel/preset-env',
+            			 {
+            			     targets: {
+            				 esmodules: true,
+            			     }
+            			 }],
+            			'@babel/preset-react'
+            		    ]
                 },
                 exclude: /node_modules/
+            },
+            { 
+              test: /\.css$/, 
+              loader: "style-loader!css-loader" 
             }
-        ]
+        ] 
     },
     plugins: [
     ]

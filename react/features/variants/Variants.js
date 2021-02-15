@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux'
 
 export const Variants = ({ match: { params } }) => {
     const result = useSelector(state => state.search.result)
+    
     return (
 	    <div>
 	    <div>multiple variants found:</div>

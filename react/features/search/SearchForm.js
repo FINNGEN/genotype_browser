@@ -53,6 +53,17 @@ export const SearchForm = () => {
 	}
     }
 
+    var error_message = null
+    if (error) {
+    	if (error.status == 404){
+    		error_message = 'Not found in the data.'
+    	} else if (error.status == 500) {
+    		error_message = 'Internal server error, let us know.'
+    	} else {
+    		error_message = error.message
+    	}
+    }
+
     return (
 	    <div style={{display: 'flex', paddingBottom: '20px'}}>
 	    <label style={{paddingRight: '10px'}}>
@@ -66,7 +77,7 @@ export const SearchForm = () => {
 	    </div>
 	    <button type="button" className="button" onClick={handleSearch}>search</button>
 	    <div style={{paddingLeft: '10px'}}>{clientError}</div>
-	    <div style={{paddingLeft: '10px'}}>{error && error.message}</div>
+	    <div style={{paddingLeft: '10px'}}>{error && error_message}</div>
 	    </div>
     )
 }

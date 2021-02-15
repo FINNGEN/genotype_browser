@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from 'react-redux'
 import { setFilter, setOption, setServerOption } from '../data/dataSlice'
 import { setDataType } from '../search/searchSlice'
 import validator from 'validator'
-
+import './styles.css'
 
 export const VariantForm = (props) => {
 
@@ -163,50 +163,32 @@ export const VariantForm = (props) => {
 
 		<div><h3 style={{marginTop: "10px", marginBottom: "10px"}}>Variant annotation</h3></div>
 
-		<div style={{display: "flex", flexDirection: "row"}}>
-
-			<div style={{display: "flex", flexDirection: "column"}}>
-			<div>rsid</div>
-			<div>{rsid_tag}</div>
+			<div>
+			<table className="anno">
+				<thead>
+				<tr>
+					<th>rsid</th>
+					<th>Gene most severe</th>
+					<th>Concequence most severe</th>
+					<th>AF</th>
+					<th>Info</th>
+					<th>Fin enr gnomad2 genomes/exomes</th>
+				</tr>
+				</thead>
+				<tbody>
+				<tr>
+					<td>{rsid_tag}</td>
+					<td>{gene_tag}</td>
+					<td>{annotation[0].most_severe.replace(/_/g, ' ')}</td>
+					<td>{af}</td>
+					<td>{annotation_info}</td>
+					<td>{enr_genomes}/{enr_exomes}</td>
+				</tr>
+				</tbody>
+			</table>
 			</div>
 
-			<div className="vl" style={{ borderLeft: "1px solid #dddddd", marginLeft: "20px", marginRight: "20px"}}></div>
-
-			<div style={{display: "flex", flexDirection: "column", marginLeft: "10px"}}>
-			<div>Gene most severe</div>
-			<div>{gene_tag}</div>
-			</div>
-
-			<div className="vl" style={{ borderLeft: "1px solid #dddddd", marginLeft: "20px", marginRight: "20px"}}></div>
-
-			<div style={{display: "flex", flexDirection: "column", marginLeft: "10px"}}>
-			<div>Concequence most severe</div>
-			<div>{annotation[0].most_severe.replace(/_/g, ' ')}</div>
-			</div>
-
-			<div className="vl" style={{ borderLeft: "1px solid #dddddd", marginLeft: "20px", marginRight: "20px"}}></div>
-
-			<div style={{display: "flex", flexDirection: "column", marginLeft: "10px"}}>
-			<div>AF</div>
-			<div>{af}</div>
-			</div>
-
-			<div className="vl" style={{ borderLeft: "1px solid #dddddd", marginLeft: "20px", marginRight: "20px"}}></div>
-
-			<div style={{display: "flex", flexDirection: "column", marginLeft: "10px"}}>
-			<div>Info</div>
-			<div>{annotation_info}</div>
-			</div>
-
-			<div className="vl" style={{ borderLeft: "1px solid #dddddd", marginLeft: "20px", marginRight: "20px"}}></div>
-
-			<div style={{display: "flex", flexDirection: "column", marginLeft: "10px"}}>
-			<div>Fin enr gnomad2 genomes/exomes</div>
-			<div>{enr_genomes}/{enr_exomes}</div>
-			</div>
-		</div>
-
-	  </div> : null
+	</div> : null
 
     return (
 	    <div style={{marginTop: "10px"}}>

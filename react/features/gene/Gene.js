@@ -64,11 +64,11 @@ export const Gene = (props) => {
     let content = (<div>loading...</div>)
     if (gene.status == 'failed') {
 	const errorMsg = gene.error.status == 400 ?
-	      '400 bad request, interesting' :
+	      'Bad request' :
 	      gene.error.status == 404 ?
-	      '404 gene not found, sorry' :
+	      'Gene not found.' :
 	      gene.error.status == 500 ?
-	      '500 internal server error, let us know' :
+	      'Internal server error, let us know.' :
 	      `${gene.error.status} oh no, something went wrong`
 	content = (<div>{errorMsg}</div>)
     }

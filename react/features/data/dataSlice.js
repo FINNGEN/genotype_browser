@@ -107,7 +107,7 @@ export const dataSlice = createSlice({
 	    state.annotation = action.payload.annotation
 	    state.data = action.payload.data
 	    state.time = action.payload.time
-	    console.log(action.payload)
+	    // console.log(action.payload)
 	    const ordered = {}
 	    Object.keys(action.payload.data.filters).sort().forEach(key => { ordered[key] = action.payload.data.filters[key] })
 	    try {
@@ -125,6 +125,7 @@ export const dataSlice = createSlice({
 	[fetchData.rejected]: (state, action) => {
 	    state.status = 'failed'
 	    state.error = action.payload
+	    // console.log("dataSlice.js state.error:", action.payload)
 	},
 	[writeData.pending]: (state, action) => {
 	    state.write_status = 'writing'

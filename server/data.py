@@ -346,7 +346,15 @@ class Datafetch(object):
             },
             'data_type': data_type
         }
-    
+
+    def check_var_in_chip(self, variant):
+        chr, pos, ref, alt = utils.parse_variant(variant)
+        var_data = self._get_genotype_data(chr, pos, ref, alt, 'chip')
+        if var_data is not None:
+            return True
+        else:
+            return False
+
     def write_variants(self, variants, filters, data_type):
         vars_data = []
         for variant in variants.split(','):

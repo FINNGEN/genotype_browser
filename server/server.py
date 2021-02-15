@@ -77,8 +77,8 @@ def write_variants(variants):
 
 @app.route('/api/v1/range/<range>')
 def range(range):
+    data_type = request.args.get('data_type')
     try:
-        data_type = request.args.get('data_type')
         chr, start, end = parse_region(range)
         data = fetch.get_genomic_range_variants(chr, start, end, data_type)
     except ParseException as e:
@@ -89,17 +89,21 @@ def range(range):
 
 @app.route('/api/v1/clusterplot/<plot_type>/<variant>')
 def clusterplot(plot_type, variant):
-    var = re.sub('-', '_', variant)
-    arr = var.split('_')
-    arr[0] = 'X' if arr[0] == '23' else arr[0]    
-    filename = config['cluster_plots_location'] + '/' + plot_type + '/' + '_'.join(arr) + '.png'
     try:
+        var = re.sub('-', '_', variant)
+        arr = var.split('_')
+        arr[0] = 'X' if arr[0] == '23' else arr[0] 
+        exists_in_chip = fetch.check_var_in_chip(variant)
+        filename = config['cluster_plots_location'] + '/' + plot_type + '/' + '_'.join(arr) + '.png'
         with open(filename, 'rb') as f:
             blob = f.read()
     except ParseException as e:
-        abort(400, 'could not parse request for the given variant')
+        abort(400, 'could not parse given variant')
     except FileNotFoundError as e:
-        abort(404, 'could not find SNP plot for the given variant')
+        if exists_in_chip:
+            abort(404, 'varaint exists in raw chip but no plot was found')
+        else:
+            abort(410, 'varaint does not exist in raw chip and no plot was found')
     return blob
 
 

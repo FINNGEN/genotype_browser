@@ -61,11 +61,11 @@ export const Range = (props) => {
     let content = (<div>loading...</div>)
     if (range.status == 'failed') {
 	const errorMsg = range.error.status == 400 ?
-	      '400 bad request, interesting' :
+	      'Bad request' :
 	      range.error.status == 404 ?
-	      '404 range not found, sorry' :
+	      'Variants not found in the given range.' :
 	      range.error.status == 500 ?
-	      '500 internal server error, let us know' :
+	      'Internal server error, let us know.' :
 	      `${range.error.status} oh no, something went wrong`
 	content = (<div>{errorMsg}</div>)
     }
