@@ -268,12 +268,7 @@ class Datafetch(object):
                 het_i, hom_alt_i, info = self._get_het_hom_index(d, id_index, filters['gtgp'] == 'gt', filters['gpThres'], len(data) == 1)
             else:
                 het_i, hom_alt_i, info = self._get_het_hom_index(d, id_index, True, None, False)
-            # extract gt probs and gts
-            gt_probs = [element.split(':')[2] for element in d ]
             gt = [element.split(':')[0] for element in d ]
-            gt_probs_arr = np.array(gt_probs)
-            gt_probs_het = list(gt_probs_arr[het_i])
-            gt_probs_hom = list(gt_probs_arr[hom_alt_i])
             gt_arr = np.array(gt)
             gt_het = list(gt_arr[het_i])
             gt_hom = list(gt_arr[hom_alt_i])
@@ -282,11 +277,18 @@ class Datafetch(object):
             het = self.info_orig.iloc[het_i].copy()
             hom_alt = self.info_orig.iloc[hom_alt_i].copy()
 
+            # extract gt probs and gts
+            if data_type == 'imputed':
+                gt_probs = [element.split(':')[2] for element in d ]
+                gt_probs_arr = np.array(gt_probs)
+                gt_probs_het = list(gt_probs_arr[het_i])
+                gt_probs_hom = list(gt_probs_arr[hom_alt_i])
+                het['three_gt_probs'] = gt_probs_het
+                hom_alt['three_gt_probs'] = gt_probs_hom
+
             # add main gt and probs for three genotypes
             het['gt'] = gt_het
             hom_alt['gt'] = gt_hom
-            het['three_gt_probs'] = gt_probs_het
-            hom_alt['three_gt_probs'] = gt_probs_hom
             # het['het_hom'] = 'het'
             # hom_alt['het_hom'] = 'hom'
 
