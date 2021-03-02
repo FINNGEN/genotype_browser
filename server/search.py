@@ -53,7 +53,7 @@ class Search(object):
 
     def _search_gene(self, query, data_type):
         c = self.conn[threading.get_ident()].cursor()
-        c.execute('SELECT * FROM genes WHERE gene_name = ? LIMIT 1', [query])
+        c.execute('SELECT * FROM genes WHERE gene_name = ? OR gene_name = ? LIMIT 1', [query, query.upper()])
         res_gene = c.fetchall()
         if len(res_gene) > 0:
             gene = res_gene[0]

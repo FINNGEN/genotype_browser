@@ -173,7 +173,8 @@ class Datafetch(object):
                 gt = s[0]
                 if gt == '1|1' or gt == '1/1':
                     hom_alt_i.append(i)
-                elif not (gt == '0|0' or gt == '0/0'):
+                # elif not (gt == '0|0' or gt == '0/0'):
+                elif not (gt == '0|0' or gt == '0/0') and not (gt == '.|.' or gt == './.'):
                     het_i.append(i)
             else:
                 if gp[2] >= gp_thres:
@@ -214,10 +215,13 @@ class Datafetch(object):
     def _count_gt(self, data, filters, chips, data_type):
         if data_type == 'imputed':
             filtered_basic_info = self._filter(self.info, filters, chips)
+            info_df = self.info
             info_columns = self.info_columns
         else:
             filtered_basic_info = self._filter(self.info_chip, filters, chips)
+            info_df = self.info_chip
             info_columns = self.info_columns_chip
+
         id_index = list(filtered_basic_info.index)
         het_i = []
         hom_i = []
@@ -236,8 +240,8 @@ class Datafetch(object):
             multihet = [i for i in het_cnt if het_cnt[i] > 1]
             hom_i = set().union(hom_i, multihet)
         # if an individual is homozygous for a variant, don't count as heterozygous for other variants
-        het = self.info.iloc[[i for i in het_i if i not in hom_i]]
-        hom = self.info.iloc[list(hom_i)]
+        het = info_df.iloc[[i for i in het_i if i not in hom_i]]
+        hom = info_df.iloc[list(hom_i)]
         agg = self._aggregate_het_hom(het, hom, filtered_basic_info, data_type)
         total_af = (len(het) + 2*len(hom))/len(filtered_basic_info)/2 if len(filtered_basic_info) > 0 else -1
         het = het.to_numpy().T.tolist()
@@ -258,8 +262,10 @@ class Datafetch(object):
         df_list = []
         if data_type == 'imputed':
             filtered_basic_info = self._filter(self.info, filters, chips)
+            info_orig = self.info_orig
         else:
             filtered_basic_info = self._filter(self.info_chip, filters, chips)
+            info_orig = self.info_orig_chip
         id_index = list(filtered_basic_info.index) 
         for i, d in enumerate(data):
             # get indices of het/hom individuals in genotype data
@@ -274,8 +280,8 @@ class Datafetch(object):
             gt_hom = list(gt_arr[hom_alt_i])
 
             # subset dataframe for het/hom individuals, copy needed as this will be mutated
-            het = self.info_orig.iloc[het_i].copy()
-            hom_alt = self.info_orig.iloc[hom_alt_i].copy()
+            het = info_orig.iloc[het_i].copy()
+            hom_alt = info_orig.iloc[hom_alt_i].copy()
 
             # extract gt probs and gts
             if data_type == 'imputed':
@@ -390,7 +396,7 @@ class Datafetch(object):
         if self.conn[threading.get_ident()].row_factory is None:
             self.conn[threading.get_ident()].row_factory = sqlite3.Row
         c = self.conn[threading.get_ident()].cursor()
-        c.execute('SELECT * FROM genes WHERE gene_name = ?', [gene])
+        c.execute('SELECT * FROM genes WHERE gene_name = ? OR gene_name = ?', [gene, gene.upper()])
         gene_db = [dict(row) for row in c.fetchall()]
         if len(gene_db) == 0:
             raise utils.NotFoundException()
