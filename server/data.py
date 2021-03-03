@@ -173,8 +173,7 @@ class Datafetch(object):
                 gt = s[0]
                 if gt == '1|1' or gt == '1/1':
                     hom_alt_i.append(i)
-                # elif not (gt == '0|0' or gt == '0/0'):
-                elif not (gt == '0|0' or gt == '0/0') and not (gt == '.|.' or gt == './.'):
+                elif (gt == '0|1' or gt == '0/1' or gt == '1|0' or gt == '1/0'):
                     het_i.append(i)
             else:
                 if gp[2] >= gp_thres:
