@@ -65,7 +65,7 @@ export const dataSlice = createSlice({
 	    impchip: 'all', // 'all', 'imp' or 'chip'
 	    gtgp: 'gt', // 'gt' or 'gp'
 	    gpThres: 0.95, // if you change this, change also in VariantForm to allow caching
-	    hethom: 'all' // 'all', 'het', 'hom': specify individuals with which type of variant should be downloaded
+	    hethom: 'all' // 'all', 'het', 'hom', 'wt_hom': specify individuals with which type of variant should be downloaded
 	},
 	options: {
 	    bbreg: 'biobank', // 'biobank' or 'region'

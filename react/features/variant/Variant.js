@@ -14,7 +14,8 @@ export const Variant = (props) => {
     const gtCnt = useSelector(gtCount)
     const dispatch = useDispatch()
     const data = useSelector(state => state.data)
-   	var dtype = props.props.data_type	
+   	var dtype = props.props.data_type
+   	const source = dtype == 'imputed' ? 'Imputed data' : 'Raw chip data'
 
    	// update state if variant was open in a separate window and thus the
     // data type is obtained from the url params
@@ -29,7 +30,7 @@ export const Variant = (props) => {
 	    const unordered = {...data.filters, ...data.serverOptions, ...{'data_type': dtype}}
 	    const ordered = {}
 	    Object.keys(unordered).sort().forEach(key => { ordered[key] = unordered[key] })
-	    console.log('Variant.js:', `${props.props.variant}+${JSON.stringify(ordered)}`)
+	    // console.log('Variant.js:', `${props.props.variant}+${JSON.stringify(ordered)}`)
 	    const stored = sessionStorage.getItem(`${props.props.variant}+${JSON.stringify(ordered)}`)
 	    if (stored) {
 			// console.log('cache hit')
@@ -45,7 +46,7 @@ export const Variant = (props) => {
 	const errorMsg = data.error.status == 400 ?
 	      'Bad request, did you format the variant correctly? e.g. 7-5397122-C-T' :
 	      data.error.status == 404 ?
-	      'Variant not found.' :
+	      `Variant not found in ${source.toLowerCase()}.` :
 	      data.error.status == 500 ?
 	      'Internal server error, let us know.' :
 	      `${data.error.status} oh no, something went wrong`

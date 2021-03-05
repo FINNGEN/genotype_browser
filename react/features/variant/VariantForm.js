@@ -18,6 +18,7 @@ export const VariantForm = (props) => {
     // update state if variant was open in a separate window and thus the
     // data type is obtained from the url params
     var dtype = props.props.data_type
+    const source = dtype == 'imputed' ? 'Imputed data' : 'Raw chip data'
     useEffect(() => {
 		dispatch(setDataType({content: dtype}))
     }, [])
@@ -157,7 +158,7 @@ export const VariantForm = (props) => {
 			</div>
 		)
 	}
-
+	
 	const anno = annotation && annotation.length == 1 ?
 	<div style={{display: "flex", flexDirection: "column"}}>
 
@@ -168,6 +169,7 @@ export const VariantForm = (props) => {
 				<thead>
 				<tr>
 					<th>rsid</th>
+					<th>GT source</th>
 					<th>Gene most severe</th>
 					<th>Concequence most severe</th>
 					<th>AF</th>
@@ -178,6 +180,7 @@ export const VariantForm = (props) => {
 				<tbody>
 				<tr>
 					<td>{rsid_tag}</td>
+					<td>{source}</td>
 					<td>{gene_tag}</td>
 					<td>{annotation[0].most_severe.replace(/_/g, ' ')}</td>
 					<td>{af}</td>
@@ -306,6 +309,10 @@ export const VariantForm = (props) => {
 			    <div>
 			    	<input type="radio" value="hom" name="hethom" checked={filters.hethom == 'hom'} onChange={filterChanged.bind(this, 'hethom', 'hom')} />
 			    	<span>hom</span>
+			    </div>
+			    <div>
+			    	<input type="radio" value="hom" name="hethom" checked={filters.hethom == 'wt_hom'} onChange={filterChanged.bind(this, 'hethom', 'wt_hom')} />
+			    	<span>WT hom</span>
 			    </div>
 		   	<div style={{flexShrink: 1, marginLeft: "10px"}}>
 		    <button type="button" className="button" onClick={downloadRequested}>Download data</button>
