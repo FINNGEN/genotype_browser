@@ -124,6 +124,7 @@ class Datafetch(object):
         hom_alt_i = []
         sum_eij = 0
         sum_fij_minus_eij2 = 0
+        wt_hom_i = []
         for i in index:
             #GT:DS:GP
             #0|0:0:1,0,0
@@ -139,8 +140,10 @@ class Datafetch(object):
                 gt = s[0]
                 if gt == '1|1' or gt == '1/1':
                     hom_alt_i.append(i)
-                elif not (gt == '0|0' or gt == '0/0'):
+                elif (gt == '1|0' or gt == '1/0' or gt == '0|1' or gt == '0/1'):
                     het_i.append(i)
+                elif (gt == '0|0' or gt =='0/0'):
+                    wt_hom_i.append(i)
             else:
                 if gp[2] >= gp_thres:
                     hom_alt_i.append(i)
@@ -151,11 +154,12 @@ class Datafetch(object):
             info = 1 if theta_hat == 0 or theta_hat == 1 else 1 - sum_fij_minus_eij2 / (2*len(index)*theta_hat*(1-theta_hat))
         else:
             info = -1
-        return (het_i, hom_alt_i, info)
+        return (het_i, hom_alt_i, wt_hom_i, info)
 
-    def _get_het_hom_chip_index(self, data, index):
+    def _get_het_hom_index_chip(self, data, index, use_gt, gp_thres, calc_info):
         het_i = []
         hom_alt_i = []
+        wt_hom_i = []
         sum_eij = 0
         sum_fij_minus_eij2 = 0
         for i in index:
@@ -175,6 +179,8 @@ class Datafetch(object):
                     hom_alt_i.append(i)
                 elif (gt == '0|1' or gt == '0/1' or gt == '1|0' or gt == '1/0'):
                     het_i.append(i)
+                elif (gt == '0|0' or gt =='0/0'):
+                    wt_hom_i.append(i)
             else:
                 if gp[2] >= gp_thres:
                     hom_alt_i.append(i)
@@ -185,7 +191,7 @@ class Datafetch(object):
             info = 1 if theta_hat == 0 or theta_hat == 1 else 1 - sum_fij_minus_eij2 / (2*len(index)*theta_hat*(1-theta_hat))
         else:
             info = -1
-        return (het_i, hom_alt_i, info)
+        return (het_i, hom_alt_i, wt_hom_i, info)
     
     def _aggregate_het_hom(self, het, hom, full, data_type):
         agg = {'regions': {}, 'cohorts': {}}
@@ -226,9 +232,9 @@ class Datafetch(object):
         hom_i = []
         for d in data:
             if data_type == 'imputed':
-                het_i_d, hom_i_d, info = self._get_het_hom_index(d, id_index, filters['gtgp'] == 'gt', filters['gpThres'], len(data) == 1)
+                het_i_d, hom_i_d, wt_hom_i, info = self._get_het_hom_index(d, id_index, filters['gtgp'] == 'gt', filters['gpThres'], len(data) == 1)
             else:
-                het_i_d, hom_i_d, info = self._get_het_hom_index(d, id_index, True, None, False)
+                het_i_d, hom_i_d, wt_hom_i, info = self._get_het_hom_index_chip(d, id_index, True, None, False)
             het_i.extend(het_i_d)
             hom_i.extend(hom_i_d)
         het_cnt = Counter(het_i)        
@@ -270,17 +276,19 @@ class Datafetch(object):
             # get indices of het/hom individuals in genotype data
             # het_i, hom_alt_i, info = self._get_het_hom_index(d, id_index, filters['gtgp'] == 'gt', filters['gpThres'], len(data) == 1)
             if data_type == 'imputed':
-                het_i, hom_alt_i, info = self._get_het_hom_index(d, id_index, filters['gtgp'] == 'gt', filters['gpThres'], len(data) == 1)
+                het_i, hom_alt_i, wt_hom_i, info = self._get_het_hom_index(d, id_index, filters['gtgp'] == 'gt', filters['gpThres'], len(data) == 1)
             else:
-                het_i, hom_alt_i, info = self._get_het_hom_index(d, id_index, True, None, False)
+                het_i, hom_alt_i, wt_hom_i, info = self._get_het_hom_index_chip(d, id_index, True, None, False)
             gt = [element.split(':')[0] for element in d ]
             gt_arr = np.array(gt)
             gt_het = list(gt_arr[het_i])
             gt_hom = list(gt_arr[hom_alt_i])
+            gt_wt_hom = list(gt_arr[wt_hom_i])
 
             # subset dataframe for het/hom individuals, copy needed as this will be mutated
             het = info_orig.iloc[het_i].copy()
             hom_alt = info_orig.iloc[hom_alt_i].copy()
+            wt_hom = info_orig.iloc[wt_hom_i].copy()
 
             # extract gt probs and gts
             if data_type == 'imputed':
@@ -288,12 +296,15 @@ class Datafetch(object):
                 gt_probs_arr = np.array(gt_probs)
                 gt_probs_het = list(gt_probs_arr[het_i])
                 gt_probs_hom = list(gt_probs_arr[hom_alt_i])
+                gt_probs_wt_hom = list(gt_probs_arr[wt_hom_i])
                 het['three_gt_probs'] = gt_probs_het
                 hom_alt['three_gt_probs'] = gt_probs_hom
+                wt_hom['three_gt_probs'] = gt_probs_wt_hom
 
             # add main gt and probs for three genotypes
             het['gt'] = gt_het
             hom_alt['gt'] = gt_hom
+            wt_hom['gt'] = gt_wt_hom
             # het['het_hom'] = 'het'
             # hom_alt['het_hom'] = 'hom'
 
@@ -303,9 +314,11 @@ class Datafetch(object):
                     df = hom_alt
                 elif filters['hethom'] == 'het':
                     df = het
+                elif filters['hethom'] == 'wt_hom':
+                    df = wt_hom
                 else:
-                    # append two data frames
-                    df = hom_alt.append(het, ignore_index=True)
+                    # append all data frames: wt, het, hom, wt_hom
+                    df = hom_alt.append(het, ignore_index=True).append(wt_hom, ignore_index=True)
 
             # append data frames
             df = self._filter(df, filters, chips)
