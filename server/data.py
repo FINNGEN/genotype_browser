@@ -27,7 +27,7 @@ class Datafetch(object):
 
         # make a copy for writing data out with male/female texts
         info_orig = info.copy()
-        info_orig['SEX'] = np.where(info_orig['SEX'] == 1, 'female', 'male')
+        # info_orig['SEX'] = np.where(info_orig['SEX'] == 1, 'female', 'male')
         info_orig['DEATH'] = np.where(info_orig['DEATH']=="NA", np.nan, info_orig['DEATH'])
         info_orig['DEATH'] = info_orig['DEATH'].astype('Int64')
         
@@ -100,8 +100,6 @@ class Datafetch(object):
                 _df = _df.loc[_df['DEATH'] == 0]
             elif filters['alive'] == 'dead':
                 _df = _df.loc[_df['DEATH'] == 1]
-            # elif filters['alive'] == 'unknown':
-            #     _df = _df.loc[_df['DEATH'] == "NA"]
         if 'sex' in filters:
             if filters['sex'] == 'female':
                 _df = _df.loc[_df['SEX'] == 1]
@@ -125,6 +123,7 @@ class Datafetch(object):
         sum_eij = 0
         sum_fij_minus_eij2 = 0
         wt_hom_i = []
+        missing_i = []
         for i in index:
             #GT:DS:GP
             #0|0:0:1,0,0
@@ -144,54 +143,23 @@ class Datafetch(object):
                     het_i.append(i)
                 elif (gt == '0|0' or gt =='0/0'):
                     wt_hom_i.append(i)
+                else:
+                    # if there are missing calls in the raw chip data
+                    missing_i.append(i)
             else:
-                if gp[2] >= gp_thres:
+                if gp[2] >= float(gp_thres):
                     hom_alt_i.append(i)
-                elif gp[1] >= gp_thres:
+                elif gp[1] >= float(gp_thres):
                     het_i.append(i)
-        if calc_info and len(index)>0:
-            theta_hat = sum_eij / (2*len(index))
-            info = 1 if theta_hat == 0 or theta_hat == 1 else 1 - sum_fij_minus_eij2 / (2*len(index)*theta_hat*(1-theta_hat))
-        else:
-            info = -1
-        return (het_i, hom_alt_i, wt_hom_i, info)
-
-    def _get_het_hom_index_chip(self, data, index, use_gt, gp_thres, calc_info):
-        het_i = []
-        hom_alt_i = []
-        wt_hom_i = []
-        sum_eij = 0
-        sum_fij_minus_eij2 = 0
-        for i in index:
-            #GT:DS:GP
-            #0|0:0:1,0,0
-            s = data[i].split(':')
-            if not use_gt or calc_info:
-                gp = [float(p) for p in s[2].split(',')]
-            if calc_info:
-                dosage = float(s[1])
-                sum_eij = sum_eij + dosage
-                fij_minus_eij2 = 4*gp[2] + gp[1] - dosage*dosage
-                sum_fij_minus_eij2 = sum_fij_minus_eij2 + fij_minus_eij2
-            if use_gt:
-                gt = s[0]
-                if gt == '1|1' or gt == '1/1':
-                    hom_alt_i.append(i)
-                elif (gt == '0|1' or gt == '0/1' or gt == '1|0' or gt == '1/0'):
-                    het_i.append(i)
-                elif (gt == '0|0' or gt =='0/0'):
+                elif gp[0] >= float(gp_thres):
                     wt_hom_i.append(i)
-            else:
-                if gp[2] >= gp_thres:
-                    hom_alt_i.append(i)
-                elif gp[1] >= gp_thres:
-                    het_i.append(i)
         if calc_info and len(index)>0:
             theta_hat = sum_eij / (2*len(index))
             info = 1 if theta_hat == 0 or theta_hat == 1 else 1 - sum_fij_minus_eij2 / (2*len(index)*theta_hat*(1-theta_hat))
         else:
             info = -1
-        return (het_i, hom_alt_i, wt_hom_i, info)
+
+        return (het_i, hom_alt_i, wt_hom_i, missing_i, info)
     
     def _aggregate_het_hom(self, het, hom, full, data_type):
         agg = {'regions': {}, 'cohorts': {}}
@@ -230,16 +198,22 @@ class Datafetch(object):
         id_index = list(filtered_basic_info.index)
         het_i = []
         hom_i = []
+        wt_hom_i = []
+        missing_i = []
         for d in data:
             if data_type == 'imputed':
-                het_i_d, hom_i_d, wt_hom_i, info = self._get_het_hom_index(d, id_index, filters['gtgp'] == 'gt', filters['gpThres'], len(data) == 1)
+                het_i_d, hom_i_d, wt_hom_i_d, missing_i_d, info = self._get_het_hom_index(d, id_index, filters['gtgp'] == 'gt', filters['gpThres'], len(data) == 1)
             else:
-                het_i_d, hom_i_d, wt_hom_i, info = self._get_het_hom_index_chip(d, id_index, True, None, False)
+                het_i_d, hom_i_d, wt_hom_i_d, missing_i_d, info = self._get_het_hom_index(d, id_index, True, None, False)
             het_i.extend(het_i_d)
             hom_i.extend(hom_i_d)
+            wt_hom_i.extend(wt_hom_i_d)
+            missing_i.extend(missing_i_d)
         het_cnt = Counter(het_i)        
         het_i = set(het_i)
         hom_i = set(hom_i)
+        wt_hom_i = set(wt_hom_i)
+        missing_i = set(missing_i)
         # maybe treat multiheterozygotes as homozygotes
         if 'hethom' in filters and filters['hethom']:
             multihet = [i for i in het_cnt if het_cnt[i] > 1]
@@ -247,13 +221,21 @@ class Datafetch(object):
         # if an individual is homozygous for a variant, don't count as heterozygous for other variants
         het = info_df.iloc[[i for i in het_i if i not in hom_i]]
         hom = info_df.iloc[list(hom_i)]
+        wt_hom = info_df.iloc[list(wt_hom_i)]
+        missing = info_df.iloc[list(missing_i)]
         agg = self._aggregate_het_hom(het, hom, filtered_basic_info, data_type)
         total_af = (len(het) + 2*len(hom))/len(filtered_basic_info)/2 if len(filtered_basic_info) > 0 else -1
         het = het.to_numpy().T.tolist()
         hom = hom.to_numpy().T.tolist()
+
+        # add wt hom and missing data
+        wt_hom = wt_hom.to_numpy().T.tolist()
+        missing = missing.to_numpy().T.tolist()        
         return {
             'het': het if len(het) > 0 else [[] for i in info_columns],
             'hom_alt': hom if len(hom) > 0 else [[] for i in info_columns],
+            'wt_hom': wt_hom if len(wt_hom) > 0 else [[] for i in info_columns],
+            'missing': missing if len(missing) > 0 else [[] for i in info_columns],
             'columns': info_columns,
             'agg': agg,
             'total_af': total_af,
@@ -274,21 +256,22 @@ class Datafetch(object):
         id_index = list(filtered_basic_info.index) 
         for i, d in enumerate(data):
             # get indices of het/hom individuals in genotype data
-            # het_i, hom_alt_i, info = self._get_het_hom_index(d, id_index, filters['gtgp'] == 'gt', filters['gpThres'], len(data) == 1)
             if data_type == 'imputed':
-                het_i, hom_alt_i, wt_hom_i, info = self._get_het_hom_index(d, id_index, filters['gtgp'] == 'gt', filters['gpThres'], len(data) == 1)
+                het_i, hom_alt_i, wt_hom_i, missing_i, info = self._get_het_hom_index(d, id_index, filters['gtgp'] == 'gt', filters['gpThres'], len(data) == 1)
             else:
-                het_i, hom_alt_i, wt_hom_i, info = self._get_het_hom_index_chip(d, id_index, True, None, False)
+                het_i, hom_alt_i, wt_hom_i, missing_i, info = self._get_het_hom_index(d, id_index, True, None, False)
             gt = [element.split(':')[0] for element in d ]
             gt_arr = np.array(gt)
             gt_het = list(gt_arr[het_i])
             gt_hom = list(gt_arr[hom_alt_i])
             gt_wt_hom = list(gt_arr[wt_hom_i])
+            gt_missing = list(gt_arr[missing_i])
 
             # subset dataframe for het/hom individuals, copy needed as this will be mutated
             het = info_orig.iloc[het_i].copy()
             hom_alt = info_orig.iloc[hom_alt_i].copy()
             wt_hom = info_orig.iloc[wt_hom_i].copy()
+            missing = info_orig.iloc[missing_i].copy()
 
             # extract gt probs and gts
             if data_type == 'imputed':
@@ -299,14 +282,13 @@ class Datafetch(object):
                 gt_probs_wt_hom = list(gt_probs_arr[wt_hom_i])
                 het['three_gt_probs'] = gt_probs_het
                 hom_alt['three_gt_probs'] = gt_probs_hom
-                wt_hom['three_gt_probs'] = gt_probs_wt_hom
+                wt_hom['three_gt_probs'] = gt_probs_wt_hom                
 
-            # add main gt and probs for three genotypes
+            # add main gt and probs for three genotypes (and missing data for raw chip)
             het['gt'] = gt_het
             hom_alt['gt'] = gt_hom
             wt_hom['gt'] = gt_wt_hom
-            # het['het_hom'] = 'het'
-            # hom_alt['het_hom'] = 'hom'
+            missing['gt'] = gt_missing
 
             # if specified the type of variants to be saved
             if 'hethom' in filters:
@@ -318,13 +300,13 @@ class Datafetch(object):
                     df = wt_hom
                 else:
                     # append all data frames: wt, het, hom, wt_hom
-                    df = hom_alt.append(het, ignore_index=True).append(wt_hom, ignore_index=True)
+                    df = hom_alt.append(het, ignore_index=True).append(wt_hom, ignore_index=True).append(missing, ignore_index=True)
 
             # append data frames
             df = self._filter(df, filters, chips)
             df['variant'] = variants[i].replace('-', ':')
             df_list.append(df)
-            
+        
         elapsed = timeit.default_timer() - start_time
         return pd.concat(df_list)
 
@@ -392,6 +374,7 @@ class Datafetch(object):
                 del filters[key]
             filename = variants.replace(',', '_') + '__rawchip_data__' + '_'.join([k+'_'+v for k,v in filters.items()]) + '.tsv'
         data = data.drop(columns=['AGE_AT_DEATH_OR_NOW'])
+        data['SEX'] = np.where(data['SEX'] == 1, 'female', 'male')
         try:
             data.to_csv(sep='\t', index=False, na_rep='NA')
             output = make_response(data.to_csv(sep='\t', index=False, na_rep='NA'))

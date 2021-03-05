@@ -17,8 +17,7 @@ export const Variant = (props) => {
    	var dtype = props.props.data_type
    	const source = dtype == 'imputed' ? 'Imputed data' : 'Raw chip data'
 
-   	// update state if variant was open in a separate window and thus the
-    // data type is obtained from the url params
+   	// update state if variant was open in a separate window. Data type is obtained from the url params
     useEffect(() => {
 		dispatch(setDataType({content: dtype}))
     }, [])
@@ -61,6 +60,8 @@ export const Variant = (props) => {
 		impscore = (<tr><td>imputation info score</td><td style={{textAlign: 'right'}}>{data.data.info < 0 ? 'NA' : data.data.info.toPrecision(3)}</td></tr>)
 	} 
 
+	const row_missing_data = dtype == 'chip' ? <tr><td style={{textAlign: 'right'}}>{gtCnt[3]}</td><td>missing GT</td></tr> : ''
+
 	content = (<div>
 		   <div style={{display: 'flex', flexDirection: 'column'}}>
 		   <div><h3 style={{marginTop: "20px", marginBottom: "10px"}}>Result summary statistics</h3></div>
@@ -70,6 +71,8 @@ export const Variant = (props) => {
 			   <tr><td style={{textAlign: 'right'}}>{data.data.total_indiv}</td><td>individual{data.data.total_indiv == 1 ? '' : 's'}</td></tr>
 			   <tr><td style={{textAlign: 'right'}}>{gtCnt[0]}</td><td>heterozygote{gtCnt[0] == 1 ? '' : 's'}</td></tr>
 			   <tr><td style={{textAlign: 'right'}}>{gtCnt[1]}</td><td>homozygote{gtCnt[1] == 1 ? '' : 's'}</td></tr>
+			   <tr><td style={{textAlign: 'right'}}>{gtCnt[2]}</td><td>WT homozygote{gtCnt[2] == 1 ? '' : 's'}</td></tr>
+			   {row_missing_data}
 			   </tbody>
 			   </table>
 			   <table style={{paddingLeft: '20px'}}>
