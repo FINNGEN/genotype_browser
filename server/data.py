@@ -117,6 +117,18 @@ class Datafetch(object):
                 _df = _df.loc[~_df['BATCH'].isin(chips)]
         return _df
 
+    def _is_homozygous_alt(self, gt):
+        return gt == '1|1' or gt == '1/1'
+
+    def _is_heterozygous(self, gt):
+        return gt == '1|0' or gt == '1/0' or gt == '0|1' or gt == '0/1'
+
+    def _is_homozygous_wt(self, gt):
+        return gt == '0|0' or gt =='0/0'
+
+    def _gt_passes_threshold(self, gt_probability, gt_probability_thres):
+        return gt_probability >= float(gt_probability_thres)
+
     def _get_het_hom_index(self, data, index, use_gt, gp_thres, calc_info):
         het_i = []
         hom_alt_i = []
@@ -128,6 +140,7 @@ class Datafetch(object):
             #GT:DS:GP
             #0|0:0:1,0,0
             s = data[i].split(':')
+            gt = s[0]
             if not use_gt or calc_info:
                 gp = [float(p) for p in s[2].split(',')]
             if calc_info:
@@ -136,23 +149,23 @@ class Datafetch(object):
                 fij_minus_eij2 = 4*gp[2] + gp[1] - dosage*dosage
                 sum_fij_minus_eij2 = sum_fij_minus_eij2 + fij_minus_eij2
             if use_gt:
-                gt = s[0]
-                if gt == '1|1' or gt == '1/1':
+                if self._is_homozygous_alt(gt):
                     hom_alt_i.append(i)
-                elif (gt == '1|0' or gt == '1/0' or gt == '0|1' or gt == '0/1'):
+                elif self._is_heterozygous(gt):
                     het_i.append(i)
-                elif (gt == '0|0' or gt =='0/0'):
+                elif self._is_homozygous_wt(gt):
                     wt_hom_i.append(i)
                 else:
                     # if there are missing calls in the raw chip data
                     missing_i.append(i)
             else:
-                if gp[2] >= float(gp_thres):
+                if self._is_homozygous_alt(gt) and self._gt_passes_threshold(gp[2], gp_thres):
                     hom_alt_i.append(i)
-                elif gp[1] >= float(gp_thres):
+                elif self._is_heterozygous(gt) and self._gt_passes_threshold(gp[1], gp_thres):
                     het_i.append(i)
-                elif gp[0] >= float(gp_thres):
+                elif self._is_homozygous_wt(gt) and self._gt_passes_threshold(gp[0], gp_thres):
                     wt_hom_i.append(i)
+
         if calc_info and len(index)>0:
             theta_hat = sum_eij / (2*len(index))
             info = 1 if theta_hat == 0 or theta_hat == 1 else 1 - sum_fij_minus_eij2 / (2*len(index)*theta_hat*(1-theta_hat))
