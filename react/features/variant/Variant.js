@@ -59,9 +59,7 @@ export const Variant = (props) => {
 	if (dtype == 'imputed') {
 		impscore = (<tr><td>imputation info score</td><td style={{textAlign: 'right'}}>{data.data.info < 0 ? 'NA' : data.data.info.toPrecision(3)}</td></tr>)
 	} 
-
-	const row_missing_data = dtype == 'chip' ? <tr><td style={{textAlign: 'right'}}>{gtCnt[3]}</td><td>missing GT</td></tr> : ''
-
+	
 	content = (<div>
 		   <div style={{display: 'flex', flexDirection: 'column'}}>
 		   <div><h3 style={{marginTop: "20px", marginBottom: "10px"}}>Result summary statistics</h3></div>
@@ -72,7 +70,7 @@ export const Variant = (props) => {
 			   <tr><td style={{textAlign: 'right'}}>{gtCnt[0]}</td><td>heterozygote{gtCnt[0] == 1 ? '' : 's'}</td></tr>
 			   <tr><td style={{textAlign: 'right'}}>{gtCnt[1]}</td><td>homozygote{gtCnt[1] == 1 ? '' : 's'}</td></tr>
 			   <tr><td style={{textAlign: 'right'}}>{gtCnt[2]}</td><td>WT homozygote{gtCnt[2] == 1 ? '' : 's'}</td></tr>
-			   {row_missing_data}
+			   <tr><td style={{textAlign: 'right'}}>{gtCnt[3]}</td><td>missing GT</td></tr> 
 			   </tbody>
 			   </table>
 			   <table style={{paddingLeft: '20px'}}>

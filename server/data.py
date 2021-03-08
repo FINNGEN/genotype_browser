@@ -156,7 +156,6 @@ class Datafetch(object):
                 elif self._is_homozygous_wt(gt):
                     wt_hom_i.append(i)
                 else:
-                    # if there are missing calls in the raw chip data
                     missing_i.append(i)
             else:
                 if self._is_homozygous_alt(gt) and self._gt_passes_threshold(gp[2], gp_thres):
@@ -165,6 +164,8 @@ class Datafetch(object):
                     het_i.append(i)
                 elif self._is_homozygous_wt(gt) and self._gt_passes_threshold(gp[0], gp_thres):
                     wt_hom_i.append(i)
+                else:
+                    missing_i.append(i)
 
         if calc_info and len(index)>0:
             theta_hat = sum_eij / (2*len(index))
@@ -293,9 +294,11 @@ class Datafetch(object):
                 gt_probs_het = list(gt_probs_arr[het_i])
                 gt_probs_hom = list(gt_probs_arr[hom_alt_i])
                 gt_probs_wt_hom = list(gt_probs_arr[wt_hom_i])
+                gt_probs_missing = list(gt_probs_arr[missing_i])
                 het['three_gt_probs'] = gt_probs_het
                 hom_alt['three_gt_probs'] = gt_probs_hom
-                wt_hom['three_gt_probs'] = gt_probs_wt_hom                
+                wt_hom['three_gt_probs'] = gt_probs_wt_hom
+                missing['three_gt_probs'] = gt_probs_missing                
 
             # add main gt and probs for three genotypes (and missing data for raw chip)
             het['gt'] = gt_het
