@@ -64,9 +64,9 @@ export const VariantClusterPlot = () => {
                 <form>
                     <label htmlFor="cluster_plot">Choose a type of SNP cluster plot:</label>
                         <select style={{marginLeft: '5px', padding: '5px'}} name="cluster_plot" id="cluster_plot" onChange={handlePlotTypeChange}>
-                            <option value="all">All</option>
-                            <option value="missing_imputation">Missing imputation</option>
-                            <option value="sex_separated">Sex-separated</option>
+                            <option value="raw">All</option>
+                            <option value="imputed">Missing imputation</option>
+                            <option value="sex">Sex-separated</option>
                         </select>
                 </form>
                 {content}
