@@ -9,7 +9,7 @@ export const VariantClusterPlot = () => {
 
     const variant = useSelector(state => state.data.variants)
     const [status, setData] = useState(null)
-    const [selection, setSelection] = useState('all')    
+    const [selection, setSelection] = useState('raw')    
     var content = null
     var drop_section = false
     var error_message = null
