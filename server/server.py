@@ -43,10 +43,18 @@ def find(query):
     
 @app.route('/api/v1/variants/<variants>')
 def variants(variants):
-    #print(request.args.to_dict())
+    
+    print("server.py, variants request.args.to_dict(): ", request.args.to_dict())
+    print("server.py, variants: ", variants)
+    print("server.py, data_type: ",  request.args.get('data_type'))
+    print(type(variants))
+
     try:
         data_type = request.args.get('data_type')
         data = fetch.get_variants(variants, request.args.to_dict(), data_type)
+
+        print("server.py, FOUND DATA: data len:", len(data))
+
     except ParseException as e:
         abort(400, 'could not parse given variant(s)')
     except NotFoundException as e:

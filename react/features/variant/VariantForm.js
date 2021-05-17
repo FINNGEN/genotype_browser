@@ -15,6 +15,9 @@ export const VariantForm = (props) => {
     const write_result = useSelector(state => state.data.write_result)
     const [gp, setGP] = useState(filters.gpThres)
 
+    // add sccenario for not showing failed search if data.status is failed
+	const data = useSelector(state => state.data)
+
     // update state if variant was open in a separate window and thus the
     // data type is obtained from the url params
     var dtype = props.props.data_type
@@ -128,7 +131,6 @@ export const VariantForm = (props) => {
 			    <span>show only directly genotyped</span>
 			    </div>
 			    </div>
-
 			</div>
 		</div>
 		)
@@ -161,9 +163,7 @@ export const VariantForm = (props) => {
 	
 	const anno = annotation && annotation.length == 1 ?
 	<div style={{display: "flex", flexDirection: "column"}}>
-
 		<div><h3 style={{marginTop: "10px", marginBottom: "10px"}}>Variant annotation</h3></div>
-
 			<div>
 			<table className="anno">
 				<thead>
@@ -193,134 +193,142 @@ export const VariantForm = (props) => {
 
 	</div> : null
 
+	var rendered_content = (
+
+		<div>
+		<div><h3>{props.props['variant'] || '...'}</h3></div>
+		<div style={{marginTop: "10px"}}>
+			    {anno}
+			    <div style={{display: 'flex', marginTop: "30px"}}>
+			    <div style={{display: 'flex', flexShrink: 0}}>
+
+			    <div style={{display: 'flex', flexDirection: 'column'}}>
+			    <div><h3 style={{marginBottom: "10px", marginTop: "0px"}}>Sample filter</h3></div>
+			    <div className="hl" style={{width: "100%", borderTop: "1px solid #dddddd", marginTop: "0px", marginBottom: "10px"}}></div>
+			    <div style={{display: 'flex', flexDirection: 'column'}}>
+
+			    	<div><b>Include individuals</b></div>
+
+			    	<div style={{display: 'flex', flexDirection: 'row'}}>
+				    <div className="buttonGroup">
+				    <div>
+					    <input type="radio" value="all" name="alive" checked={filters.alive == 'all'} onChange={filterChanged.bind(this, 'alive', 'all')} />
+					    <span>all</span>
+					    </div>
+					    <div>
+					    <input type="radio" value="alive" name="alive" checked={filters.alive == 'alive'} onChange={filterChanged.bind(this, 'alive', 'alive')} />
+					    <span>alive</span>
+					    </div>
+				        <div>
+					    <input type="radio" value="dead" name="alive" checked={filters.alive == 'dead'} onChange={filterChanged.bind(this, 'alive', 'dead')} />
+					    <span>deceased</span>
+					    </div>
+					    </div>
+
+					    <div className="buttonGroup">
+					    <div>
+					    <input type="radio" value="all" name="sex" checked={filters.sex == 'all'} onChange={filterChanged.bind(this, 'sex', 'all')} />
+					    <span>all</span>
+					    </div>
+					    <div>
+					    <input type="radio" value="female" name="sex" checked={filters.sex == 'female'} onChange={filterChanged.bind(this, 'sex', 'female')} />
+					    <span>female</span>
+					    </div>
+					    <div>
+					    <input type="radio" value="male" name="sex" checked={filters.sex == 'male'} onChange={filterChanged.bind(this, 'sex', 'male')}/>
+					    <span>male</span>
+					    </div>
+					    </div>
+				    </div>
+			    
+			    </div>
+			    </div>
+
+			    <div className="vl" style={{height: "100%", borderLeft: "1px solid #dddddd", marginLeft: "20px", marginRight: "20px"}}></div>
+
+			    <div style={{display: 'flex', flexDirection: 'column'}}>
+			    <div><h3 style={{marginBottom: "10px", marginTop: "0px"}}>Genotype filter</h3></div>
+			    <div className="hl" style={{width: "100%", borderTop: "1px solid #dddddd", marginTop: "0px", marginBottom: "10px"}}></div>
+			    <div style={{display: 'flex', flexDirection: 'row'}}>
+
+			    	<div style={{display: 'flex', flexDirection: 'column'}}>
+			    	<div><b>Chip type</b></div>
+			    	<div style={{display: 'flex', flexDirection: 'row'}}>
+				    	<div className="buttonGroup">
+						<div>
+					    <input type="radio" value="all" name="array" checked={filters.array == 'all'} onChange={filterChanged.bind(this, 'array', 'all')}/>
+					    <span>all</span>
+					    </div>
+					    <div>
+					    <input type="radio" value="finngen" name="array" checked={filters.array == 'finngen'} onChange={filterChanged.bind(this, 'array', 'finngen')}/>
+					    <span>finngen chip</span>
+					    </div>
+					    <div>
+					    <input type="radio" value="legacy" name="array" checked={filters.array == 'legacy'} onChange={filterChanged.bind(this, 'array', 'legacy')}/>
+					    <span>legacy data</span>
+					    </div>
+					    </div>
+				    </div>
+				    </div>
+
+				    {render_imputchip_radio}
+				    {render_gt_filtering_radio}
+
+			    </div>
+			    </div>
+
+			    <div className="vl" style={{height: "100%", borderLeft: "1px solid #dddddd", marginLeft: "20px", marginRight: "20px"}}></div>
+
+			    <div style={{display: 'flex', flexDirection: 'column'}}>
+			    <div><h3 style={{marginBottom: "10px", marginTop: "0px"}}>Show</h3></div>
+			    <div className="hl" style={{width: "100%", borderTop: "1px solid #dddddd", marginTop: "0px", marginBottom: "10px"}}></div>
+			    <div style={{display: 'flex', flexDirection: 'row'}}>
+
+				    <div onChange={optionChanged.bind(this, 'cntfreq')} className="buttonGroup">
+				    <div><input type="radio" value="gt_count" name="cntfreq" defaultChecked/><span>number of genotypes</span></div>
+				    <div><input type="radio" value="freq" name="cntfreq"/><span>allele frequency</span></div>
+				    </div>
+				    
+				    <div onChange={optionChanged.bind(this, 'bbreg')} className="buttonGroup">
+				    <div><input type="radio" value="biobank" name="bbreg" defaultChecked/><span>by biobank</span></div>
+				    <div><input type="radio" value="region" name="bbreg"/><span>by region of birth</span></div>
+				    </div>
+			    </div>
+			    </div>
+			    </div>
+			    </div>
+
+			    <div style={{display: 'flex', flexDirection: 'column', marginTop: "40px"}}>
+			    <div><h3 style={{marginBottom: "10px", marginTop: "0px"}}>Download</h3></div>
+			    <div style={{display: 'flex', flexDirection: 'row'}}>
+				    	<div>
+					    	<input type="radio" value="all" name="hethom" checked={filters.hethom == 'all'} onChange={filterChanged.bind(this, 'hethom', 'all')} />
+					    	<span>all</span>
+					    </div>
+					    <div>
+					    	<input type="radio" value="het" name="hethom" checked={filters.hethom == 'het'} onChange={filterChanged.bind(this, 'hethom', 'het')} />
+					    	<span>het</span>
+					    </div>
+					    <div>
+					    	<input type="radio" value="hom" name="hethom" checked={filters.hethom == 'hom'} onChange={filterChanged.bind(this, 'hethom', 'hom')} />
+					    	<span>hom</span>
+					    </div>
+					    <div>
+					    	<input type="radio" value="hom" name="hethom" checked={filters.hethom == 'wt_hom'} onChange={filterChanged.bind(this, 'hethom', 'wt_hom')} />
+					    	<span>WT hom</span>
+					    </div>
+				   	<div style={{flexShrink: 1, marginLeft: "10px"}}>
+				    <button type="button" className="button" onClick={downloadRequested}>Download data</button>
+				    </div>
+			    </div>
+
+			    </div>
+				{hethom}
+			    </div> 
+		</div>
+	)
+
     return (
-	    <div style={{marginTop: "10px"}}>
-	    {anno}
-	    <div style={{display: 'flex', marginTop: "30px"}}>
-	    <div style={{display: 'flex', flexShrink: 0}}>
-
-	    <div style={{display: 'flex', flexDirection: 'column'}}>
-	    <div><h3 style={{marginBottom: "10px", marginTop: "0px"}}>Sample filter</h3></div>
-	    <div className="hl" style={{width: "100%", borderTop: "1px solid #dddddd", marginTop: "0px", marginBottom: "10px"}}></div>
-	    <div style={{display: 'flex', flexDirection: 'column'}}>
-
-	    	<div><b>Include individuals</b></div>
-
-	    	<div style={{display: 'flex', flexDirection: 'row'}}>
-		    <div className="buttonGroup">
-		    <div>
-			    <input type="radio" value="all" name="alive" checked={filters.alive == 'all'} onChange={filterChanged.bind(this, 'alive', 'all')} />
-			    <span>all</span>
-			    </div>
-			    <div>
-			    <input type="radio" value="alive" name="alive" checked={filters.alive == 'alive'} onChange={filterChanged.bind(this, 'alive', 'alive')} />
-			    <span>alive</span>
-			    </div>
-		        <div>
-			    <input type="radio" value="dead" name="alive" checked={filters.alive == 'dead'} onChange={filterChanged.bind(this, 'alive', 'dead')} />
-			    <span>deceased</span>
-			    </div>
-			    </div>
-
-			    <div className="buttonGroup">
-			    <div>
-			    <input type="radio" value="all" name="sex" checked={filters.sex == 'all'} onChange={filterChanged.bind(this, 'sex', 'all')} />
-			    <span>all</span>
-			    </div>
-			    <div>
-			    <input type="radio" value="female" name="sex" checked={filters.sex == 'female'} onChange={filterChanged.bind(this, 'sex', 'female')} />
-			    <span>female</span>
-			    </div>
-			    <div>
-			    <input type="radio" value="male" name="sex" checked={filters.sex == 'male'} onChange={filterChanged.bind(this, 'sex', 'male')}/>
-			    <span>male</span>
-			    </div>
-			    </div>
-		    </div>
-	    
-	    </div>
-	    </div>
-
-	    <div className="vl" style={{height: "100%", borderLeft: "1px solid #dddddd", marginLeft: "20px", marginRight: "20px"}}></div>
-
-	    <div style={{display: 'flex', flexDirection: 'column'}}>
-	    <div><h3 style={{marginBottom: "10px", marginTop: "0px"}}>Genotype filter</h3></div>
-	    <div className="hl" style={{width: "100%", borderTop: "1px solid #dddddd", marginTop: "0px", marginBottom: "10px"}}></div>
-	    <div style={{display: 'flex', flexDirection: 'row'}}>
-
-	    	<div style={{display: 'flex', flexDirection: 'column'}}>
-	    	<div><b>Chip type</b></div>
-	    	<div style={{display: 'flex', flexDirection: 'row'}}>
-		    	<div className="buttonGroup">
-				<div>
-			    <input type="radio" value="all" name="array" checked={filters.array == 'all'} onChange={filterChanged.bind(this, 'array', 'all')}/>
-			    <span>all</span>
-			    </div>
-			    <div>
-			    <input type="radio" value="finngen" name="array" checked={filters.array == 'finngen'} onChange={filterChanged.bind(this, 'array', 'finngen')}/>
-			    <span>finngen chip</span>
-			    </div>
-			    <div>
-			    <input type="radio" value="legacy" name="array" checked={filters.array == 'legacy'} onChange={filterChanged.bind(this, 'array', 'legacy')}/>
-			    <span>legacy data</span>
-			    </div>
-			    </div>
-		    </div>
-		    </div>
-
-		    {render_imputchip_radio}
-		    {render_gt_filtering_radio}
-
-	    </div>
-	    </div>
-
-	    <div className="vl" style={{height: "100%", borderLeft: "1px solid #dddddd", marginLeft: "20px", marginRight: "20px"}}></div>
-
-	    <div style={{display: 'flex', flexDirection: 'column'}}>
-	    <div><h3 style={{marginBottom: "10px", marginTop: "0px"}}>Show</h3></div>
-	    <div className="hl" style={{width: "100%", borderTop: "1px solid #dddddd", marginTop: "0px", marginBottom: "10px"}}></div>
-	    <div style={{display: 'flex', flexDirection: 'row'}}>
-
-		    <div onChange={optionChanged.bind(this, 'cntfreq')} className="buttonGroup">
-		    <div><input type="radio" value="gt_count" name="cntfreq" defaultChecked/><span>number of genotypes</span></div>
-		    <div><input type="radio" value="freq" name="cntfreq"/><span>allele frequency</span></div>
-		    </div>
-		    
-		    <div onChange={optionChanged.bind(this, 'bbreg')} className="buttonGroup">
-		    <div><input type="radio" value="biobank" name="bbreg" defaultChecked/><span>by biobank</span></div>
-		    <div><input type="radio" value="region" name="bbreg"/><span>by region of birth</span></div>
-		    </div>
-	    </div>
-	    </div>
-	    </div>
-	    </div>
-
-	    <div style={{display: 'flex', flexDirection: 'column', marginTop: "40px"}}>
-	    <div><h3 style={{marginBottom: "10px", marginTop: "0px"}}>Download</h3></div>
-	    <div style={{display: 'flex', flexDirection: 'row'}}>
-		    	<div>
-			    	<input type="radio" value="all" name="hethom" checked={filters.hethom == 'all'} onChange={filterChanged.bind(this, 'hethom', 'all')} />
-			    	<span>all</span>
-			    </div>
-			    <div>
-			    	<input type="radio" value="het" name="hethom" checked={filters.hethom == 'het'} onChange={filterChanged.bind(this, 'hethom', 'het')} />
-			    	<span>het</span>
-			    </div>
-			    <div>
-			    	<input type="radio" value="hom" name="hethom" checked={filters.hethom == 'hom'} onChange={filterChanged.bind(this, 'hethom', 'hom')} />
-			    	<span>hom</span>
-			    </div>
-			    <div>
-			    	<input type="radio" value="hom" name="hethom" checked={filters.hethom == 'wt_hom'} onChange={filterChanged.bind(this, 'hethom', 'wt_hom')} />
-			    	<span>WT hom</span>
-			    </div>
-		   	<div style={{flexShrink: 1, marginLeft: "10px"}}>
-		    <button type="button" className="button" onClick={downloadRequested}>Download data</button>
-		    </div>
-	    </div>
-
-	    </div>
-		{hethom}
-	    </div>
+    	data.status == 'failed' ? '' : rendered_content
     )
 }

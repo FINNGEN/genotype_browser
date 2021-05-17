@@ -16,7 +16,7 @@ export const Variant = (props) => {
     const data = useSelector(state => state.data)
    	var dtype = props.props.data_type
    	const source = dtype == 'imputed' ? 'Imputed data' : 'Raw chip data'
-
+   	
    	// update state if variant was open in a separate window. Data type is obtained from the url params
     useEffect(() => {
 		dispatch(setDataType({content: dtype}))
@@ -49,7 +49,7 @@ export const Variant = (props) => {
 	      data.error.status == 500 ?
 	      'Internal server error, let us know.' :
 	      `${data.error.status} oh no, something went wrong`
-	content = (<div>{errorMsg}</div>)
+	content = (<div style={{color: 'red'}}>{errorMsg}</div>)
     }
     if (data.status == 'done') {
 	//after info score, there's a bug though that this doesn't currently update because it's not in data.data

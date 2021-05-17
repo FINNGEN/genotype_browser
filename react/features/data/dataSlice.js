@@ -114,7 +114,7 @@ export const dataSlice = createSlice({
 		sessionStorage.setItem(`${action.payload.variants.join(',')}+${JSON.stringify(ordered)}+${action.payload.data_type}`, JSON.stringify(action.payload.data))
 	    } catch(e) {
 		if (isQuotaExceeded(e)) {
-		    console.warn('sessionstorage quota exceeded')
+		    console.warn('sessionstorage quota exceeded (dataSlice), clear the storage!')
 		    sessionStorage.clear()
 		} else {
 		    alert(e)

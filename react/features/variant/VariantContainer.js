@@ -10,10 +10,6 @@ export const VariantContainer = ({ match: { params } }) => {
     // <div style={{paddingLeft: '10px'}}><a href={`https://genetics.opentargets.org/variant/${params.variant.replace(/-/g, '_')}`} target='_blank'>opentargets</a></div>
     return (
 	    <div>
-	    <div style={{display: 'flex'}}>
-	    <div className="header">{params.variant || '...'}</div>
-	    <div className="header"></div>
-	    </div>
 	    <VariantForm props={params}/>
 	    <div style={{paddingTop: '10px'}}>
 	    <Variant props={params}/>
