@@ -16,14 +16,17 @@ export const Variant = (props) => {
     const data = useSelector(state => state.data)
    	var dtype = props.props.data_type
    	const source = dtype == 'imputed' ? 'Imputed data' : 'Raw chip data'
-   	
+
    	// update state if variant was open in a separate window. Data type is obtained from the url params
     useEffect(() => {
 		dispatch(setDataType({content: dtype}))
     }, [])
 
+    const search_status =  useSelector(state => state.search.status)
+
     useEffect(() => {
-	if (data.status == 'idle') { //fetch by default
+    if (search_status != 'failed'){
+    	if (data.status == 'idle') { //fetch by default
 	    dispatch(fetchData(`/api/v1/variants/${props.props.variant}?` + new URLSearchParams({...data.filters, ...data.serverOptions, ...{'data_type': dtype}})))
 	} else {
 	    const unordered = {...data.filters, ...data.serverOptions, ...{'data_type': dtype}}
@@ -38,6 +41,7 @@ export const Variant = (props) => {
 	    	dispatch(fetchData(`/api/v1/variants/${props.props.variant}?` + new URLSearchParams({...data.filters, ...data.serverOptions, ...{'data_type': dtype}})))
 	    }
 	}
+    }
     }, [data.filters, data.serverOptions, props])
 
     let content = (<div>loading...</div>)
@@ -86,6 +90,6 @@ export const Variant = (props) => {
     }
 
     return (
-	    <div>{content}</div>
+    	search_status == 'failed' ? '' : ( <div>{content}</div>)
     )
 }

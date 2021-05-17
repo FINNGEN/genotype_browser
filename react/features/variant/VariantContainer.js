@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useSelector } from 'react-redux'
 import { Variant } from './Variant'
 import { VariantForm } from './VariantForm'
+import { search } from '../search/searchSlice'
 
 export const VariantContainer = ({ match: { params } }) => {
     // external links after header

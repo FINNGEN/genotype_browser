@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useHistory } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import validator from 'validator'
-import { search, setDataType } from '../search/searchSlice'
+import { search, setDataType, setResult } from '../search/searchSlice'
 
 
 export const SearchForm = () => {
@@ -16,20 +16,16 @@ export const SearchForm = () => {
     const error = useSelector(state => state.search.error)
     const dtype = useSelector(state => state.search.data_type)
 
-    const status =  useSelector(state => state.search.status)
-
     const handleDataTypeChange = event => {
     	dispatch(setDataType({content: event.target.value}))
     }
 
     useEffect(() => {
 	if (!result.ids) {
-		history.push(`/`)
 		return
 	    }
 	if (result.ids.length==1) {
 	    if (result.type == 'variant') {
-		
 		history.push(`/variant/${result.ids[0]}/${dtype}`)
 	    }
 	    if (result.type == 'gene') {

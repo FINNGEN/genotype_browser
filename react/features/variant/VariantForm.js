@@ -15,9 +15,6 @@ export const VariantForm = (props) => {
     const write_result = useSelector(state => state.data.write_result)
     const [gp, setGP] = useState(filters.gpThres)
 
-    // add sccenario for not showing failed search if data.status is failed
-	const data = useSelector(state => state.data)
-
     // update state if variant was open in a separate window and thus the
     // data type is obtained from the url params
     var dtype = props.props.data_type
@@ -26,6 +23,7 @@ export const VariantForm = (props) => {
 		dispatch(setDataType({content: dtype}))
     }, [])
 
+    const search_status =  useSelector(state => state.search.status)
     const filterChanged = (filt, value, event) => {
 	if (event.target.type !== 'text') {
 	    if (filt == 'gtgp') {
@@ -193,7 +191,7 @@ export const VariantForm = (props) => {
 
 	</div> : null
 
-	var rendered_content = (
+	var render_content = (
 
 		<div>
 		<div><h3>{props.props['variant'] || '...'}</h3></div>
@@ -328,7 +326,7 @@ export const VariantForm = (props) => {
 		</div>
 	)
 
-    return (
-    	data.status == 'failed' ? '' : rendered_content
+     return (
+    	search_status == 'failed' ? '' : render_content
     )
 }
