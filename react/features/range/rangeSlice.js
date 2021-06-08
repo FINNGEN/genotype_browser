@@ -67,7 +67,7 @@ export const rangeSlice = createSlice({
 				sessionStorage.setItem(`, ${action.payload.range}_${action.payload.data_type}`, JSON.stringify(action.payload))
 			    } catch(e) {
 				if (isQuotaExceeded(e)) {
-				    console.warn('sessionstorage quota exceeded, clear storage!')
+				    console.warn('sessionstorage quota exceeded (rangeSlice), clear storage!')
 				    sessionStorage.clear()
 				} else {
 				    alert(e)

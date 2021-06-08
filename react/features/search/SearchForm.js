@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react'
 import { useHistory } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import validator from 'validator'
-import { search, setDataType } from '../search/searchSlice'
+import { search, setDataType, setResult } from '../search/searchSlice'
+
 
 export const SearchForm = () => {
 
@@ -20,7 +21,9 @@ export const SearchForm = () => {
     }
 
     useEffect(() => {
-	if (!result.ids) return
+	if (!result.ids) {
+		return
+	    }
 	if (result.ids.length==1) {
 	    if (result.type == 'variant') {
 		history.push(`/variant/${result.ids[0]}/${dtype}`)
@@ -64,10 +67,12 @@ export const SearchForm = () => {
     	}
     }
 
+    // onKeyDown={handleSearch}
     return (
 	    <div style={{display: 'flex', paddingBottom: '20px'}}>
 	    <label style={{paddingRight: '10px'}}>
-	    <input type="text" name="fgq_search" className="input" onChange={handleSearchTextChange} onKeyDown={handleSearch} />
+	    <input type="text" name="fgq_search" className="input" 
+	    		onChange={handleSearchTextChange} onKeyDown={handleSearch} />
 	    </label>
 	    <div style={{paddingRight: '10px'}}>
 	    <input type="radio" value="imputed" id="imputed" name="dtype" checked = {dtype == 'imputed' ? "checked" : ""} onChange={handleDataTypeChange} />
@@ -76,8 +81,8 @@ export const SearchForm = () => {
 	    <label>Raw FinnGen chip data</label>
 	    </div>
 	    <button type="button" className="button" onClick={handleSearch}>search</button>
-	    <div style={{paddingLeft: '10px'}}>{clientError}</div>
-	    <div style={{paddingLeft: '10px'}}>{error && error_message}</div>
+	    <div style={{paddingLeft: '10px', color: 'red'}}>{clientError}</div>
+	    <div style={{paddingLeft: '10px', color: 'red'}}>{error && error_message}</div>
 	    </div>
     )
 }

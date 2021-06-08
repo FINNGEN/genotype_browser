@@ -22,8 +22,11 @@ export const Variant = (props) => {
 		dispatch(setDataType({content: dtype}))
     }, [])
 
+    const search_status =  useSelector(state => state.search.status)
+
     useEffect(() => {
-	if (data.status == 'idle') { //fetch by default
+    if (search_status != 'failed'){
+    	if (data.status == 'idle') { //fetch by default
 	    dispatch(fetchData(`/api/v1/variants/${props.props.variant}?` + new URLSearchParams({...data.filters, ...data.serverOptions, ...{'data_type': dtype}})))
 	} else {
 	    const unordered = {...data.filters, ...data.serverOptions, ...{'data_type': dtype}}
@@ -38,6 +41,7 @@ export const Variant = (props) => {
 	    	dispatch(fetchData(`/api/v1/variants/${props.props.variant}?` + new URLSearchParams({...data.filters, ...data.serverOptions, ...{'data_type': dtype}})))
 	    }
 	}
+    }
     }, [data.filters, data.serverOptions, props])
 
     let content = (<div>loading...</div>)
@@ -49,7 +53,7 @@ export const Variant = (props) => {
 	      data.error.status == 500 ?
 	      'Internal server error, let us know.' :
 	      `${data.error.status} oh no, something went wrong`
-	content = (<div>{errorMsg}</div>)
+	content = (<div style={{color: 'red'}}>{errorMsg}</div>)
     }
     if (data.status == 'done') {
 	//after info score, there's a bug though that this doesn't currently update because it's not in data.data
@@ -86,6 +90,6 @@ export const Variant = (props) => {
     }
 
     return (
-	    <div>{content}</div>
+    	search_status == 'failed' ? '' : ( <div>{content}</div>)
     )
 }

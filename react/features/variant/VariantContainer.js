@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useSelector } from 'react-redux'
 import { Variant } from './Variant'
 import { VariantForm } from './VariantForm'
+import { search } from '../search/searchSlice'
 
 export const VariantContainer = ({ match: { params } }) => {
     // external links after header
@@ -10,10 +11,6 @@ export const VariantContainer = ({ match: { params } }) => {
     // <div style={{paddingLeft: '10px'}}><a href={`https://genetics.opentargets.org/variant/${params.variant.replace(/-/g, '_')}`} target='_blank'>opentargets</a></div>
     return (
 	    <div>
-	    <div style={{display: 'flex'}}>
-	    <div className="header">{params.variant || '...'}</div>
-	    <div className="header"></div>
-	    </div>
 	    <VariantForm props={params}/>
 	    <div style={{paddingTop: '10px'}}>
 	    <Variant props={params}/>

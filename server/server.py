@@ -43,7 +43,6 @@ def find(query):
     
 @app.route('/api/v1/variants/<variants>')
 def variants(variants):
-    #print(request.args.to_dict())
     try:
         data_type = request.args.get('data_type')
         data = fetch.get_variants(variants, request.args.to_dict(), data_type)

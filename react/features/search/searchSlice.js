@@ -33,6 +33,7 @@ export const searchSlice = createSlice({
 	[search.pending]: (state, action) => {
 	    state.status = 'loading'
 	    state.error = null
+	    state.result = {}
 	},
 	[search.fulfilled]: (state, action) => {
 	    state.status = 'done'
@@ -43,6 +44,7 @@ export const searchSlice = createSlice({
 	    state.status = 'failed'
 	    state.error = action.payload
 	    // console.log("searchSlice.js state.error:", action.payload)
+	    state.result = {}
 	}
     }
 })
