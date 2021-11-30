@@ -1,5 +1,9 @@
 import logging
 
+use_gcp_buckets = False
+basic_info_file_bucket = ''
+cluster_plots_bucket = ''
+
 sqlite_db = '/finngen/red/fgq/data/fgq.r6.2.db'
 
 basic_info_file = '/finngen/red/fgq/data/finngen_R6_gt_samples_info_2.txt.gz'

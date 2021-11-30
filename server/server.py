@@ -6,6 +6,7 @@ import re
 from utils import parse_chr, parse_region, ParseException, NotFoundException
 from data import Datafetch
 from search import Search
+from cloud_storage import CloudStorage
 
 app = Flask(__name__, template_folder='../templates', static_folder='../static')
 Compress(app)
@@ -22,6 +23,7 @@ gunicorn_logger = logging.getLogger('gunicorn.error')
 app.logger.handlers = gunicorn_logger.handlers
 app.logger.setLevel(config['log_level'])
 
+cloud_storage = CloudStorage()
 fetch = Datafetch(config)
 search = Search(config)
 
@@ -94,8 +96,15 @@ def clusterplot(plot_type, variant):
         arr[0] = 'X' if arr[0] == '23' else arr[0] 
         exists_in_chip = fetch.check_var_in_chip(variant)
         filename = config['cluster_plots_location'] + '/' + plot_type + '/' + '_'.join(arr) + '.png'
-        with open(filename, 'rb') as f:
-            blob = f.read()
+        if (config['use_gcp_buckets']):
+            blob = cloud_storage.read_file(config['cluster_plots_bucket'], filename)
+            if blob is None:
+                raise FileNotFoundError("Requested cluster plot not found!")
+            data = blob.download_as_bytes()
+        else:
+            with open(filename, 'rb') as f:
+                data = f.read()
+        
     except ParseException as e:
         abort(400, 'could not parse given variant')
     except FileNotFoundError as e:
@@ -103,7 +112,7 @@ def clusterplot(plot_type, variant):
             abort(404, 'varaint exists in raw chip but no plot was found')
         else:
             abort(410, 'varaint does not exist in raw chip and no plot was found')
-    return blob
+    return data
 
 
 if __name__ == '__main__':
