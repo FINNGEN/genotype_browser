@@ -25,7 +25,7 @@ def run_gunicorn(app, args):
         'access_log_format': '%(t)s | %(s)s | %(L)ss | %(m)s %(U)s | resp_len:%(B)s | referrer:"%(f)s" | ip:%(h)s | agent:%(a)s',
         'loglevel': args.loglevel,
         'timeout': 120,
-        'worker_class': 'sync',
+        'worker_class': 'gevent',
     }
     sga = StandaloneGunicornApplication(app, options)
     sga.run()
