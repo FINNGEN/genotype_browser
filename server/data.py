@@ -261,6 +261,8 @@ class Datafetch(object):
     def _count_gt_for_write(self, variants, data, filters, chips, data_type):
         start_time = timeit.default_timer()
         df_list = []
+        release_version = re.search(r'(?<=fgq.r)\d+', self.conf['sqlite_db']).group(0)
+        cohort_source = 'Genobrowser[DF' + release_version + ']'
         if data_type == 'imputed':
             filtered_basic_info = self._filter(self.info, filters, chips)
             info_orig = self.info_orig
@@ -321,6 +323,8 @@ class Datafetch(object):
             # append data frames
             df = self._filter(df, filters, chips)
             df['variant'] = variants[i].replace('-', ':')
+            df['COHORT_SOURCE'] = cohort_source
+            df['COHORT_NAME'] = df['variant'] + '-' + df['gt']
             df_list.append(df)
         
         elapsed = timeit.default_timer() - start_time
