@@ -17,7 +17,12 @@ class Datafetch(object):
         self.conn = defaultdict(lambda: sqlite3.connect(self.conf['sqlite_db']))
 
     def _init_info(self, select_chip):
-        info = pd.read_csv(self.conf['basic_info_file'], sep='\t').fillna('NA')
+        if (self.conf['use_gcp_buckets']):
+            info_file = 'gs://'+ self.conf['basic_info_file_bucket']+'/'+ self.conf['basic_info_file']
+        else:
+            info_file = self.conf['basic_info_file']
+        info = pd.read_csv(info_file, sep='\t').fillna('NA')
+
         if select_chip:
             info.index = info['FINNGENID']
             tabix_iter = self.tabix_files_chip[threading.get_ident()][0]
