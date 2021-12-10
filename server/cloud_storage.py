@@ -7,11 +7,12 @@ class CloudStorage:
         # Uses "GOOGLE_APPLICATION_CREDENTIALS" environment variable to get service account key
         self.client = storage.Client()
       
-    def read_file(self, bucket, file):
+    def read_bytes(self, bucket, file):
         try:
             bucket = self.client.bucket(bucket)
+            blob = bucket.blob(file)
+            data = blob.download_as_bytes()
         except google.cloud.exceptions.NotFound:
             return None
-        blob = bucket.blob(file)
             
-        return blob
+        return data
