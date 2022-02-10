@@ -28,8 +28,7 @@ class Datafetch(object):
             tabix_iter = self.tabix_files_chip[threading.get_ident()][0]
             h = tabix_iter.header[len(tabix_iter.header) - 1].split('\t')
             chip_samples = h[9:]
-            info = info.loc[chip_samples, :]
-
+            info = info.loc[info.index.intersection(chip_samples), :]
         # make a copy for writing data out with male/female texts
         info_orig = info.copy()
         # info_orig['SEX'] = np.where(info_orig['SEX'] == 1, 'female', 'male')
@@ -37,11 +36,12 @@ class Datafetch(object):
         info_orig['DEATH'] = info_orig['DEATH'].astype('Int64')
         
         # change cohort/region names to index
-        cohort_list = sorted(list(set(info['cohort'].tolist())))
+        # nan values cause error during sorting so fill them first?
+        cohort_list = sorted(list(set(info['cohort'].fillna("NA").tolist())))
         cohort_idx = {cohort:i for i,cohort in enumerate(cohort_list)}
         info['cohort'] = info['cohort'].map(cohort_idx)
         
-        region_list = sorted(list(set(info['regionofbirthname'].tolist())))
+        region_list = sorted(list(set(info['regionofbirthname'].fillna("NA").tolist())))
         region_idx = {region:i for i,region in enumerate(region_list)}
         info['regionofbirth'] = info['regionofbirthname'].map(region_idx)
         info = info.drop(columns=['FINNGENID', 'regionofbirthname'])
