@@ -17,7 +17,6 @@ export const VariantClusterPlot = () => {
     const handlePlotTypeChange = event => {
     	setSelection(event.target.value)
     }
-
     useEffect (() => {
         if (variant.length == 1){
             fetch('/api/v1/clusterplot/' + selection + '/' + variant).then((res) => {
@@ -29,7 +28,11 @@ export const VariantClusterPlot = () => {
     if (variant.length == 1) {
         // 404: varaint exists in raw chip but no plot was found
         if (status && status == 404){
-            error_message = "Variant exists in FinnGen chip but no cluster plot was found. Contact helpdesk to report the issue."
+	    if (selection == "excluded"){
+	        error_message = "Variant has failed QC so there are no calls to show."
+	    } else {
+               error_message = "Variant exists in FinnGen chip but no cluster plot was found. Contact helpdesk to report the issue."
+	    }
         // varaint does not exist in raw chip' -> imputed data
         } else if (status && status == 410){
            drop_section = true
