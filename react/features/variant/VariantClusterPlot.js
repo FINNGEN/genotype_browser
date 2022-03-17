@@ -67,6 +67,8 @@ export const VariantClusterPlot = () => {
                             <option value="raw">All</option>
                             <option value="imputed">Missing imputation</option>
                             <option value="sex">Sex-separated</option>
+                            <option value="exome">Exome</option>
+                            <option value="excluded">Excluded</option>
                         </select>
                 </form>
                 {content}
