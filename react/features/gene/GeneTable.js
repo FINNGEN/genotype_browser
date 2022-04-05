@@ -144,7 +144,7 @@ export const getColumns = (gene, checked, handleCheck, handleCheckAll, dtype) =>
 		Cell: props => {
 			if (props.value == 'NA'){
 				return 'NA'
-			} else if (props.value == 1e6 || props.value == 'Inf') {
+			} else if (props.value == 1e6 || props.value == 'inf') {
 				return 'inf'
 			} else {
 				return props.value.toPrecision(3)
