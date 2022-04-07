@@ -1,4 +1,4 @@
-FROM ubuntu:18.04
+FROM ubuntu:20.04
 
 ENV LC_ALL C.UTF-8
 ENV LANG C.UTF-8
@@ -13,7 +13,7 @@ RUN apt-get update -y && apt-get upgrade -y
 RUN apt-get install curl python3-pip zlib1g-dev libbz2-dev liblzma-dev -y
 
 # add node archive
-RUN curl -sL https://deb.nodesource.com/setup_15.x | bash -
+RUN curl -sL https://deb.nodesource.com/setup_16.x | bash -
 RUN apt-get install nodejs -y
 
 RUN curl -LO https://github.com/samtools/htslib/releases/download/${HTSLIB_VER}/htslib-${HTSLIB_VER}.tar.bz2 && \
