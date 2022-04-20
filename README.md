@@ -1,5 +1,5 @@
 # genotype_browser
-FinnGen genotype browser pilot
+FinnGen genotype browser
 
 ### Running Docker image
 
