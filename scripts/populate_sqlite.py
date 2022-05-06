@@ -25,20 +25,25 @@ def main():
     populate_chip(args)
     populate_anno(args)
 
-def populate_anno(config):
-    start_time = timeit.default_timer()
-    conn = sqlite3.connect(config['sqlite_db'])
-    c = conn.cursor()
-    c.execute('DROP TABLE IF EXISTS anno')
-    c.execute('CREATE TABLE anno (variant text, chr text, pos integer, rsid text, af real, info real, enrichment_nfsee_genomes real, enrichment_nfsee_exomes real, gene_most_severe text, most_severe text, consequence_gnomad text, in_data integer)')
-    entries = []
-    with gzip.open(config['variant_annotation_file'], 'rt') as f:
+
+def generate_entries(varf):
+    #entries = []
+    with gzip.open(varf, 'rt') as f:
         h = {h:i for i,h in enumerate(f.readline().strip().split('\t'))}
         for line in f:
             s = line.strip().split('\t')
             # TODO gets the first rsid.. whats the best rsid .split(',')[0]
-            entries.append((s[h['variant']], s[h['chr']], s[h['pos']], s[h['rsid']], s[h['af']], s[h['info']], s[h['enrichment_nfsee_genomes']], s[h['enrichment_nfsee_exomes']], s[h['gene_most_severe']], s[h['most_severe']], s[h['consequence_gnomad']], s[h['in_data']]))
-    c.executemany('INSERT INTO anno VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', entries)
+            yield((s[h['variant']], s[h['chr']], s[h['pos']], s[h['rsid']], s[h['af']], s[h['info']], s[h['enrichment_nfsee_genomes']], s[h['enrichment_nfsee_exomes']], s[h['gene_most_severe']], s[h['most_severe']], s[h['consequence_gnomad']], s[h['in_data']]))
+
+
+def populate_anno(config):
+    start_time = timeit.default_timer()
+    f = config['variant_annotation_file']
+    conn = sqlite3.connect(config['sqlite_db'])
+    c = conn.cursor()
+    c.execute('DROP TABLE IF EXISTS anno')
+    c.execute('CREATE TABLE anno (variant text, chr text, pos integer, rsid text, af real, info real, enrichment_nfsee_genomes real, enrichment_nfsee_exomes real, gene_most_severe text, most_severe text, consequence_gnomad text, in_data integer)')
+    c.executemany('INSERT INTO anno VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', generate_entries(f))
     print(str(timeit.default_timer() - start_time) + ' seconds pushing anno')
     start_time = timeit.default_timer()
     c.execute('CREATE INDEX variant_idx ON anno (variant ASC)')
