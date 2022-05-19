@@ -311,7 +311,7 @@ class Datafetch(object):
             het['gt'] = gt_het
             hom_alt['gt'] = gt_hom
             wt_hom['gt'] = gt_wt_hom
-            missing['gt'] = gt_missing
+            missing['gt'] = '.|.'
 
             # if specified the type of variants to be saved
             if 'hethom' in filters:
@@ -400,10 +400,10 @@ class Datafetch(object):
             filename = variants.replace(',', '_') + '__rawchip_data__' + '_'.join([k+'_'+v for k,v in filters.items()]) + '.tsv'
         data = data.drop(columns=['AGE_AT_DEATH_OR_NOW'])
         data['SEX'] = np.where(data['SEX'] == 1, 'female', 'male')
+        data = data.sort_values(by=['FINNGENID'])           
         try:
             data.to_csv(sep='\t', index=False, na_rep='NA')
             output = make_response(data.to_csv(sep='\t', index=False, na_rep='NA'))
-
             output.headers["Content-Disposition"] = "attachment; filename=" + filename
             output.headers["Content-type"] = "text/tab-separated-values"
             return output
