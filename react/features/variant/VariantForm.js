@@ -283,13 +283,13 @@ export const VariantForm = (props) => {
 			    <div style={{display: 'flex', flexDirection: 'row'}}>
 
 				    <div onChange={optionChanged.bind(this, 'cntfreq')} className="buttonGroup">
-				    <div><input type="radio" value="gt_count" name="cntfreq" defaultChecked/><span>number of genotypes</span></div>
-				    <div><input type="radio" value="freq" name="cntfreq"/><span>allele frequency</span></div>
+				    <div><input type="radio" value="freq" name="cntfreq" defaultChecked/><span>allele frequency</span></div>
+				    <div><input type="radio" value="gt_count" name="cntfreq"/><span>number of genotypes</span></div>
 				    </div>
 				    
 				    <div onChange={optionChanged.bind(this, 'bbreg')} className="buttonGroup">
-				    <div><input type="radio" value="biobank" name="bbreg" defaultChecked/><span>by biobank</span></div>
-				    <div><input type="radio" value="region" name="bbreg"/><span>by region of birth</span></div>
+				    <div><input type="radio" value="region" name="bbreg" defaultChecked/><span>by region of birth</span></div>
+				    <div><input type="radio" value="biobank" name="bbreg"/><span>by biobank</span></div>
 				    </div>
 			    </div>
 			    </div>

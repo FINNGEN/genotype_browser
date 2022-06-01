@@ -8,7 +8,6 @@ export const VariantPlotCohort = () => {
     const data = useSelector(state => state.data.data)
     const options = useSelector(state => state.data.options)
     const use_data = options.bbreg == 'biobank' ? data.agg.cohorts : data.agg.regions
-    
     let traces
     if (options.cntfreq == 'freq') {
 	traces = [{

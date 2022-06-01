@@ -3,12 +3,14 @@ import { useSelector, useDispatch } from 'react-redux'
 import { VariantPlotCohort } from './VariantPlotCohort'
 import { VariantPlotAge } from './VariantPlotAge'
 import { VariantClusterPlot } from './VariantClusterPlot'
+import { VariantPlotMap } from './VariantPlotMap.js'
 
 export const VariantPlots = () => {
     return (
 	    <div>
-	    <VariantPlotCohort />
+		<VariantPlotCohort /> 
 	    <VariantPlotAge />
+	    <VariantPlotMap />
 	    <VariantClusterPlot />
 	    </div>
     )

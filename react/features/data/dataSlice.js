@@ -68,8 +68,8 @@ export const dataSlice = createSlice({
 	    hethom: 'all' // 'all', 'het', 'hom', 'wt_hom': specify individuals with which type of variant should be downloaded
 	},
 	options: {
-	    bbreg: 'biobank', // 'biobank' or 'region'
-	    cntfreq: 'gt_count' // 'gt_count', 'indiv_count' or 'freq'
+	    bbreg: 'region', // 'biobank' or 'region'
+	    cntfreq: 'freq' // 'gt_count', 'indiv_count' or 'freq'
 	},
 	serverOptions: {
 	    hethom: false // whether to count individuals heterozygous for more than one variant as homozygous
