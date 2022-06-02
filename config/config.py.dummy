@@ -8,6 +8,8 @@ sqlite_db = 'fgq.r6.4.db'
 
 basic_info_file = 'genotype_browser_dummy_data_50k_1.txt.gz'
 
+geojson = 'finmap.geojson'
+
 vcf_files = {
     "imputed_data": [
         '1.vcf.gz',
