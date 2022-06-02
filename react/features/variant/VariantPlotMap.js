@@ -11,7 +11,7 @@ export const VariantPlotMap = () => {
     const use_data = data.agg.regions
     var geo_data = data.geo_data['features']
     const width = 800;
-	const height = 600;
+	const height = 550;
 	const colors = ["#F5F9FF", "#BBD1EB", "#599DCC", "#1C5BA6", "#0A2258"]
 
     var svg_data=[]
@@ -53,7 +53,7 @@ export const VariantPlotMap = () => {
 	var projection = d3.geoMercator()
 		.center([23, 61])
 		.scale(1200)
-		.translate([width/2-50, 500]); 
+		.translate([width/2-50, 490]); 
 	const path = d3.geoPath().projection(projection);
 
 	var tooltip = d3.select("body").append("div")
@@ -147,13 +147,13 @@ export const VariantPlotMap = () => {
 			.attr("stop-color", function(d){return d.color})
 
 		svg.append("text")
-			.attr("x", 10)
+			.attr("x", 20)
 			.attr("y", 20)
 			.style("text-anchor", "left")
 			.text("Allele frequency")
 
 		svg.append("rect")
-			.attr("x", 65)
+			.attr("x", 75)
 			.attr("y", 40)
 			.attr("width", 15)
 			.attr("height", 250)
@@ -176,9 +176,9 @@ export const VariantPlotMap = () => {
 	}, [svg_data])
 
     return (
-    	<div>
-    		<p style={{width: width, textAlign: "center"}}>Allele frequency by region of birth</p>
-			<svg style={{"borderColor": "#b3b3b3", "border": "solid", "borderWidth": "1px"}} ref={ref}></svg>
+    	<div style={{width: width, height: "600px", display: "inline-block", verticalAlign: "top"}}>
+    		<p style={{width: width, textAlign: "center", marginTop: "10px", marginBottom: "10px"}}>Allele frequency by region of birth</p>
+			<svg ref={ref}></svg>
 		</div>
     )
 }
