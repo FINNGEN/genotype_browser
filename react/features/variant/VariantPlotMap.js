@@ -10,8 +10,8 @@ export const VariantPlotMap = () => {
     const options = useSelector(state => state.data.options)
     const use_data = data.agg.regions
     var geo_data = data.geo_data['features']
-    // var values = options.cntfreq == 'freq' ? use_data.af : options.maphethom == 'het' ? use_data.gt_counts[0] : use_data.gt_counts[1]
-    var title =  options.cntfreq == 'freq' ? "Allele frequency by region of birth" : "Number of genotypes by region of birth"
+    var hethom_title = options.maphethom == 'het' ? 'heterozygous' : 'homozygous'
+    var title =  options.cntfreq == 'freq' ? "Allele frequency by region of birth" :  "Number of " + hethom_title + " genotypes by region of birth"
 
     const width = 800;
 	const height = 550;
