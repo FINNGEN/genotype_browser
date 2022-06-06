@@ -69,7 +69,9 @@ export const dataSlice = createSlice({
 	},
 	options: {
 	    bbreg: 'region', // 'biobank' or 'region'
-	    cntfreq: 'freq' // 'gt_count', 'indiv_count' or 'freq'
+	    cntfreq: 'freq', // 'gt_count', 'indiv_count' or 'freq'
+	    barmap: 'map', // 'bar' or 'map'
+	    maphethom: 'het' // 'het' or 'hom'
 	},
 	serverOptions: {
 	    hethom: false // whether to count individuals heterozygous for more than one variant as homozygous

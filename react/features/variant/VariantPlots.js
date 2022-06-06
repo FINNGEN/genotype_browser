@@ -6,11 +6,15 @@ import { VariantClusterPlot } from './VariantClusterPlot'
 import { VariantPlotMap } from './VariantPlotMap.js'
 
 export const VariantPlots = () => {
+
+	const options = useSelector(state => state.data.options)    
+
     return (
 	    <div>
-		<VariantPlotCohort /> 
+	    {
+	    	options.barmap == 'map' && options.bbreg == 'region' ? <VariantPlotMap /> : <VariantPlotCohort /> 
+	    } 
 	    <VariantPlotAge />
-	    <VariantPlotMap />
 	    <VariantClusterPlot />
 	    </div>
     )

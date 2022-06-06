@@ -10,11 +10,18 @@ export const VariantPlotMap = () => {
     const options = useSelector(state => state.data.options)
     const use_data = data.agg.regions
     var geo_data = data.geo_data['features']
+    // var values = options.cntfreq == 'freq' ? use_data.af : options.maphethom == 'het' ? use_data.gt_counts[0] : use_data.gt_counts[1]
+    var title =  options.cntfreq == 'freq' ? "Allele frequency by region of birth" : "Number of genotypes by region of birth"
+
     const width = 800;
 	const height = 550;
 	const colors = ["#F5F9FF", "#BBD1EB", "#599DCC", "#1C5BA6", "#0A2258"]
+	var regions = ["Region_ceded_to_Soviet", "NA", "Abroad"]
+	var text = options.cntfreq == 'freq' ? "AF" : "GT count" 
+	var leg_title = options.cntfreq == 'freq' ? "Allele frequency" : "Genotype count" 
 
     var svg_data=[]
+    var values = []
     for (var i=0; i<geo_data.length; i++){
     	var feature = geo_data[i]
     	var geom = turf.rewind(feature['geometry'], {reverse:true})
@@ -22,16 +29,14 @@ export const VariantPlotMap = () => {
     	var id = use_data.names.findIndex(obj => { return obj == feature['properties']['shapeName_gb'] })
     	var fg_stats = {}
     	if (id !== -1){
+    		var element = options.cntfreq == 'freq' ? use_data.af[id] : options.maphethom == 'het' ? use_data.gt_counts[0][id] : use_data.gt_counts[1][id]
     		fg_stats = {
-    			'af': use_data.af[id], 
-    			'gt_counts': [use_data.gt_counts[0][id], use_data.gt_counts[1][id]],
-    			'num_indiv': use_data.num_indiv[id]
+    			'value': element
     		}
+    		values.push(element)
     	} else {
     		fg_stats = {
-    			'af': NaN, 
-    			'gt_counts': NaN,
-    			'num_indiv': NaN
+    			'value': NaN
     		}
     	}
     	const prop = Object.assign({}, fg_stats, feature['properties'])
@@ -40,21 +45,36 @@ export const VariantPlotMap = () => {
     				   'geometry': geom})
 	}
 
-	// exclude NA, Abroad and Soviet areas
-	var regions = ["Region_ceded_to_Soviet", "NA", "Abroad"]
-	var af = use_data.af
-	for (var i=0; i<regions.length; i++){ 
-		var ind = use_data.names.findIndex(obj => { return obj == regions[i] })
-		af = af.filter(function(element, i) {if (i != ind){
-			return element
-		} })
-	}
-
 	var projection = d3.geoMercator()
 		.center([23, 61])
 		.scale(1200)
 		.translate([width/2-50, 490]); 
 	const path = d3.geoPath().projection(projection);
+
+	// choose min and max value for the plot
+	var min_val = Math.min.apply(Math, values)
+	var max_val = Math.max.apply(Math, values)
+	if (options.cntfreq == 'freq'){
+		const af_thres = [0.001, 0.005, 0.01, 0.05]
+		for (i=0; i<af_thres.length; i++){
+			if (max_val < af_thres[i]){
+				max_val = af_thres[i]
+				break
+			}
+		}
+	} else {
+		// for GT count: fix min count to 0
+		min_val = 0
+		max_val = min_val == 0 && max_val == 0 ? 1 : max_val
+	} 
+
+	// bin data for the legend
+	var len = colors.length
+	var step = (max_val - min_val) / (len - 1)
+	var val_seq = [min_val]
+	for (var i=1; i<len; i++){
+		val_seq.push(val_seq[i - 1] + step)
+	}
 
 	var tooltip = d3.select("body").append("div")
 		.style("background-color", "white")
@@ -64,19 +84,8 @@ export const VariantPlotMap = () => {
 		.style("padding", "10px")
 		.style("opacity", 0);
 
-	const min_af = Math.min.apply(Math, af)
-	const max_af = Math.max.apply(Math, af)
-
-	// bin af data for the legend
-	var len = colors.length
-	var step = (max_af - min_af) / (len - 1)
-	var af_seq = [min_af]
-	for (var i=1; i<len; i++){
-		af_seq.push(af_seq[i - 1] + step)
-	}
-
 	var colorScaleLinear = d3.scaleLinear()
-			.domain(af_seq)
+			.domain(val_seq)
 			.range(colors) 
 
 	const ref = useRef()
@@ -85,6 +94,9 @@ export const VariantPlotMap = () => {
 			.style("width", width)
 			.style("height", height)
 
+		// remove previous content
+		svg.selectAll("*").remove()
+
 		svg.append("svg")
 			.selectAll('path')
 			.data(svg_data)
@@ -92,15 +104,14 @@ export const VariantPlotMap = () => {
 		    .append('path')
 		    .attr("d", path)
 		    .style("fill", function(d) {
-		    	return colorScaleLinear(d.properties.af)
+		    	return colorScaleLinear(d.properties.value)
 		    })
 		    .style("stroke", "#000000")
 		    .style("stroke-width", 0.5)
 		    .on("mouseover",function(e, d) {
-		   		console.log("just had a mouseover", d.properties.shapeName_gb);
 		   		tooltip.html(
 		   				"<b>Region: </b>" + d.properties.shapeName_gb + "<br />" +
-		   				"<b>AF: </b>"+ parseFloat(d.properties.af).toFixed(6)
+		   				"<b>" + text + ": </b>"+ `${ options.cntfreq == 'freq' ? parseFloat(d.properties.value).toFixed(6) : d.properties.value}`
 		   			)
 		        	.style("left", (event.clientX + 4) + "px")
 		        	.style("top", (event.clientY - 4) + "px")
@@ -150,7 +161,7 @@ export const VariantPlotMap = () => {
 			.attr("x", 20)
 			.attr("y", 20)
 			.style("text-anchor", "left")
-			.text("Allele frequency")
+			.text(leg_title)
 
 		svg.append("rect")
 			.attr("x", 75)
@@ -160,7 +171,7 @@ export const VariantPlotMap = () => {
 			.style("fill", "url(#linear-gradient)")
 
 		var scaleLegend = d3.scaleLinear()
-			.domain([min_af, max_af])
+			.domain([min_val, max_val])
 			.range([0, 249])
 		
 		var axisLegend = d3.axisLeft(scaleLegend)
@@ -177,7 +188,7 @@ export const VariantPlotMap = () => {
 
     return (
     	<div style={{width: width, height: "600px", display: "inline-block", verticalAlign: "top"}}>
-    		<p style={{width: width, textAlign: "center", marginTop: "10px", marginBottom: "10px"}}>Allele frequency by region of birth</p>
+    		<p style={{width: width, textAlign: "center", marginTop: "10px", marginBottom: "10px"}}>{title}</p>
 			<svg ref={ref}></svg>
 		</div>
     )
