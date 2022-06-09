@@ -52,19 +52,21 @@ export const VariantPlotMap = () => {
 	const path = d3.geoPath().projection(projection);
 
 	// choose min and max value for the plot
-	// var min_val = Math.min.apply(Math, values)
-	var min_val = 0
+	var min_val = Math.min.apply(Math, values)
+	// var min_val = 0
 	var max_val = Math.max.apply(Math, values)
 	if (options.cntfreq == 'freq'){
 		const af_thres = [0.001, 0.005, 0.01, 0.05]
 		for (i=0; i<af_thres.length; i++){
 			if (max_val < af_thres[i]){
 				max_val = af_thres[i]
+				min_val = 0
 				break
 			}
 		}
 	} else {
 		// for GT count: fix min count to 0
+		min_val = 0
 		max_val = min_val == 0 && max_val == 0 ? 1 : max_val
 	} 
 
