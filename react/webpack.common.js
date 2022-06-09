@@ -14,7 +14,7 @@ module.exports = {
                 test: /\.js?$/,
                 loader: 'babel-loader',
 		// use: ['style-loader', 'css-loader'],
-                query: {
+                options: {
                     presets: [
             			['@babel/preset-env',
             			 {
@@ -29,7 +29,7 @@ module.exports = {
             },
             { 
               test: /\.css$/, 
-              loader: "style-loader!css-loader" 
+              use: ['style-loader', 'css-loader']
             }
         ] 
     },
