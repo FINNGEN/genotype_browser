@@ -1,12 +1,15 @@
 import logging
 
+sqlite_db = '/finngen/red/fgq/data/fgq.r6.2.db'
+
 use_gcp_buckets = False
 basic_info_file_bucket = ''
 cluster_plots_bucket = ''
 
-sqlite_db = '/finngen/red/fgq/data/fgq.r6.2.db'
-
+cluster_plots_location = 'cluster_plots/'
 basic_info_file = '/finngen/red/fgq/data/finngen_R6_gt_samples_info_2.txt.gz'
+
+geojson = 'finmap.geojson'
 
 vcf_files = [
     '/finngen/library-red/finngen_R6/genotype_1.0/data/finngen_R6_chr1.vcf.gz',
@@ -33,7 +36,5 @@ vcf_files = [
     '/finngen/library-red/finngen_R6/genotype_1.0/data/finngen_R6_chr22.vcf.gz',
     '/finngen/library-red/finngen_R6/genotype_1.0/data/finngen_R6_chr23.vcf.gz'
 ]
-
-write_dir = '/finngen/red/fgq/out'
 
 log_level = logging.INFO
