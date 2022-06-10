@@ -412,7 +412,7 @@ class Datafetch(object):
             # TODO should return non-200 maybes
             return {'status': 'failed', 'message': str(e)}
 
-    def get_gene_variants(self, gene, data_type):
+    def get_gene_variants(self, gene):
         if self.conn[threading.get_ident()].row_factory is None:
             self.conn[threading.get_ident()].row_factory = sqlite3.Row
         c = self.conn[threading.get_ident()].cursor()
@@ -421,7 +421,7 @@ class Datafetch(object):
         if len(gene_db) == 0:
             raise utils.NotFoundException()
         else:
-            vars_db = self.get_genomic_range_variants(gene_db[0]['chr'], gene_db[0]['start'], gene_db[0]['end'], data_type)
+            vars_db = self.get_genomic_range_variants(gene_db[0]['chr'], gene_db[0]['start'], gene_db[0]['end'])
             res_vars = vars_db['data']
         # drop columns we don't show
         exclude_cols = ['gene_most_severe', 'consequence_gnomad', 'chr', 'pos', 'in_data']
@@ -429,16 +429,16 @@ class Datafetch(object):
         return {
             'gene': gene,
             'columns': cols,
-            'data': res_vars,
-            'data_type': data_type
+            'data': res_vars
         }
 
-    def get_genomic_range_variants(self, chr, start, end, data_type):
-        in_data = 1 if data_type == 'imputed' else 2
+    def get_genomic_range_variants(self, chr, start, end):
+        # in_data = 1 if data_type == 'imputed' else 2
         if self.conn[threading.get_ident()].row_factory is None:
             self.conn[threading.get_ident()].row_factory = sqlite3.Row
         c = self.conn[threading.get_ident()].cursor()
-        query = 'SELECT * FROM anno WHERE chr=%s AND pos>=%s AND pos<=%s AND (in_data=%s OR in_data=3);' % (chr, start, end, in_data)
+        query = 'SELECT * FROM anno WHERE chr=%s AND pos>=%s AND pos<=%s;' % (chr, start, end)
+        # query = 'SELECT * FROM anno WHERE chr=%s AND pos>=%s AND pos<=%s AND (in_data=%s OR in_data=3);' % (chr, start, end, in_data)
         c.execute(query)
         res = [dict(row) for row in c.fetchall()]
         if len(res) == 0:
@@ -446,6 +446,12 @@ class Datafetch(object):
         data = []
         for item in res:
             item['variant'] = '-'.join(item['variant'].split(':'))
+            var_src = 'imputed, chip'
+            if item['in_data'] == 1:
+                var_src = 'imputed'
+            elif item['in_data'] == 2:
+                var_src = 'chip'
+            item['source'] = var_src
             data.append(item)
         genomic_range = "%s:%s-%s" % (chr, start, end)                     
         exclude_cols = ['gene_most_severe', 'consequence_gnomad', 'chr', 'pos', 'in_data']
@@ -453,6 +459,5 @@ class Datafetch(object):
         return {
             'range': genomic_range,
             'columns': cols,
-            'data': data,
-            'data_type': data_type
+            'data': data
         }

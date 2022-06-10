@@ -49,6 +49,14 @@ export const getColumns = (gene, checked, handleCheck, handleCheckAll, dtype) =>
 		headerStyle: {textAlign: 'right'},
 		Cell: props => <Link to={`/variant/${props.value.replace(/:/g, '-')}/${dtype}`} target="_blank">{props.value}</Link>
 	    }
+	} else if (c == 'source') {
+	    return {
+		Header: 'variant present in',
+		accessor: c,
+		style: {textAlign: 'right'},
+		headerStyle: {textAlign: 'right'},
+		Cell: props => props.value
+	    }
 	} else if (c == 'rsid') {
 	    return {
 		Header: c,

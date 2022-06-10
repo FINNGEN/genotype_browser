@@ -58,7 +58,8 @@ def variants(variants):
 def gene_variants(gene):
     try:
         data_type = request.args.get('data_type')
-        data = fetch.get_gene_variants(gene, data_type)
+        data = fetch.get_gene_variants(gene)
+        data['data_type'] = data_type
     except ParseException as e:
         abort(400, 'could not parse given gene')
     except NotFoundException as e:
@@ -81,7 +82,8 @@ def range(range):
     data_type = request.args.get('data_type')
     try:
         chr, start, end = parse_region(range)
-        data = fetch.get_genomic_range_variants(chr, start, end, data_type)
+        data = fetch.get_genomic_range_variants(chr, start, end)
+        data['data_type'] = data_type
     except ParseException as e:
         abort(400, 'could not parse given genomic range')
     except NotFoundException as e:
