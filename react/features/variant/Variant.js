@@ -59,7 +59,7 @@ export const Variant = (props) => {
 	//after info score, there's a bug though that this doesn't currently update because it's not in data.data
 	//<tr><td>wall time</td><td style={{textAlign: 'right'}}>{`${data.time.fetch.toPrecision(3)}+${data.time.munge.toPrecision(3)}`}</td></tr>
 	
-	var impscore = ''
+	var impscore = null
 	if (dtype == 'imputed') {
 		impscore = (<tr><td>imputation info score</td><td style={{textAlign: 'right'}}>{data.data.info < 0 ? 'NA' : data.data.info.toPrecision(3)}</td></tr>)
 	} 
@@ -70,10 +70,10 @@ export const Variant = (props) => {
 		   <div style={{display: 'flex', flexDirection: 'row'}}>
 			   <table style={{width: '200px'}}>
 			   <tbody>
-			   <tr><td style={{textAlign: 'right'}}>{data.data.total_indiv}</td><td>individual{data.data.total_indiv == 1 ? '' : 's'}</td></tr>
-			   <tr><td style={{textAlign: 'right'}}>{gtCnt[0]}</td><td>heterozygote{gtCnt[0] == 1 ? '' : 's'}</td></tr>
-			   <tr><td style={{textAlign: 'right'}}>{gtCnt[1]}</td><td>homozygote{gtCnt[1] == 1 ? '' : 's'}</td></tr>
-			   <tr><td style={{textAlign: 'right'}}>{gtCnt[2]}</td><td>WT homozygote{gtCnt[2] == 1 ? '' : 's'}</td></tr>
+			   <tr><td style={{textAlign: 'right'}}>{data.data.total_indiv}</td><td>individual{data.data.total_indiv == 1 ? null : 's'}</td></tr>
+			   <tr><td style={{textAlign: 'right'}}>{gtCnt[0]}</td><td>heterozygote{gtCnt[0] == 1 ? null : 's'}</td></tr>
+			   <tr><td style={{textAlign: 'right'}}>{gtCnt[1]}</td><td>homozygote{gtCnt[1] == 1 ? null : 's'}</td></tr>
+			   <tr><td style={{textAlign: 'right'}}>{gtCnt[2]}</td><td>WT homozygote{gtCnt[2] == 1 ? null : 's'}</td></tr>
 			   <tr><td style={{textAlign: 'right'}}>{gtCnt[3]}</td><td>missing GT</td></tr> 
 			   </tbody>
 			   </table>
@@ -90,6 +90,6 @@ export const Variant = (props) => {
     }
 
     return (
-    	search_status == 'failed' ? '' : ( <div>{content}</div>)
+    	search_status == 'failed' ? null : ( <div>{content}</div>)
     )
 }
