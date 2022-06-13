@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import { setFilter, setOption, setServerOption } from '../data/dataSlice'
-import { setDataType } from '../search/searchSlice'
+import { setFilter, setOption, setServerOption, setDataType } from '../data/dataSlice'
 import validator from 'validator'
 import './styles.css'
+
 
 export const VariantForm = (props) => {
 
@@ -14,16 +14,16 @@ export const VariantForm = (props) => {
     const write_status = useSelector(state => state.data.write_status)
     const write_result = useSelector(state => state.data.write_result)
     const [gp, setGP] = useState(filters.gpThres)
-
-    // update state if variant was open in a separate window and thus the
-    // data type is obtained from the url params
-    var dtype = props.props.data_type
-    const source = dtype == 'imputed' ? 'Imputed data' : 'Raw chip data'
-    useEffect(() => {
-		dispatch(setDataType({content: dtype}))
-    }, [])
-
+    const state_data = useSelector(state => state.data.data)
+    const dtype = useSelector(state => state.data.data_type)  
+   	
+    // const dtype = useSelector(state => state.data.data_type)
+    var source = null
+    if (state_data != null){
+    	source = state_data.data_type == 'imputed' ? 'Imputed data' : 'Raw chip data' 
+    }
     const search_status =  useSelector(state => state.search.status)
+
     const filterChanged = (filt, value, event) => {
 	if (event.target.type !== 'text') {
 	    if (filt == 'gtgp') {
@@ -36,6 +36,10 @@ export const VariantForm = (props) => {
 		dispatch(setFilter({filt: filt, content: value}))
 	    }
 	}
+    }
+
+    const handleDataTypeChange = (event) => {
+		dispatch(setDataType({content: event.target.value}))
     }
 
     const optionChanged = (opt, event) => {
@@ -105,9 +109,7 @@ export const VariantForm = (props) => {
 		}
 	}
 
-	const hide_imputchip_radio = dtype != undefined ?
-		dtype == 'chip' ? true : false
-	: false
+	const hide_imputchip_radio = dtype != null ? dtype == 'chip' ? true : false : false
 
 	var render_imputchip_radio = ''
 	if (!hide_imputchip_radio){
@@ -194,6 +196,14 @@ export const VariantForm = (props) => {
 	var render_content = (
 
 		<div>
+
+		<div style={{paddingRight: '10px'}}>
+	    <input type="radio" value="imputed" id="imputed" name="dtype" checked={dtype == 'imputed'} onChange={handleDataTypeChange} />
+	    <label>Imputed data</label>
+		<input type="radio" value="chip" id="chip" name="dtype" checked={dtype == 'chip'} onChange={handleDataTypeChange} />
+	    <label>Raw FinnGen chip data</label>
+	    </div>
+
 		<div><h3>{props.props['variant'] || '...'}</h3></div>
 		<div style={{marginTop: "10px"}}>
 			    {anno}

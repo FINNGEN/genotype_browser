@@ -17,15 +17,11 @@ export const searchSlice = createSlice({
     name: 'search',
     initialState: {
 	status: 'idle',
-	result: {},
-	data_type: 'imputed'
+	result: {}
     },
     reducers: {
 	setResult: (state, action) => {
 	    state.result = action.payload
-	},
-	setDataType: (state, action) => {
-	    state.data_type = action.payload.content
 	}
     },
     extraReducers: {
@@ -49,6 +45,6 @@ export const searchSlice = createSlice({
     }
 })
 
-export const { setResult, setDataType } = searchSlice.actions
+export const { setResult } = searchSlice.actions
 
 export default searchSlice.reducer

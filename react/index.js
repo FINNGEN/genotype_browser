@@ -25,10 +25,10 @@ ReactDOM.render(
 	<Link to='/' style={{paddingBottom: '10px', textDecoration: 'none', color: 'black', width: '200px'}}>genotype browser</Link>
 	<Route path='/' component={SearchForm}/>
 	<Route exact path='/' component={SearchExamples}/>
-	<Route path='/variant/:variant/:data_type' component={VariantContainer}/>
+	<Route path='/variant/:variant' component={VariantContainer}/>
     <Route path='/variants/:variants/:data_type' component={Variants}/>
-	<Route path='/gene/:gene/:data_type' component={Gene}/>
-    <Route path='/range/:range/:data_type' component={Range}/>
+	<Route path='/gene/:gene' component={Gene}/>
+    <Route path='/range/:range' component={Range}/>
         </div>
         </div>
         </BrowserRouter>
