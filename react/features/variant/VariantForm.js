@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import { setFilter, setOption, setServerOption } from '../data/dataSlice'
+import { setFilter, setServerOption } from '../data/dataSlice'
 import { setDataType } from '../search/searchSlice'
 import validator from 'validator'
 import './styles.css'
@@ -14,7 +14,6 @@ export const VariantForm = (props) => {
     const write_status = useSelector(state => state.data.write_status)
     const write_result = useSelector(state => state.data.write_result)
     const [gp, setGP] = useState(filters.gpThres)
-    const options = useSelector(state => state.data.options)
 
     // update state if variant was open in a separate window and thus the
     // data type is obtained from the url params
@@ -37,10 +36,6 @@ export const VariantForm = (props) => {
 		dispatch(setFilter({filt: filt, content: value}))
 	    }
 	}
-    }
-
-    const optionChanged = (opt, event) => {
-	dispatch(setOption({opt: opt, content: event.target.value}))
     }
 
     const gpThresChanged = event => {
@@ -279,48 +274,8 @@ export const VariantForm = (props) => {
 			    <div className="vl" style={{height: "100%", borderLeft: "1px solid #dddddd", marginLeft: "20px", marginRight: "20px"}}></div>
 
 			    <div style={{display: 'flex', flexDirection: 'column'}}>
-			    <div><h3 style={{marginBottom: "10px", marginTop: "0px"}}>Show</h3></div>
-			    <div className="hl" style={{width: "100%", borderTop: "1px solid #dddddd", marginTop: "0px", marginBottom: "10px"}}></div>
-			    <div style={{display: 'flex', flexDirection: 'row'}}>
-
-				    <div className="buttonGroup">
-				    <div><input type="radio" value="freq" name="cntfreq" onChange={optionChanged.bind(this, 'cntfreq')} checked={options.cntfreq == 'freq'} /><span>allele frequency</span></div>
-				    <div><input type="radio" value="gt_count" name="cntfreq" onChange={optionChanged.bind(this, 'cntfreq')} checked={options.cntfreq == 'gt_count'} /><span>number of genotypes</span></div>				    
-
-				    <div className="buttonGroup">
-				    {
-				    	options.cntfreq == 'gt_count' && options.barmap == 'map' && options.bbreg == 'region' ?
-				    	<div>
-						    <div style={{ marginLeft: "20px" }}><input type="radio" value="het" name="maphethom" checked={options.maphethom == 'het'} onChange={optionChanged.bind(this, 'maphethom')}/><span>show het</span></div>
-						    <div style={{ marginLeft: "20px" }}><input type="radio" value="hom" name="maphethom" checked={options.maphethom == 'hom'} onChange={optionChanged.bind(this, 'maphethom')}/><span>show hom</span></div>						    
-					    </div> 
-					    : null
-				    }
-				    </div>
-
-				    </div>
-
-				    <div className="buttonGroup">
-				    <div onChange={optionChanged.bind(this, 'bbreg')}><input type="radio" value="region" name="bbreg" defaultChecked/><span>by region of birth</span></div>
-				    {
-				    	options.bbreg == 'region' ?
-				    	<div>
-					    <div style={{ marginLeft: "20px" }}><input type="radio" value="map" name="barmap" checked={ options.barmap == 'map'} onChange={optionChanged.bind(this, 'barmap')} /><span>show as map</span></div>
-					    <div style={{ marginLeft: "20px" }}><input type="radio" value="bar" name="barmap" checked={ options.barmap == 'bar'} onChange={optionChanged.bind(this, 'barmap')} /><span>show as barplot</span></div>				    
-					    </div> 
-					    : null
-				    }
-				    <div onChange={optionChanged.bind(this, 'bbreg')} ><input type="radio" value="biobank" name="bbreg"/><span>by biobank</span></div>
-				    </div>
-
-
-			    </div>
-			    </div>
-			    </div>
-			    </div>
-
-			    <div style={{display: 'flex', flexDirection: 'column', marginTop: "40px"}}>
 			    <div><h3 style={{marginBottom: "10px", marginTop: "0px"}}>Download</h3></div>
+			    <div className="hl" style={{width: "100%", borderTop: "1px solid #dddddd", marginTop: "0px", marginBottom: "10px"}}></div>
 			    <div style={{display: 'flex', flexDirection: 'row'}}>
 				    	<div>
 					    	<input type="radio" value="all" name="hethom" checked={filters.hethom == 'all'} onChange={filterChanged.bind(this, 'hethom', 'all')} />
@@ -346,6 +301,9 @@ export const VariantForm = (props) => {
 			    </div>
 				{hethom}
 			    </div> 
+
+			    </div>
+			    </div>
 		</div>
 	)
 

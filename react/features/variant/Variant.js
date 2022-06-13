@@ -8,6 +8,8 @@ import {
 } from '../data/dataSlice'
 import { setDataType } from '../search/searchSlice'
 
+import { setOption } from '../data/dataSlice'
+
 
 export const Variant = (props) => {
 
@@ -16,6 +18,7 @@ export const Variant = (props) => {
     const data = useSelector(state => state.data)
    	var dtype = props.props.data_type
    	const source = dtype == 'imputed' ? 'Imputed data' : 'Raw chip data'
+   	const options = useSelector(state => state.data.options)
 
    	// update state if variant was open in a separate window. Data type is obtained from the url params
     useEffect(() => {
@@ -44,6 +47,10 @@ export const Variant = (props) => {
     }
     }, [data.filters, data.serverOptions, props])
 
+    const optionChanged = (opt, event) => {
+	dispatch(setOption({opt: opt, content: event.target.value}))
+    }
+
     let content = (<div>loading...</div>)
     if (data.status == 'failed') {
 	const errorMsg = data.error.status == 400 ?
@@ -63,6 +70,44 @@ export const Variant = (props) => {
 	if (dtype == 'imputed') {
 		impscore = (<tr><td>imputation info score</td><td style={{textAlign: 'right'}}>{data.data.info < 0 ? 'NA' : data.data.info.toPrecision(3)}</td></tr>)
 	} 
+
+	// <div className="hl" style={{borderTop: "1px solid #dddddd", marginTop: "0px", marginBottom: "10px"}}></div>
+	var show_panel_content = (
+		<div style={{display: 'flex', flexDirection: 'column', width: 'max-content'}}>
+		    <div><h3 style={{marginBottom: "10px", marginTop: "20px"}}>Show</h3></div>
+		    
+		    <div style={{display: 'flex', flexDirection: 'row'}}>
+
+			    <div className="buttonGroup">
+			    <div><input type="radio" value="freq" name="cntfreq" onChange={optionChanged.bind(this, 'cntfreq')} checked={options.cntfreq == 'freq'} /><span>allele frequency</span></div>
+			    <div><input type="radio" value="gt_count" name="cntfreq" onChange={optionChanged.bind(this, 'cntfreq')} checked={options.cntfreq == 'gt_count'} /><span>number of genotypes</span></div>				    
+				    <div className="buttonGroup">
+				    {
+				    	options.cntfreq == 'gt_count' && options.barmap == 'map' && options.bbreg == 'region' ?
+				    	<div>
+						    <div style={{ marginLeft: "20px" }}><input type="radio" value="het" name="maphethom" checked={options.maphethom == 'het'} onChange={optionChanged.bind(this, 'maphethom')}/><span>show het</span></div>
+						    <div style={{ marginLeft: "20px" }}><input type="radio" value="hom" name="maphethom" checked={options.maphethom == 'hom'} onChange={optionChanged.bind(this, 'maphethom')}/><span>show hom</span></div>						    
+					    </div> 
+					    : null
+				    }
+				    </div>
+			    </div>
+
+			    <div className="buttonGroup">
+				    <div onChange={optionChanged.bind(this, 'bbreg')}><input type="radio" value="region" name="bbreg" defaultChecked/><span>by region of birth</span></div>
+				    {
+				    	options.bbreg == 'region' ?
+				    	<div>
+					    <div style={{ marginLeft: "20px" }}><input type="radio" value="map" name="barmap" checked={ options.barmap == 'map'} onChange={optionChanged.bind(this, 'barmap')} /><span>show as map</span></div>
+					    <div style={{ marginLeft: "20px" }}><input type="radio" value="bar" name="barmap" checked={ options.barmap == 'bar'} onChange={optionChanged.bind(this, 'barmap')} /><span>show as barplot</span></div>				    
+					    </div> 
+					    : null
+				    }
+				    <div onChange={optionChanged.bind(this, 'bbreg')} ><input type="radio" value="biobank" name="bbreg"/><span>by biobank</span></div>
+		    	</div>
+		 </div>
+		</div>
+	)
 	
 	content = (<div>
 		   <div style={{display: 'flex', flexDirection: 'column'}}>
@@ -84,8 +129,9 @@ export const Variant = (props) => {
 			   </tbody>
 			   </table>
 		   </div>
-		   </div>
+		   {show_panel_content}
 		   <VariantPlots />
+		   </div>
 		   </div>)
     }
 
