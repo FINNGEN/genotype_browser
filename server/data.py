@@ -260,7 +260,8 @@ class Datafetch(object):
             'total_af': total_af,
             'info': info,
             'total_indiv': len(filtered_basic_info),
-            'filters': filters
+            'filters': filters,
+            'data_type': data_type
         }
     
     def _count_gt_for_write(self, variants, data, filters, chips, data_type):
@@ -382,6 +383,14 @@ class Datafetch(object):
         else:
             return False
 
+    def check_var_in_imput(self, variant):
+        chr, pos, ref, alt = utils.parse_variant(variant)
+        var_data = self._get_genotype_data(chr, pos, ref, alt, 'imputed')
+        if var_data is not None:
+            return True
+        else:
+            return False
+
     def write_variants(self, variants, filters, data_type):
         vars_data = []
         for variant in variants.split(','):
@@ -433,25 +442,24 @@ class Datafetch(object):
         }
 
     def get_genomic_range_variants(self, chr, start, end):
-        # in_data = 1 if data_type == 'imputed' else 2
         if self.conn[threading.get_ident()].row_factory is None:
             self.conn[threading.get_ident()].row_factory = sqlite3.Row
         c = self.conn[threading.get_ident()].cursor()
         query = 'SELECT * FROM anno WHERE chr=%s AND pos>=%s AND pos<=%s;' % (chr, start, end)
-        # query = 'SELECT * FROM anno WHERE chr=%s AND pos>=%s AND pos<=%s AND (in_data=%s OR in_data=3);' % (chr, start, end, in_data)
         c.execute(query)
         res = [dict(row) for row in c.fetchall()]
         if len(res) == 0:
             raise utils.NotFoundException()
         data = []
         for item in res:
-            item['variant'] = '-'.join(item['variant'].split(':'))
-            var_src = 'imputed, chip'
+            # item['variant'] = '-'.join(item['variant'].split(':'))
+            src = 'imputed,chip'
             if item['in_data'] == 1:
-                var_src = 'imputed'
+                src = 'imputed'
             elif item['in_data'] == 2:
-                var_src = 'chip'
-            item['source'] = var_src
+                src = 'chip'
+            item['variant'] = "/variant/" + '-'.join(item['variant'].split(':'))
+            item['source'] = src
             data.append(item)
         genomic_range = "%s:%s-%s" % (chr, start, end)                     
         exclude_cols = ['gene_most_severe', 'consequence_gnomad', 'chr', 'pos', 'in_data']

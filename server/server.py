@@ -35,8 +35,7 @@ def index(path):
 @app.route('/api/v1/find/<query>')
 def find(query):
     try:
-        data_type = request.args.get('data_type')
-        result = search.search(query, data_type)
+        result = search.search(query)
     except ParseException as e:
         abort(400, 'could not parse given query to anything useful')
     except NotFoundException as e:
@@ -57,9 +56,7 @@ def variants(variants):
 @app.route('/api/v1/gene_variants/<gene>')
 def gene_variants(gene):
     try:
-        data_type = request.args.get('data_type')
         data = fetch.get_gene_variants(gene)
-        data['data_type'] = data_type
     except ParseException as e:
         abort(400, 'could not parse given gene')
     except NotFoundException as e:
@@ -79,11 +76,9 @@ def write_variants(variants):
 
 @app.route('/api/v1/range/<range>')
 def range(range):
-    data_type = request.args.get('data_type')
     try:
         chr, start, end = parse_region(range)
         data = fetch.get_genomic_range_variants(chr, start, end)
-        data['data_type'] = data_type
     except ParseException as e:
         abort(400, 'could not parse given genomic range')
     except NotFoundException as e:

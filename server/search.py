@@ -13,10 +13,9 @@ class Search(object):
         self.conf=conf
         self._init_db()
 
-    def _get_variant(self, chr, pos, ref, alt, data_type):
-        in_data = 1 if data_type == 'imputed' else 2
+    def _get_variant(self, chr, pos, ref, alt):
         c = self.conn[threading.get_ident()].cursor()        
-        q = 'SELECT variant FROM anno WHERE variant = "%s" AND (in_data=%s OR in_data=3);' % (str(chr) + ':' + str(pos) + ':' + ref + ':' + alt, in_data)        
+        q = 'SELECT variant FROM anno WHERE variant = "%s";' % (str(chr) + ':' + str(pos) + ':' + ref + ':' + alt)        
         c.execute(q)
         # c.execute('SELECT variant FROM %s WHERE variant = ?' % db, [str(chr) + ':' + str(pos) + ':' + ref + ':' + alt])
         res = c.fetchall()
@@ -25,10 +24,9 @@ class Search(object):
         else:
             raise utils.NotFoundException(str(chr) + '-' + str(pos) + '-' + ref + '-' + alt)
         
-    def _get_variants_by_rsid(self, rsid, data_type):
-        in_data = 1 if data_type == 'imputed' else 2
+    def _get_variants_by_rsid(self, rsid):
         c = self.conn[threading.get_ident()].cursor()
-        q = 'SELECT variant FROM anno WHERE rsid = "%s" AND (in_data=%s OR in_data=3);' % (rsid.lower(), in_data)        
+        q = 'SELECT variant FROM anno WHERE rsid = "%s";' % (rsid.lower())        
         c.execute(q)
         res = c.fetchall()
         if len(res) > 0:
@@ -36,10 +34,9 @@ class Search(object):
         else:
             raise utils.NotFoundException(rsid)
 
-    def _get_variants_in_range(self, chr, start, end, data_type):
-        in_data = 1 if data_type == 'imputed' else 2
+    def _get_variants_in_range(self, chr, start, end):
         c = self.conn[threading.get_ident()].cursor()
-        q = 'SELECT variant FROM anno WHERE chr="%s" AND pos>=%s AND pos<=%s AND (in_data=%s OR in_data=3) LIMIT 1;' % (chr, start, end, in_data)        
+        q = 'SELECT variant FROM anno WHERE chr="%s" AND pos>=%s AND pos<=%s LIMIT 1;' % (chr, start, end)        
         c.execute(q)
         res = c.fetchall()
         res_formatted = []
@@ -51,7 +48,7 @@ class Search(object):
         else:
             raise utils.NotFoundException(str(chr) + ':' + str(start) + '-' + str(end))
 
-    def _search_gene(self, query, data_type):
+    def _search_gene(self, query):
         c = self.conn[threading.get_ident()].cursor()
         c.execute('SELECT * FROM genes WHERE gene_name = ? OR gene_name = ? LIMIT 1', [query, query.upper()])
         res_gene = c.fetchall()
@@ -60,23 +57,23 @@ class Search(object):
         else:
             raise utils.NotFoundException(query)
         try:
-            res = self._get_variants_in_range(gene[0], gene[1], gene[2], data_type)
+            res = self._get_variants_in_range(gene[0], gene[1], gene[2])
         except utils.NotFoundException as e:
             raise utils.NotFoundException(query)
         else:
             return query
         return res
     
-    def _search_variants(self, query, data_type):
+    def _search_variants(self, query):
         var_ids = []
         try:
             for q in query.split(','):
                 if q.lower().startswith('rs'):
-                    vars = self._get_variants_by_rsid(q, data_type)
+                    vars = self._get_variants_by_rsid(q)
                     var_ids.extend(['-'.join([str(s) for s in var.split(':')]) for var in vars])
                 else:
                     chr, pos, ref, alt = utils.parse_variant(q)
-                    self._get_variant(chr, pos, ref, alt, data_type)
+                    self._get_variant(chr, pos, ref, alt)
                     var_ids.extend(['-'.join([str(s) for s in [chr, pos, ref, alt]])])
         except utils.ParseException as e:
             pass
@@ -87,11 +84,11 @@ class Search(object):
         else:
             raise utils.NotFoundException(query)
 
-    def _search_range(self, query, data_type):
+    def _search_range(self, query):
         var_ids = []
         try:
             chr, start, end = utils.parse_region(query)
-            vars = self._get_variants_in_range(chr, start, end, data_type)
+            vars = self._get_variants_in_range(chr, start, end)
             var_ids.extend(['-'.join([str(s) for s in var.split(':')]) for var in vars])
         except utils.ParseException as e:
             pass
@@ -104,9 +101,9 @@ class Search(object):
         else:
             raise utils.NotFoundException(query)
         
-    def search(self, query, data_type):
+    def search(self, query):
         try:
-            var_ids = self._search_variants(query, data_type)
+            var_ids = self._search_variants(query)
             return {
                 'query': query,
                 'type': 'variant',
@@ -115,7 +112,7 @@ class Search(object):
         except utils.NotFoundException as e:
             pass
         try:
-            gene = self._search_gene(query, data_type)
+            gene = self._search_gene(query)
             return {
                 'query': query,
                 'type': 'gene',
@@ -124,7 +121,7 @@ class Search(object):
         except utils.NotFoundException as e:
             pass
         try:
-            var_ids = self._search_range(query, data_type)
+            var_ids = self._search_range(query)
             return {
                 'query': query,
                 'type': 'range',
