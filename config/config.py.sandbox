@@ -3,8 +3,8 @@ import logging
 sqlite_db = '/finngen/red/fgq/data/fgq.r6.2.db'
 
 use_gcp_buckets = False
-basic_info_file_bucket = ''
-cluster_plots_bucket = ''
+basic_info_file_bucket = 'red_bucket'
+cluster_plots_bucket = 'green_bucket'
 
 cluster_plots_location = 'cluster_plots/'
 basic_info_file = '/finngen/red/fgq/data/finngen_R6_gt_samples_info_2.txt.gz'

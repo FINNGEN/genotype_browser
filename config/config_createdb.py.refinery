@@ -1,6 +1,6 @@
 use_gcp_buckets = False
-basic_info_file_bucket = ''
-cluster_plots_bucket = ''
+basic_info_file_bucket = 'red_bucket'
+cluster_plots_bucket = 'green_bucket'
 
 
 sqlite_db = '/mnt/nfs/juha/FGQ/fgq.r6.2.db'
