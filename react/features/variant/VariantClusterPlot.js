@@ -510,7 +510,7 @@ export const VariantClusterPlot = () => {
             })
             
             d3.select('#b_export_chart_svg').on('click', function(){
-                const svg = document.querySelector('svg').cloneNode(true);
+                const svg = document.querySelector('#v3c-body').cloneNode(true);
                 document.body.appendChild(svg);
                 svg.setAttribute('width', svg.getBoundingClientRect().width)
                 svg.setAttribute('height', svg.getBoundingClientRect().height + 20)
@@ -720,7 +720,7 @@ export const VariantClusterPlot = () => {
 
             //Click specification
             function drawSpecification(d){
-                d3.select('svg').append('circle')
+                d3.select('#v3c-svg').append('circle')
                     .attr('cx', cx(d.intensity_ref))
                     .attr('cy', cy(d.intensity_alt))
                     .attr('r', 3)
@@ -866,17 +866,17 @@ export const VariantClusterPlot = () => {
                 t_row.select('.manual').append('div').attr('class', 't_table_circle').style('background-color', function(d){return colorCalls(d.manual)});
 
                 t_row.on('mouseover', function(e, d){
-                    d3.select('svg').append('circle')
+                    d3.select("#v3c-svg").append('circle')
                         .attr('cx', cx(d.intensity_ref))
                         .attr('cy', cy(d.intensity_alt))
                         .attr('class', 'g_dots_hover')
-                    d3.select('svg').append('line')
+                    d3.select("#v3c-svg").append('line')
                         .style('stroke-width','0.25px')
                         .style('stroke', '#000')
                         .attr('x1', cx(d.intensity_ref)).attr('x2', cx(d.intensity_ref))
                         .attr('y1', 0).attr('y2', y_axis + m)
                         .attr('class', 'g_dots_hover');
-                    d3.select('svg').append('line')
+                    d3.select("#v3c-svg").append('line')
                         .style('stroke-width','0.25px')
                         .style('stroke', '#000')
                         .attr('x1', u).attr('x2', x_axis + u + m)
@@ -1399,7 +1399,7 @@ export const VariantClusterPlot = () => {
             <button id='b_zoom_more'    className="b_zoom_controllers v3c-button"  style={{float: 'right', width: '30px'}}>+</button>
             <button id='b_zoom_k'       className="b_zoom_controllers v3c-button"  style={{float: 'right', width: '55px'}}>x1</button>
         </div>
-        <svg>
+        <svg id="v3c-svg">
             <g id="g_dots"></g>
             <g id="g_isolines"  className="transparent"></g>
             <g id="g_exomelocations" className="transparent"></g>
