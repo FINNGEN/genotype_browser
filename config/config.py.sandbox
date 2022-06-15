@@ -1,40 +1,68 @@
 import logging
 
-sqlite_db = '/finngen/red/fgq/data/fgq.r6.2.db'
-
 use_gcp_buckets = False
-basic_info_file_bucket = 'red_bucket'
-cluster_plots_bucket = 'green_bucket'
+red_bucket = ''
+green_bucket = ''
 
-cluster_plots_location = 'cluster_plots/'
-basic_info_file = '/finngen/red/fgq/data/finngen_R6_gt_samples_info_2.txt.gz'
+sqlite_db = '/finngen/library-green/finngen_R9/finngen_R9_analysis_data/annotations/fgq.r9.1.db'
+
+basic_info_file = '/finngen/library-red/finngen_R9/phenotype_1.0/data/finngen_R9_gt_samples_info.txt.gz'
+cluster_plots_location = '/finngen/library-green/finngen_R9/cluster_plots/'
+intensity_files_location = '/finngen/library-red/finngen_R9/cluster_plot_1.0/data/'
 
 geojson = 'finmap.geojson'
 
-vcf_files = [
-    '/finngen/library-red/finngen_R6/genotype_1.0/data/finngen_R6_chr1.vcf.gz',
-    '/finngen/library-red/finngen_R6/genotype_1.0/data/finngen_R6_chr2.vcf.gz',
-    '/finngen/library-red/finngen_R6/genotype_1.0/data/finngen_R6_chr3.vcf.gz',
-    '/finngen/library-red/finngen_R6/genotype_1.0/data/finngen_R6_chr4.vcf.gz',
-    '/finngen/library-red/finngen_R6/genotype_1.0/data/finngen_R6_chr5.vcf.gz',
-    '/finngen/library-red/finngen_R6/genotype_1.0/data/finngen_R6_chr6.vcf.gz',
-    '/finngen/library-red/finngen_R6/genotype_1.0/data/finngen_R6_chr7.vcf.gz',
-    '/finngen/library-red/finngen_R6/genotype_1.0/data/finngen_R6_chr8.vcf.gz',
-    '/finngen/library-red/finngen_R6/genotype_1.0/data/finngen_R6_chr9.vcf.gz',
-    '/finngen/library-red/finngen_R6/genotype_1.0/data/finngen_R6_chr10.vcf.gz',
-    '/finngen/library-red/finngen_R6/genotype_1.0/data/finngen_R6_chr11.vcf.gz',
-    '/finngen/library-red/finngen_R6/genotype_1.0/data/finngen_R6_chr12.vcf.gz',
-    '/finngen/library-red/finngen_R6/genotype_1.0/data/finngen_R6_chr13.vcf.gz',
-    '/finngen/library-red/finngen_R6/genotype_1.0/data/finngen_R6_chr14.vcf.gz',
-    '/finngen/library-red/finngen_R6/genotype_1.0/data/finngen_R6_chr15.vcf.gz',
-    '/finngen/library-red/finngen_R6/genotype_1.0/data/finngen_R6_chr16.vcf.gz',
-    '/finngen/library-red/finngen_R6/genotype_1.0/data/finngen_R6_chr17.vcf.gz',
-    '/finngen/library-red/finngen_R6/genotype_1.0/data/finngen_R6_chr18.vcf.gz',
-    '/finngen/library-red/finngen_R6/genotype_1.0/data/finngen_R6_chr19.vcf.gz',
-    '/finngen/library-red/finngen_R6/genotype_1.0/data/finngen_R6_chr20.vcf.gz',
-    '/finngen/library-red/finngen_R6/genotype_1.0/data/finngen_R6_chr21.vcf.gz',
-    '/finngen/library-red/finngen_R6/genotype_1.0/data/finngen_R6_chr22.vcf.gz',
-    '/finngen/library-red/finngen_R6/genotype_1.0/data/finngen_R6_chr23.vcf.gz'
-]
+vcf_files = {
+    "imputed_data": [
+        '/finngen/library-red/finngen_R9/genotype_1.0/data/finngen_R9_chr1.vcf.gz',
+        '/finngen/library-red/finngen_R9/genotype_1.0/data/finngen_R9_chr2.vcf.gz',
+        '/finngen/library-red/finngen_R9/genotype_1.0/data/finngen_R9_chr3.vcf.gz',
+        '/finngen/library-red/finngen_R9/genotype_1.0/data/finngen_R9_chr4.vcf.gz',
+        '/finngen/library-red/finngen_R9/genotype_1.0/data/finngen_R9_chr5.vcf.gz',
+        '/finngen/library-red/finngen_R9/genotype_1.0/data/finngen_R9_chr6.vcf.gz',
+        '/finngen/library-red/finngen_R9/genotype_1.0/data/finngen_R9_chr7.vcf.gz',
+        '/finngen/library-red/finngen_R9/genotype_1.0/data/finngen_R9_chr8.vcf.gz',
+        '/finngen/library-red/finngen_R9/genotype_1.0/data/finngen_R9_chr9.vcf.gz',
+        '/finngen/library-red/finngen_R9/genotype_1.0/data/finngen_R9_chr10.vcf.gz',
+        '/finngen/library-red/finngen_R9/genotype_1.0/data/finngen_R9_chr11.vcf.gz',
+        '/finngen/library-red/finngen_R9/genotype_1.0/data/finngen_R9_chr12.vcf.gz',
+        '/finngen/library-red/finngen_R9/genotype_1.0/data/finngen_R9_chr13.vcf.gz',
+        '/finngen/library-red/finngen_R9/genotype_1.0/data/finngen_R9_chr14.vcf.gz',
+        '/finngen/library-red/finngen_R9/genotype_1.0/data/finngen_R9_chr15.vcf.gz',
+        '/finngen/library-red/finngen_R9/genotype_1.0/data/finngen_R9_chr16.vcf.gz',
+        '/finngen/library-red/finngen_R9/genotype_1.0/data/finngen_R9_chr17.vcf.gz',
+        '/finngen/library-red/finngen_R9/genotype_1.0/data/finngen_R9_chr18.vcf.gz',
+        '/finngen/library-red/finngen_R9/genotype_1.0/data/finngen_R9_chr19.vcf.gz',
+        '/finngen/library-red/finngen_R9/genotype_1.0/data/finngen_R9_chr20.vcf.gz',
+        '/finngen/library-red/finngen_R9/genotype_1.0/data/finngen_R9_chr21.vcf.gz',
+        '/finngen/library-red/finngen_R9/genotype_1.0/data/finngen_R9_chr22.vcf.gz',
+        '/finngen/library-red/finngen_R9/genotype_1.0/data/finngen_R9_chr23.vcf.gz'
+    ],
+    "chip_data": [
+        '/finngen/library-red/finngen_R9/chipd_1.0/data/finngen_R9_chipdata_chr1.vcf.gz',
+        '/finngen/library-red/finngen_R9/chipd_1.0/data/finngen_R9_chipdata_chr2.vcf.gz',
+        '/finngen/library-red/finngen_R9/chipd_1.0/data/finngen_R9_chipdata_chr3.vcf.gz',
+        '/finngen/library-red/finngen_R9/chipd_1.0/data/finngen_R9_chipdata_chr4.vcf.gz',
+        '/finngen/library-red/finngen_R9/chipd_1.0/data/finngen_R9_chipdata_chr5.vcf.gz',
+        '/finngen/library-red/finngen_R9/chipd_1.0/data/finngen_R9_chipdata_chr6.vcf.gz',
+        '/finngen/library-red/finngen_R9/chipd_1.0/data/finngen_R9_chipdata_chr7.vcf.gz',
+        '/finngen/library-red/finngen_R9/chipd_1.0/data/finngen_R9_chipdata_chr8.vcf.gz',
+        '/finngen/library-red/finngen_R9/chipd_1.0/data/finngen_R9_chipdata_chr9.vcf.gz',
+        '/finngen/library-red/finngen_R9/chipd_1.0/data/finngen_R9_chipdata_chr10.vcf.gz',
+        '/finngen/library-red/finngen_R9/chipd_1.0/data/finngen_R9_chipdata_chr11.vcf.gz',
+        '/finngen/library-red/finngen_R9/chipd_1.0/data/finngen_R9_chipdata_chr12.vcf.gz',
+        '/finngen/library-red/finngen_R9/chipd_1.0/data/finngen_R9_chipdata_chr13.vcf.gz',
+        '/finngen/library-red/finngen_R9/chipd_1.0/data/finngen_R9_chipdata_chr14.vcf.gz',
+        '/finngen/library-red/finngen_R9/chipd_1.0/data/finngen_R9_chipdata_chr15.vcf.gz',
+        '/finngen/library-red/finngen_R9/chipd_1.0/data/finngen_R9_chipdata_chr16.vcf.gz',
+        '/finngen/library-red/finngen_R9/chipd_1.0/data/finngen_R9_chipdata_chr17.vcf.gz',
+        '/finngen/library-red/finngen_R9/chipd_1.0/data/finngen_R9_chipdata_chr18.vcf.gz',
+        '/finngen/library-red/finngen_R9/chipd_1.0/data/finngen_R9_chipdata_chr19.vcf.gz',
+        '/finngen/library-red/finngen_R9/chipd_1.0/data/finngen_R9_chipdata_chr20.vcf.gz',
+        '/finngen/library-red/finngen_R9/chipd_1.0/data/finngen_R9_chipdata_chr21.vcf.gz',
+        '/finngen/library-red/finngen_R9/chipd_1.0/data/finngen_R9_chipdata_chr22.vcf.gz',
+        '/finngen/library-red/finngen_R9/chipd_1.0/data/finngen_R9_chipdata_chrX.vcf.gz'
+    ]    
+}
 
 log_level = logging.INFO
