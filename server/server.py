@@ -96,11 +96,12 @@ def clusterplot(variant):
         var = re.sub('-', '_', variant)
         arr = var.split('_')
         arr[0] = 'X' if arr[0] == '23' else arr[0] 
+        chr = arr[0]
         exists_in_chip = fetch.check_var_in_chip(variant)
-        filename = config['cluster_plots_location'] + '/' + '_'.join(arr) + '.tsv'
-
+        filename = config['intensity_files_location'] + '/' + chr + '/' + '_'.join(arr) + '.tsv'
+        filename = re.sub('//', '/', filename)
         if (config['use_gcp_buckets']):
-            data = cloud_storage.read_bytes(config['cluster_plots_bucket'], filename)
+            data = cloud_storage.read_bytes(config['red_bucket'], filename)
             if data is None:
                 raise FileNotFoundError("Requested cluster plot not found!")
         else:
