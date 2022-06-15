@@ -653,9 +653,9 @@ export const VariantClusterPlot = () => {
 
                 g_dots.exit().remove();
                 g_dots.enter().append('circle');
-
-                d3.selectAll('circle')
-                    .data(a)
+                
+                // .select('#v3c-svg') added by sanastas:  error in next line: d.intensity_ref not found
+                d3.select('#v3c-svg').selectAll('circle')
                     .attr('cx',     function(d){return cx(d.intensity_ref)})
                     .attr('cy',     function(d){return cy(d.intensity_alt)})
                     .attr('r', 3)
@@ -703,8 +703,8 @@ export const VariantClusterPlot = () => {
                 g_exomelocations.exit().remove();
                 g_exomelocations.enter().append('rect');
 
-                d3.selectAll('rect')
-                    .data(dataExome_Only)
+                // .select('#v3c-svg') added by sanastas:  error in next line: d.intensity_ref not found
+                d3.select('#v3c-svg').selectAll('rect')
                     .attr('x',     function(d){return cx(d.intensity_ref) -1})
                     .attr('y',     function(d){return cy(d.intensity_alt) -1})
                     .attr('class', function(d){return 'g_exomelocations'})
@@ -1342,7 +1342,7 @@ export const VariantClusterPlot = () => {
         window.addEventListener('resize', function(){
             console.log('ciao')
             svg_height = window.innerHeight - 285
-            svg_width = document.getElementsByTagName('#v3c-body')[0].clientWidth - 820            
+            svg_width = document.getElementsByTagName('body')[0].clientWidth - 820            
             
             u = svg_height/12
             x_axis = svg_width - u - m
