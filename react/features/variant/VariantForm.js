@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import { setFilter, setOption, setServerOption } from '../data/dataSlice'
+import { setFilter, setServerOption } from '../data/dataSlice'
 import { setDataType } from '../search/searchSlice'
 import validator from 'validator'
 import './styles.css'
@@ -36,10 +36,6 @@ export const VariantForm = (props) => {
 		dispatch(setFilter({filt: filt, content: value}))
 	    }
 	}
-    }
-
-    const optionChanged = (opt, event) => {
-	dispatch(setOption({opt: opt, content: event.target.value}))
     }
 
     const gpThresChanged = event => {
@@ -278,26 +274,8 @@ export const VariantForm = (props) => {
 			    <div className="vl" style={{height: "100%", borderLeft: "1px solid #dddddd", marginLeft: "20px", marginRight: "20px"}}></div>
 
 			    <div style={{display: 'flex', flexDirection: 'column'}}>
-			    <div><h3 style={{marginBottom: "10px", marginTop: "0px"}}>Show</h3></div>
-			    <div className="hl" style={{width: "100%", borderTop: "1px solid #dddddd", marginTop: "0px", marginBottom: "10px"}}></div>
-			    <div style={{display: 'flex', flexDirection: 'row'}}>
-
-				    <div onChange={optionChanged.bind(this, 'cntfreq')} className="buttonGroup">
-				    <div><input type="radio" value="gt_count" name="cntfreq" defaultChecked/><span>number of genotypes</span></div>
-				    <div><input type="radio" value="freq" name="cntfreq"/><span>allele frequency</span></div>
-				    </div>
-				    
-				    <div onChange={optionChanged.bind(this, 'bbreg')} className="buttonGroup">
-				    <div><input type="radio" value="biobank" name="bbreg" defaultChecked/><span>by biobank</span></div>
-				    <div><input type="radio" value="region" name="bbreg"/><span>by region of birth</span></div>
-				    </div>
-			    </div>
-			    </div>
-			    </div>
-			    </div>
-
-			    <div style={{display: 'flex', flexDirection: 'column', marginTop: "40px"}}>
 			    <div><h3 style={{marginBottom: "10px", marginTop: "0px"}}>Download</h3></div>
+			    <div className="hl" style={{width: "100%", borderTop: "1px solid #dddddd", marginTop: "0px", marginBottom: "10px"}}></div>
 			    <div style={{display: 'flex', flexDirection: 'row'}}>
 				    	<div>
 					    	<input type="radio" value="all" name="hethom" checked={filters.hethom == 'all'} onChange={filterChanged.bind(this, 'hethom', 'all')} />
@@ -323,6 +301,9 @@ export const VariantForm = (props) => {
 			    </div>
 				{hethom}
 			    </div> 
+
+			    </div>
+			    </div>
 		</div>
 	)
 

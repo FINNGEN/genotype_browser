@@ -97,7 +97,7 @@ def clusterplot(plot_type, variant):
         exists_in_chip = fetch.check_var_in_chip(variant)
         filename = config['cluster_plots_location'] + '/' + plot_type + '/' + '_'.join(arr) + '.png'
         if (config['use_gcp_buckets']):
-            data = cloud_storage.read_bytes(config['cluster_plots_bucket'], filename)
+            data = cloud_storage.read_bytes(config['red_bucket'], filename)
             if data is None:
                 raise FileNotFoundError("Requested cluster plot not found!")
         else:

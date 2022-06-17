@@ -47,23 +47,24 @@ export const VariantClusterPlot = () => {
 
     if (status == 200) {
         content = (
-            <div style={{width: "600px", height: "600px"}}>
-                <img style={{maxWidth: "100%", maxHeight: "100%"}} id="img" src={`/api/v1/clusterplot/${selection}/${variant}`} />
+            <div>
+                <img id="img" src={`/api/v1/clusterplot/${selection}/${variant}`} />
             </div>
         )
     } else {
         content = (
-            <div style={{width: "600px", height: "600px"}}>
+            <div>
                 {error_message}
             </div>
         )
     }
 
     return (
-    	<div>
+    	<div style={{width: "800px", height: "600px", display: "inline-block", verticalAlign: "top"}}>
     	{
             drop_section ? '' :
-            <div>
+            <div style={{display: "flex", flexDirection: "column", alignItems: "center"}}>
+                <p style={{width: "800px", textAlign: "center", marginTop: "10px", marginBottom: "10px"}}>SNP cluster plot</p>
                 <form>
                     <label htmlFor="cluster_plot">Choose a type of SNP cluster plot:</label>
                         <select style={{marginLeft: '5px', padding: '5px'}} name="cluster_plot" id="cluster_plot" onChange={handlePlotTypeChange}>

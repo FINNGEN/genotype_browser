@@ -3,7 +3,7 @@ import gzip, pysam, threading, logging, timeit, os, sqlite3
 import pandas as pd
 import numpy as np
 from collections import defaultdict, Counter
-
+import geojson 
 import utils
 import re
 
@@ -16,9 +16,13 @@ class Datafetch(object):
     def _init_db(self):
         self.conn = defaultdict(lambda: sqlite3.connect(self.conf['sqlite_db']))
 
+    def _init_geo_data(self):
+        with open(self.conf['geojson'], 'r') as f:
+            self.geo_data = geojson.load(f)
+ 
     def _init_info(self, select_chip):
         if (self.conf['use_gcp_buckets']):
-            info_file = 'gs://'+ self.conf['basic_info_file_bucket']+'/'+ self.conf['basic_info_file']
+            info_file = 'gs://'+ self.conf['red_bucket']+'/'+ self.conf['basic_info_file']
         else:
             info_file = self.conf['basic_info_file']
         info = pd.read_csv(info_file, sep='\t').fillna('NA')
@@ -57,6 +61,7 @@ class Datafetch(object):
         self.conf=conf
         self._init_tabix()
         self._init_db()
+        self._init_geo_data()
         self.info, self.info_orig, self.cohort_list, self.region_list, self.info_columns = self._init_info(select_chip=False)
         self.info_chip, self.info_orig_chip, self.cohort_list_chip, self.region_list_chip, self.info_columns_chip = self._init_info(select_chip=True)
 
@@ -260,7 +265,8 @@ class Datafetch(object):
             'total_af': total_af,
             'info': info,
             'total_indiv': len(filtered_basic_info),
-            'filters': filters
+            'filters': filters,
+            'geo_data': self.geo_data
         }
     
     def _count_gt_for_write(self, variants, data, filters, chips, data_type):
