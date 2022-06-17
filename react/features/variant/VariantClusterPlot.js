@@ -11,9 +11,10 @@ export const VariantClusterPlot = () => {
 
     const variant = useSelector(state => state.data.variants);
     const varname = variant[0].replaceAll('-', '_');
-    const [status, setData] = useState(null);
+    const [status, setStatus] = useState(null);
     const [data, setIntensityData] = useState(null);
-    const [error, setError] = useState(null);
+    const [error_message, setError] = useState(null);
+    const [drop_plot, setDropPlot] = useState(null);
 
     let vizWidth = window.innerWidth;
     let vizHeight = window.innerHeight;
@@ -33,13 +34,16 @@ export const VariantClusterPlot = () => {
             try {
                 const response = await fetch('/api/v1/clusterplot/' + variant);
                 if (response.status == 404){
-                    throw new Error('ERROR 404');
+                    var error = "Variant exists in FinnGen chip but no cluster plot was found. Contact helpdesk to report the issue.";
+                    throw new Error(error)
                 } else if (response.status == 400){
-                    throw new Error('ERROR 400');
+                    var error = "Error parsing the data.";
+                    throw new Error(error)
                 } else if (response.status == 500){
-                    throw new Error('ERROR 500');
+                    var error = "Internal server error, let us know.";
+                    throw new Error(error)
                 }
-                setData(response.status);
+                setStatus(response.status);
                 const server_data = await response.blob();
 
                 // process blob from server
@@ -74,15 +78,30 @@ export const VariantClusterPlot = () => {
         getData();
     }, [])
 
+    useEffect(()=> {
+        if (data !== null){
+            if (data.length > 0 && variant.length == 1) {
+                setDropPlot(false)
+            } else {
+                setDropPlot(true)
+            }
+        } else {
+            setDropPlot(true)
+        }
+    }, [data, variant])
+
     // build svg
     useEffect(()=> {
 
         if (data !== null){
-            d3.select('#graph').classed('transparent', false)
-            d3.select('#table').classed('transparent', false)
-            d3.select('#panel').classed('transparent', false)
-            drawChart(data, varname)
-        } 
+            if (data.length > 0 && variant.length == 1) {
+                setDropPlot(false)
+                d3.select('#graph').classed('transparent', false)
+                d3.select('#table').classed('transparent', false)
+                d3.select('#panel').classed('transparent', false)
+                drawChart(data, varname)
+            } 
+        }
 
         function drawChart(data_initial, data_current_filename, ref){
         
@@ -262,8 +281,8 @@ export const VariantClusterPlot = () => {
             var g_svg = d3.select('#graph').select('svg')
                 .style('background-color', '#EDECEA')
                 .style('cursor', 'grab')
-                .on('mouseenter', function(){d3.selectAll('.b_zoom_controllers').style('opacity', '1');})
-                .on('mouseleave', function(){d3.selectAll('.b_zoom_controllers').style('opacity', '0');})
+                .on('mouseenter', function(){d3.select('#v3c-svg').selectAll('.b_zoom_controllers').style('opacity', '1');})
+                .on('mouseleave', function(){d3.select('#v3c-svg').selectAll('.b_zoom_controllers').style('opacity', '0');})
                 
             g_svg.call(d3.zoom().on("zoom", e => {
                 if (d3.select('#b_selection_new').classed('button_active')) return null
@@ -327,7 +346,7 @@ export const VariantClusterPlot = () => {
                 if (d3.select(this).classed('button_active')) {
                     d3.select(this).classed('button_active', false).html('New selection');
                     
-                    d3.selectAll('.g_dots_selected').each(function(d){data_selection.push(d)});
+                    d3.select('#v3c-svg').selectAll('.g_dots_selected').each(function(d){data_selection.push(d)});
                     d3.select('#t_table').classed('transparent', false);
                     d3.select('#t_manual_add').classed('transparent', false);
                     d3.select('#t_message').classed('transparent', true);
@@ -337,7 +356,7 @@ export const VariantClusterPlot = () => {
                     d3.select('#b_selection_filtered').classed('transparent', false);
                     d3.select('#b_selection_add').classed('transparent', false);
                     d3.select('#b_export_chart').classed('transparent', false);
-                    d3.selectAll('.b_zoom_controllers').classed('transparent', false);
+                    d3.select('#v3c-svg').selectAll('.b_zoom_controllers').classed('transparent', false);
                     d3.select('#b_zoom_reset').classed('transparent', function(){
                         if (zoom_k === 1 && zoom_x === 0 & zoom_y === 0) return true
                         else return false
@@ -367,7 +386,7 @@ export const VariantClusterPlot = () => {
                     d3.select('#b_export_data').classed('button_active', false);
                     d3.select('#b_export_data_all').classed('transparent', true);
                     d3.select('#b_export_data_selection').classed('transparent', true);
-                    d3.selectAll('.b_zoom_controllers').classed('transparent', true);
+                    d3.select('#v3c-svg').selectAll('.b_zoom_controllers').classed('transparent', true);
                     d3.select('#b_selection_undo').classed('transparent', false)
                     d3.select('#b_selection_filtered').classed('button_active', false).classed('transparent', true);
                     d3.select('#b_selection_add').classed('transparent', true);
@@ -398,7 +417,7 @@ export const VariantClusterPlot = () => {
                 if (d3.select(this).classed('button_active')) {
                     d3.select(this).classed('button_active', false).html('Add dots');
 
-                    d3.selectAll('.g_dots_selected').each(function(d){
+                    d3.select('#v3c-svg').selectAll('.g_dots_selected').each(function(d){
                         let current_ID = d.FINNGENID;
                         let data_selection_id = data_selection.map(a => a.FINNGENID);
                         
@@ -411,7 +430,7 @@ export const VariantClusterPlot = () => {
                     d3.select('#b_selection_undo').classed('transparent', true)
                     d3.select('#b_selection_filtered').classed('transparent', false)
                     d3.select('#b_export_chart').classed('transparent', false);
-                    d3.selectAll('.b_zoom_controllers').classed('transparent', false);
+                    d3.select('#v3c-svg').selectAll('.b_zoom_controllers').classed('transparent', false);
                     d3.select('#b_zoom_reset').classed('transparent', function(){
                         if (zoom_k === 1 && zoom_x === 0 & zoom_y === 0) return true
                         else return false
@@ -441,7 +460,7 @@ export const VariantClusterPlot = () => {
                     d3.select('#b_export_data').classed('button_active', false);
                     d3.select('#b_export_data_all').classed('transparent', true);
                     d3.select('#b_export_data_selection').classed('transparent', true);
-                    d3.selectAll('.b_zoom_controllers').classed('transparent', true);
+                    d3.select('#v3c-svg').selectAll('.b_zoom_controllers').classed('transparent', true);
                     d3.select('#b_selection_new').classed('transparent', true).classed('button_active', true);
                     d3.select('#b_selection_undo').classed('transparent', false)
                     d3.select('#b_selection_filtered').classed('button_active', false).classed('transparent', true)
@@ -468,7 +487,7 @@ export const VariantClusterPlot = () => {
 
                 d3.select(this).classed('transparent', true)
                 
-                d3.selectAll('.g_dots_selected').classed('g_dots_selected', false);
+                d3.select('#v3c-svg').selectAll('.g_dots_selected').classed('g_dots_selected', false);
                 d3.select('#g_alert').classed('transparent', true);
                 d3.select('#b_selection_new').classed('transparent', false).classed('button_active', false).html('New selection');
                 d3.select('#b_selection_filtered').classed('transparent', false);
@@ -476,7 +495,7 @@ export const VariantClusterPlot = () => {
                     if (d3.select('#t_table').classed('transparent')) return true
                     else return false}).classed('button_active', false)
                 d3.select('#b_export_chart').classed('transparent', false);
-                d3.selectAll('.b_zoom_controllers').classed('transparent', false);
+                d3.select('#v3c-svg').selectAll('.b_zoom_controllers').classed('transparent', false);
                 d3.select('#b_zoom_reset').classed('transparent', function(){
                         if (zoom_k === 1 && zoom_x === 0 & zoom_y === 0) return true
                         else return false
@@ -610,8 +629,8 @@ export const VariantClusterPlot = () => {
             })
 
             d3.select('.g_zoom_buttons')
-                .on('mouseenter', function(){d3.selectAll('.b_zoom_controllers').style('opacity', '1');})
-                .on('mouseleave', function(){d3.selectAll('.b_zoom_controllers').style('opacity', '0');});
+                .on('mouseenter', function(){d3.select('#v3c-svg').selectAll('.b_zoom_controllers').style('opacity', '1');})
+                .on('mouseleave', function(){d3.select('#v3c-svg').selectAll('.b_zoom_controllers').style('opacity', '0');});
 
             //Svg
             function drawAxes(){
@@ -654,7 +673,7 @@ export const VariantClusterPlot = () => {
                 g_dots.exit().remove();
                 g_dots.enter().append('circle');
                 
-                // .select('#v3c-svg') added by sanastas:  error in next line: d.intensity_ref not found
+                // .select('#v3c-svg') added by sanastas:  error in the line: d.intensity_ref not found
                 d3.select('#v3c-svg').selectAll('circle')
                     .attr('cx',     function(d){return cx(d.intensity_ref)})
                     .attr('cy',     function(d){return cy(d.intensity_alt)})
@@ -676,14 +695,14 @@ export const VariantClusterPlot = () => {
                     .classed('transparent', function(d){if (d.intensity_ref < zoom_extent_x[0] || d.intensity_alt < zoom_extent_y[0]) return true})
 
                 if (arrayOfClickedSpots.length > 2){
-                    d3.selectAll('circle').classed('g_dots_selected', function(d){
+                    d3.select('#v3c-svg').selectAll('circle').classed('g_dots_selected', function(d){
                         if (d3.polygonContains(arrayOfClickedSpots, [cx(d.intensity_ref), cy(d.intensity_alt)]))
                         return true})
                 }
             }
 
             function colorDots(){
-                d3.selectAll('circle').data(data_visible)
+                d3.select('#v3c-svg').selectAll('circle').data(data_visible)
                     .style('fill', function(d){ 
                         if      (d3.select('#p_color_raw').classed('button_active'))        return colorCalls(d.raw)
                         else if (d3.select('#p_color_imputed').classed('button_active'))    return colorCalls(d.imputed)
@@ -885,7 +904,7 @@ export const VariantClusterPlot = () => {
                 })
 
                 t_row.on('mouseout', function(){
-                    d3.selectAll('.g_dots_hover').remove();
+                    d3.select('#v3c-svg').selectAll('.g_dots_hover').remove();
                 })
             }
 
@@ -998,11 +1017,11 @@ export const VariantClusterPlot = () => {
                 d3.select('#t_manual_add').classed('transparent', false);
                 d3.select('#t_table').classed('transparent', true);
                 // d3.select('#t_table').style('width', '85.4%').classed('transparent', true);
-                d3.selectAll('.manual').classed('transparent', true);
-                d3.selectAll('circle').classed('g_dots_selected', false);
+                d3.select('#v3c-svg').selectAll('.manual').classed('transparent', true);
+                d3.select('#v3c-svg').selectAll('circle').classed('g_dots_selected', false);
 
-                d3.selectAll('.g_dots_click').remove();
-                d3.selectAll('.g_rect').remove();
+                d3.select('#v3c-svg').selectAll('.g_dots_click').remove();
+                d3.select('#v3c-svg').selectAll('.g_rect').remove();
 
                 d3.select('#t_manual_add').classed('transparent', true);
                 d3.select('#table').selectAll('.heading').classed('transparent', true);
@@ -1018,7 +1037,7 @@ export const VariantClusterPlot = () => {
                 getDataVisible();
                 drawCount(data_visible, 'graph');
                 drawDots(data_visible);
-                d3.selectAll('.manual').classed('transparent', false);
+                d3.select('#v3c-svg').selectAll('.manual').classed('transparent', false);
                 d3.select('#t_manual_add').remove();
                 d3.select('#t_table').style('width', '100%');
             })
@@ -1067,7 +1086,7 @@ export const VariantClusterPlot = () => {
                 getDataVisible();
                 drawCount(data_visible, 'graph');
                 drawDots(data_visible);
-                d3.selectAll('.manual').classed('transparent', false);
+                d3.select('#v3c-svg').selectAll('.manual').classed('transparent', false);
                 d3.select(this).classed('transparent', true);
                 d3.select('#t_sums').classed('transparent', false);
             })
@@ -1090,7 +1109,7 @@ export const VariantClusterPlot = () => {
                 arrayOfClickedSpots.push([e.clientX - 5, e.clientY - 148]);
                 g_svg.select('.g_selection_path').attr('d',`M${arrayOfClickedSpots.join('L')}Z`)
                 g_svg.select('.g_selection_dots').append('circle').attr('cx', e.clientX - 5).attr('cy', e.clientY - 148).attr('r', 2).attr('fill', '#000');
-                d3.selectAll('circle').classed('g_dots_selected', function(d, i){
+                d3.select('#v3c-svg').selectAll('circle').classed('g_dots_selected', function(d, i){
                     if (d && d3.polygonContains(arrayOfClickedSpots, [cx(d.intensity_ref), cy(d.intensity_alt)])) {return true};
                 })
             }})
@@ -1098,7 +1117,7 @@ export const VariantClusterPlot = () => {
             function eraseSelection(){
                 g_svg.select('.g_selection_path').remove();
                 g_svg.select('.g_selection_dots').remove();
-                d3.selectAll('circle').classed('g_dots_selected', false);
+                d3.select('#v3c-svg').selectAll('circle').classed('g_dots_selected', false);
             }
 
             //PANEL
@@ -1371,8 +1390,15 @@ export const VariantClusterPlot = () => {
 
     return (
     <div id="v3c-body">
-    
-    <div id="header">
+
+    {
+        drop_plot ? 
+        <div> 
+            <p style={{color: 'red'}}>{error_message}</p> 
+        </div> : null
+    }
+
+    <div id="header" style={{backgroundColor: drop_plot ? null :  'black'}}>
         <div id="h_description">
             <p></p>
         </div>

@@ -107,7 +107,6 @@ def clusterplot(variant):
         else:
             with open(filename, 'rb') as f:
                 data = f.read()
-
     except ParseException as e:
         abort(400, 'could not parse given variant')
     except FileNotFoundError as e:

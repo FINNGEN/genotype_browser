@@ -9,7 +9,7 @@
   padding: 0px;
   position: relative;
   font-weight: 400;
-  background-color: black;
+  /* background-color: black; */
   transition: background-color 1s;
   font-size: 15px;
   line-height: 18px;
@@ -51,10 +51,10 @@ u{
 #header{
   padding: 0px 0px 0px 0;
   width: 100%;
-  background-color: black;
   color: white;
   height: 37px;
   /*position: fixed;
+  background-color: black;
   top: 50%;
   transform: translate(0, -250px);*/
 }
