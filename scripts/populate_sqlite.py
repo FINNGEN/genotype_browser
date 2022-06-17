@@ -27,12 +27,10 @@ def main():
 
 
 def generate_entries(varf):
-    #entries = []
     with gzip.open(varf, 'rt') as f:
         h = {h:i for i,h in enumerate(f.readline().strip().split('\t'))}
         for line in f:
             s = line.strip().split('\t')
-            # TODO gets the first rsid.. whats the best rsid .split(',')[0]
             yield((s[h['variant']], s[h['chr']], s[h['pos']], s[h['rsid']], s[h['af']], s[h['info']], s[h['genome_enrichment_nfee']], s[h['exome_enrichment_nfsee']], s[h['gene_most_severe']], s[h['most_severe']], s[h['in_data']]))
 
 
