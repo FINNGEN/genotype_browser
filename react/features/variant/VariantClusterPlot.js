@@ -1108,9 +1108,9 @@ export const VariantClusterPlot = () => {
             g_svg.on('click', function(e, d){
 
             if (d3.select('#b_selection_new').classed('button_active')){
-                arrayOfClickedSpots.push([e.clientX - 27, e.clientY - 185]);
+                arrayOfClickedSpots.push([e.clientX - 27, e.clientY - 170]);
                 g_svg.select('.g_selection_path').attr('d',`M${arrayOfClickedSpots.join('L')}Z`)
-                g_svg.select('.g_selection_dots').append('circle').attr('cx', e.clientX - 27).attr('cy', e.clientY - 185).attr('r', 2).attr('fill', '#000');
+                g_svg.select('.g_selection_dots').append('circle').attr('cx', e.clientX - 27).attr('cy', e.clientY - 170).attr('r', 2).attr('fill', '#000');
                 d3.select('#v3c-svg').selectAll('circle').classed('g_dots_selected', function(d, i){
                     if (d && d3.polygonContains(arrayOfClickedSpots, [cx(d.intensity_ref), cy(d.intensity_alt)])) {return true};
                 })
