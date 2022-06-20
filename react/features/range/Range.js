@@ -48,7 +48,7 @@ export const Range = (props) => {
     }
 
     const goToVariant = event => {
-	const variants = checked.map((c, i) => c ? range.data[i].variant.replace(/:/g, '-') : null).filter(d => d!==null).join(',')
+	const variants = checked.map((c, i) => c ? range.data[i].variant.replace(/:/g, '-').replace(/\/variant\//g, '') : null).filter(d => d!==null).join(',')
 	window.open(`${window.location.origin}/variant/${variants}`, '_blank')
     }
     

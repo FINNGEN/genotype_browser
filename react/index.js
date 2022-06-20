@@ -26,7 +26,7 @@ ReactDOM.render(
 	<Route path='/' component={SearchForm}/>
 	<Route exact path='/' component={SearchExamples}/>
 	<Route path='/variant/:variant' component={VariantContainer}/>
-    <Route path='/variants/:variants/:data_type' component={Variants}/>
+    <Route path='/variants/:variants' component={Variants}/>
 	<Route path='/gene/:gene' component={Gene}/>
     <Route path='/range/:range' component={Range}/>
         </div>

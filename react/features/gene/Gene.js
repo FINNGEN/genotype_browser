@@ -49,7 +49,7 @@ export const Gene = (props) => {
     }
 
     const goToVariant = event => {
-	const variants = checked.map((c, i) => c ? gene.data[i].variant.replace(/:/g, '-') : null).filter(d => d!==null).join(',')
+	const variants = checked.map((c, i) => c ? gene.data[i].variant.replace(/:/g, '-').replace(/\/variant\//g, '') : null).filter(d => d!==null).join(',')
 	
 	//get won't work for a large number of variants
 	//maybe put variant list to localstorage and read in the opened tab or hash variant list

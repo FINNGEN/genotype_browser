@@ -16,7 +16,6 @@ export const SearchForm = () => {
     const history = useHistory()
     const result = useSelector(state => state.search.result)
     const error = useSelector(state => state.search.error)
-    const dtype = useSelector(state => state.data.data_type)
 
     useEffect(() => {
 	if (!result.ids) {
@@ -34,10 +33,10 @@ export const SearchForm = () => {
 	    }
 	} else if (result.ids.length > 1) {
 	    if (result.type == 'variant') {
-		history.push(`/variants/${result.ids.join(',')}/${dtype}`)
+		history.push(`/variants/${result.ids.join(',')}`)
 	    }
 	}
-    }, [result, error, dtype])
+    }, [result, error])
 
     const handleSearchTextChange = event => {
 	setText(event.target.value.trim())

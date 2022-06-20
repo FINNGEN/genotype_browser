@@ -15,7 +15,8 @@ export const VariantForm = (props) => {
     const write_result = useSelector(state => state.data.write_result)
     const [gp, setGP] = useState(filters.gpThres)
     const state_data = useSelector(state => state.data.data)
-    const dtype = useSelector(state => state.data.data_type)  
+    const dtype = useSelector(state => state.data.data_type) 
+    const data = useSelector(state => state.data)
    	
     // const dtype = useSelector(state => state.data.data_type)
     var source = null
@@ -204,7 +205,7 @@ export const VariantForm = (props) => {
 	    <label>Raw FinnGen chip data</label>
 	    </div>
 
-		<div><h3>{props.props['variant'] || '...'}</h3></div>
+		<div><h3>{ variants != undefined ? variants.join(',') : props.props['variant']}</h3></div>
 		<div style={{marginTop: "10px"}}>
 			    {anno}
 			    <div style={{display: 'flex', marginTop: "30px"}}>

@@ -18,6 +18,13 @@ export const Variant = (props) => {
     const search_status =  useSelector(state => state.search.status)
     const source = dtype == 'imputed' ? 'Imputed data' : 'Raw chip data'
 
+    var varlen = 1
+    if (data != undefined){
+    	if ( data.variants!= undefined ){
+    		varlen = data.variants.length
+   		}
+    }
+
     useEffect(() => {
     if (search_status != 'failed'){
     	if (data.status == 'idle') { //fetch by default
@@ -43,7 +50,7 @@ export const Variant = (props) => {
 	const errorMsg = data.error.status == 400 ?
 	      'Bad request, did you format the variant correctly? e.g. 7-5397122-C-T' :
 	      data.error.status == 404 ?
-	      `Variant not found in ${source.toLowerCase()}.` :
+	      	`Variant${varlen > 1 ? 's' : ''} not found in ${source.toLowerCase()}.` :
 	      data.error.status == 500 ?
 	      'Internal server error, let us know.' :
 	      `${data.error.status} oh no, something went wrong`

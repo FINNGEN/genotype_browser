@@ -8,10 +8,8 @@ import { useSelector, useDispatch } from 'react-redux'
 export const SearchExamples = () => {
 
 	// <Link to='/variant/13-32315226-G-A'> rs3092989 
-	// <Link to='/variant/12-71584145-G-T'> rs200138614 
- 	const dtype = useSelector(state => state.data.data_type)  
-   	console.log("SEARCH EXAMPLES: dtype:", dtype)
- 	
+	// <Link to='/variant/12-71584145-G-T'> rs200138614 	
+	
     return (
 	    <div>
 	    <span>Examples: 
