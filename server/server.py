@@ -46,7 +46,7 @@ def find(query):
 @app.route('/api/v1/variants/<variants>')
 def variants(variants):
     try:
-        data_type = request.args.get('data_type')
+        data_type = request.args.get('data_type')       
         data = fetch.get_variants(variants, request.args.to_dict(), data_type)
     except ParseException as e:
         abort(400, 'could not parse given variant(s)')
@@ -68,7 +68,7 @@ def gene_variants(gene):
 @app.route('/api/v1/write_variants/<variants>')
 def write_variants(variants):
     try:
-        data_type = request.args.get('data_type')
+        data_type = request.args.get('data_type')        
         status = fetch.write_variants(variants, request.args.to_dict(), data_type)
     except ParseException as e:
         abort(400, 'could not parse given variant(s)')

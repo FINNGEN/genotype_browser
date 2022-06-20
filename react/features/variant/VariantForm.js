@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import { setFilter, setServerOption } from '../data/dataSlice'
+import { setFilter, setServerOption, setDownloadOption } from '../data/dataSlice'
 import { setDataType } from '../search/searchSlice'
 import validator from 'validator'
 import './styles.css'
@@ -14,6 +14,9 @@ export const VariantForm = (props) => {
     const write_status = useSelector(state => state.data.write_status)
     const write_result = useSelector(state => state.data.write_result)
     const [gp, setGP] = useState(filters.gpThres)
+    const data = useSelector(state => state.data.data)
+    const data_freeze = data != null ? `[DF${data.release_version}]` : null
+    const downloadOptions = useSelector(state => state.data.downloadOptions)
 
     // update state if variant was open in a separate window and thus the
     // data type is obtained from the url params
@@ -27,15 +30,19 @@ export const VariantForm = (props) => {
     const filterChanged = (filt, value, event) => {
 	if (event.target.type !== 'text') {
 	    if (filt == 'gtgp') {
-		if (!(+gp>=0 && +gp<=1)) {
-		    alert('gp threshold should be between 0 and 1')
-		} else {
-		    dispatch(setFilter({filt: filt, content: {type: value, gpThres: value == 'gt' ? 0.95 : +gp}}))
-		}
-	    } else {
-		dispatch(setFilter({filt: filt, content: value}))
+			if (!(+gp>=0 && +gp<=1)) {
+			    alert('gp threshold should be between 0 and 1')
+			} else {
+			    dispatch(setFilter({filt: filt, content: {type: value, gpThres: value == 'gt' ? 0.95 : +gp}}))
+			}
+	    } else if (filt != 'hethom') {
+			dispatch(setFilter({filt: filt, content: value}))
 	    }
 	}
+    }
+
+    const downloadOptionChanged = (opt, event) => {
+		dispatch(setDownloadOption({opt: 'hethom', content: event.target.value}))
     }
 
     const gpThresChanged = event => {
@@ -47,7 +54,9 @@ export const VariantForm = (props) => {
     }
 
     const downloadRequested = event => {
-		window.open(`/api/v1/write_variants/${variants.join(',')}?${new URLSearchParams(Object.assign({}, filters, {'data_type': dtype}))}`, "_blank")
+    	
+    	var test = Object.assign({}, filters, downloadOptions, {'data_type': dtype})
+		window.open(`/api/v1/write_variants/${variants.join(',')}?${new URLSearchParams(Object.assign({}, filters, downloadOptions, {'data_type': dtype}))}`, "_blank")
     }
 
     const hethom = variants && variants.length > 1 ?
@@ -190,7 +199,7 @@ export const VariantForm = (props) => {
 	var render_content = (
 
 		<div>
-		<div><h3>{props.props['variant'] || '...'}</h3></div>
+		<div><h3>{data_freeze} {props.props['variant'] || '...'}</h3></div>
 		<div style={{marginTop: "10px"}}>
 			    {anno}
 			    <div style={{display: 'flex', marginTop: "30px"}}>
@@ -278,28 +287,29 @@ export const VariantForm = (props) => {
 			    <div className="hl" style={{width: "100%", borderTop: "1px solid #dddddd", marginTop: "0px", marginBottom: "10px"}}></div>
 			    <div style={{display: 'flex', flexDirection: 'row'}}>
 				    	<div>
-					    	<input type="radio" value="all" name="hethom" checked={filters.hethom == 'all'} onChange={filterChanged.bind(this, 'hethom', 'all')} />
+					    	<input type="radio" value="all" name="hethom" checked={downloadOptions.hethom == 'all'} onChange={downloadOptionChanged.bind(this, 'all')} />
 					    	<span>all</span>
 					    </div>
 					    <div>
-					    	<input type="radio" value="het" name="hethom" checked={filters.hethom == 'het'} onChange={filterChanged.bind(this, 'hethom', 'het')} />
+					    	<input type="radio" value="het" name="hethom" checked={downloadOptions.hethom == 'het'} onChange={downloadOptionChanged.bind(this, 'het')} />
 					    	<span>het</span>
 					    </div>
 					    <div>
-					    	<input type="radio" value="hom" name="hethom" checked={filters.hethom == 'hom'} onChange={filterChanged.bind(this, 'hethom', 'hom')} />
+					    	<input type="radio" value="hom" name="hethom" checked={downloadOptions.hethom == 'hom'} onChange={downloadOptionChanged.bind(this, 'hom')} />
 					    	<span>hom</span>
 					    </div>
 					    <div>
-					    	<input type="radio" value="hom" name="hethom" checked={filters.hethom == 'wt_hom'} onChange={filterChanged.bind(this, 'hethom', 'wt_hom')} />
+					    	<input type="radio" value="wt_hom" name="hethom" checked={downloadOptions.hethom == 'wt_hom'} onChange={downloadOptionChanged.bind(this, 'wt_hom')} />
 					    	<span>WT hom</span>
 					    </div>
 				   	<div style={{flexShrink: 1, marginLeft: "10px"}}>
 				    <button type="button" className="button" onClick={downloadRequested}>Download data</button>
 				    </div>
 			    </div>
+			    {hethom}
 
 			    </div>
-				{hethom}
+				
 			    </div> 
 
 			    </div>
