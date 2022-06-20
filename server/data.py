@@ -18,7 +18,7 @@ class Datafetch(object):
 
     def _init_info(self, select_chip):
         if (self.conf['use_gcp_buckets']):
-            info_file = 'gs://'+ self.conf['basic_info_file_bucket']+'/'+ self.conf['basic_info_file']
+            info_file = 'gs://'+ self.conf['red_bucket']+'/'+ self.conf['basic_info_file']
         else:
             info_file = self.conf['basic_info_file']
         info = pd.read_csv(info_file, sep='\t').fillna('NA')

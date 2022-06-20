@@ -1,39 +1,44 @@
 import logging
 
 use_gcp_buckets = False
-basic_info_file_bucket = ''
-cluster_plots_bucket = ''
+red_bucket = ''
+green_bucket = ''
 
 sqlite_db = '/mnt/nfs/juha/FGQ/fgq.r6.2.db'
-
 basic_info_file = '/mnt/nfs/r6/pheno/finngen_R6_gt_samples_info_2.txt.gz'
+cluster_plots_location = ''
+intensity_files_location = ''
 
-vcf_files = [
-    '/mnt/nfs/r6/geno/vcf/finngen_R6_chr1.vcf.gz',
-    '/mnt/nfs/r6/geno/vcf/finngen_R6_chr2.vcf.gz',
-    '/mnt/nfs/r6/geno/vcf/finngen_R6_chr3.vcf.gz',
-    '/mnt/nfs/r6/geno/vcf/finngen_R6_chr4.vcf.gz',
-    '/mnt/nfs/r6/geno/vcf/finngen_R6_chr5.vcf.gz',
-    '/mnt/nfs/r6/geno/vcf/finngen_R6_chr6.vcf.gz',
-    '/mnt/nfs/r6/geno/vcf/finngen_R6_chr7.vcf.gz',
-    '/mnt/nfs/r6/geno/vcf/finngen_R6_chr8.vcf.gz',
-    '/mnt/nfs/r6/geno/vcf/finngen_R6_chr9.vcf.gz',
-    '/mnt/nfs/r6/geno/vcf/finngen_R6_chr10.vcf.gz',
-    '/mnt/nfs/r6/geno/vcf/finngen_R6_chr11.vcf.gz',
-    '/mnt/nfs/r6/geno/vcf/finngen_R6_chr12.vcf.gz',
-    '/mnt/nfs/r6/geno/vcf/finngen_R6_chr13.vcf.gz',
-    '/mnt/nfs/r6/geno/vcf/finngen_R6_chr14.vcf.gz',
-    '/mnt/nfs/r6/geno/vcf/finngen_R6_chr15.vcf.gz',
-    '/mnt/nfs/r6/geno/vcf/finngen_R6_chr16.vcf.gz',
-    '/mnt/nfs/r6/geno/vcf/finngen_R6_chr17.vcf.gz',
-    '/mnt/nfs/r6/geno/vcf/finngen_R6_chr18.vcf.gz',
-    '/mnt/nfs/r6/geno/vcf/finngen_R6_chr19.vcf.gz',
-    '/mnt/nfs/r6/geno/vcf/finngen_R6_chr20.vcf.gz',
-    '/mnt/nfs/r6/geno/vcf/finngen_R6_chr21.vcf.gz',
-    '/mnt/nfs/r6/geno/vcf/finngen_R6_chr22.vcf.gz',
-    '/mnt/nfs/r6/geno/vcf/finngen_R6_chr23.vcf.gz'
-]
+geojson = 'finmap.geojson'
 
-write_dir = '/mnt/nfs/juha/FGQ/out'
+vcf_files = {
+    "imputed_data": [
+        '/mnt/nfs/r6/geno/vcf/finngen_R6_chr1.vcf.gz',
+        '/mnt/nfs/r6/geno/vcf/finngen_R6_chr2.vcf.gz',
+        '/mnt/nfs/r6/geno/vcf/finngen_R6_chr3.vcf.gz',
+        '/mnt/nfs/r6/geno/vcf/finngen_R6_chr4.vcf.gz',
+        '/mnt/nfs/r6/geno/vcf/finngen_R6_chr5.vcf.gz',
+        '/mnt/nfs/r6/geno/vcf/finngen_R6_chr6.vcf.gz',
+        '/mnt/nfs/r6/geno/vcf/finngen_R6_chr7.vcf.gz',
+        '/mnt/nfs/r6/geno/vcf/finngen_R6_chr8.vcf.gz',
+        '/mnt/nfs/r6/geno/vcf/finngen_R6_chr9.vcf.gz',
+        '/mnt/nfs/r6/geno/vcf/finngen_R6_chr10.vcf.gz',
+        '/mnt/nfs/r6/geno/vcf/finngen_R6_chr11.vcf.gz',
+        '/mnt/nfs/r6/geno/vcf/finngen_R6_chr12.vcf.gz',
+        '/mnt/nfs/r6/geno/vcf/finngen_R6_chr13.vcf.gz',
+        '/mnt/nfs/r6/geno/vcf/finngen_R6_chr14.vcf.gz',
+        '/mnt/nfs/r6/geno/vcf/finngen_R6_chr15.vcf.gz',
+        '/mnt/nfs/r6/geno/vcf/finngen_R6_chr16.vcf.gz',
+        '/mnt/nfs/r6/geno/vcf/finngen_R6_chr17.vcf.gz',
+        '/mnt/nfs/r6/geno/vcf/finngen_R6_chr18.vcf.gz',
+        '/mnt/nfs/r6/geno/vcf/finngen_R6_chr19.vcf.gz',
+        '/mnt/nfs/r6/geno/vcf/finngen_R6_chr20.vcf.gz',
+        '/mnt/nfs/r6/geno/vcf/finngen_R6_chr21.vcf.gz',
+        '/mnt/nfs/r6/geno/vcf/finngen_R6_chr22.vcf.gz',
+        '/mnt/nfs/r6/geno/vcf/finngen_R6_chr23.vcf.gz'
+    ],
+    "chip_data": [
+    ]    
+}
 
 log_level = logging.INFO
