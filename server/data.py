@@ -220,11 +220,6 @@ class Datafetch(object):
             info_columns = self.info_columns_chip
 
         # extract data freeze number from the data
-        try:
-            release_version = re.search(r'(?<=fgq.r)\d+', self.conf['sqlite_db']).group(0)
-        except Exception as e:
-            release_version = ''
-
         id_index = list(filtered_basic_info.index)
         het_i = []
         hom_i = []
@@ -273,14 +268,13 @@ class Datafetch(object):
             'total_indiv': len(filtered_basic_info),
             'filters': filters,
             'geo_data': self.geo_data,
-            'release_version': release_version
+            'release_version': self.conf['release_version']
         }
     
     def _count_gt_for_write(self, variants, data, filters, chips, data_type):
         start_time = timeit.default_timer()
         df_list = []
-        release_version = re.search(r'(?<=fgq.r)\d+', self.conf['sqlite_db']).group(0)
-        cohort_source = 'Genobrowser[DF' + release_version + ']'
+        cohort_source = 'Genobrowser[' + self.conf['release_version'] + ']'
         if data_type == 'imputed':
             filtered_basic_info = self._filter(self.info, filters, chips)
             info_orig = self.info_orig

@@ -15,7 +15,7 @@ export const VariantForm = (props) => {
     const write_result = useSelector(state => state.data.write_result)
     const [gp, setGP] = useState(filters.gpThres)
     const data = useSelector(state => state.data.data)
-    const data_freeze = data != null ? `[DF${data.release_version}]` : null
+    const data_freeze = data != null ? `[${data.release_version}]` : null
     const downloadOptions = useSelector(state => state.data.downloadOptions)
 
     // update state if variant was open in a separate window and thus the
@@ -54,8 +54,6 @@ export const VariantForm = (props) => {
     }
 
     const downloadRequested = event => {
-    	
-    	var test = Object.assign({}, filters, downloadOptions, {'data_type': dtype})
 		window.open(`/api/v1/write_variants/${variants.join(',')}?${new URLSearchParams(Object.assign({}, filters, downloadOptions, {'data_type': dtype}))}`, "_blank")
     }
 
