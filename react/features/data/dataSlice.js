@@ -73,6 +73,9 @@ export const dataSlice = createSlice({
 	    barmap: 'map', // 'bar' or 'map'
 	    maphethom: 'het' // 'het' or 'hom'
 	},
+	downloadOptions : {
+	    hethom: 'all' // 'all', 'het', 'hom', 'wt_hom': specify individuals with which type of variant should be downloaded
+	},
 	serverOptions: {
 	    hethom: false // whether to count individuals heterozygous for more than one variant as homozygous
 	}
@@ -93,6 +96,9 @@ export const dataSlice = createSlice({
 	},
 	setOption: (state, action) => {
 	    state.options[action.payload.opt] = action.payload.content
+	},
+	setDownloadOption: (state, action) => {
+	    state.downloadOptions[action.payload.opt] = action.payload.content
 	},
 	setServerOption: (state, action) => {
 	    state.serverOptions[action.payload.opt] = action.payload.content
@@ -143,7 +149,7 @@ export const dataSlice = createSlice({
     }
 })
 
-export const { setFilter, setOption, setServerOption, setData } = dataSlice.actions
+export const { setFilter, setOption, setServerOption, setDownloadOption, setData } = dataSlice.actions
 export const gtCount = state => (state.data.data && [state.data.data.het[0].length, state.data.data.hom_alt[0].length, state.data.data.wt_hom[0].length, state.data.data.missing[0].length])
 
 export default dataSlice.reducer

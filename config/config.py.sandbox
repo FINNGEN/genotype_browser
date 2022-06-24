@@ -10,6 +10,7 @@ basic_info_file = '/finngen/library-red/finngen_R9/phenotype_1.0/data/finngen_R9
 cluster_plots_location = '/finngen/library-green/finngen_R9/cluster_plots/'
 
 geojson = 'finmap.geojson'
+release_version = 'DF9'
 
 vcf_files = {
     "imputed_data": [
