@@ -711,7 +711,12 @@ export const VariantClusterPlot = () => {
                         else if (d3.select('#p_color_manual').classed('button_active'))     return colorCalls(d.manual)
                         else if (d3.select('#p_color_exome').classed('button_active'))           return colorCalls(d.exome)
                     })
-                    .classed('g_dots_selected', function(d){if (d3.polygonContains(arrayOfClickedSpots, [cx(d.intensity_ref), cy(d.intensity_alt)])) return true})
+                    .classed('g_dots_selected', function(d){
+                        if (arrayOfClickedSpots.length > 0) {
+                            if (d3.polygonContains(arrayOfClickedSpots, [cx(d.intensity_ref), cy(d.intensity_alt)])) return true
+                            else return false
+                        } else return false
+                    })
             }
 
             function drawExomeLocations(){
