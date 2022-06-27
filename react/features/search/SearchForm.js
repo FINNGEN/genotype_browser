@@ -4,9 +4,6 @@ import { useSelector, useDispatch } from 'react-redux'
 import validator from 'validator'
 import { search, setResult } from '../search/searchSlice'
 
-import { setDataType } from '../data/dataSlice'
-
-
 export const SearchForm = () => {
 
 	// sessionStorage.clear()

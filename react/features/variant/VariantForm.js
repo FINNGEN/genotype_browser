@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import { setFilter, setOption, setServerOption, setDataType } from '../data/dataSlice'
+import { setFilter, setOption, setServerOption, setDataType, setDownloadOption } from '../data/dataSlice'
 import validator from 'validator'
 import './styles.css'
 
@@ -17,24 +17,26 @@ export const VariantForm = (props) => {
     const state_data = useSelector(state => state.data.data)
     const dtype = useSelector(state => state.data.data_type) 
     const data = useSelector(state => state.data)
-   	
-    // const dtype = useSelector(state => state.data.data_type)
+    
     var source = null
     if (state_data != null){
     	source = state_data.data_type == 'imputed' ? 'Imputed data' : 'Raw chip data' 
     }
+    
+    const data_freeze = state_data != null ? `[${state_data.release_version}]` : null
+    const downloadOptions = useSelector(state => state.data.downloadOptions)
     const search_status =  useSelector(state => state.search.status)
 
     const filterChanged = (filt, value, event) => {
 	if (event.target.type !== 'text') {
 	    if (filt == 'gtgp') {
-		if (!(+gp>=0 && +gp<=1)) {
-		    alert('gp threshold should be between 0 and 1')
-		} else {
-		    dispatch(setFilter({filt: filt, content: {type: value, gpThres: value == 'gt' ? 0.95 : +gp}}))
-		}
-	    } else {
-		dispatch(setFilter({filt: filt, content: value}))
+			if (!(+gp>=0 && +gp<=1)) {
+			    alert('gp threshold should be between 0 and 1')
+			} else {
+			    dispatch(setFilter({filt: filt, content: {type: value, gpThres: value == 'gt' ? 0.95 : +gp}}))
+			}
+	    } else if (filt != 'hethom') {
+			dispatch(setFilter({filt: filt, content: value}))
 	    }
 	}
     }
@@ -44,7 +46,11 @@ export const VariantForm = (props) => {
     }
 
     const optionChanged = (opt, event) => {
-	dispatch(setOption({opt: opt, content: event.target.value}))
+		dispatch(setOption({opt: opt, content: event.target.value}))
+	}
+
+    const downloadOptionChanged = (opt, event) => {
+		dispatch(setDownloadOption({opt: 'hethom', content: event.target.value}))
     }
 
     const gpThresChanged = event => {
@@ -56,7 +62,7 @@ export const VariantForm = (props) => {
     }
 
     const downloadRequested = event => {
-		window.open(`/api/v1/write_variants/${variants.join(',')}?${new URLSearchParams(Object.assign({}, filters, {'data_type': dtype}))}`, "_blank")
+		window.open(`/api/v1/write_variants/${variants.join(',')}?${new URLSearchParams(Object.assign({}, filters, downloadOptions, {'data_type': dtype}))}`, "_blank")
     }
 
     const hethom = variants && variants.length > 1 ?
@@ -197,7 +203,6 @@ export const VariantForm = (props) => {
 	var render_content = (
 
 		<div>
-
 		<div style={{paddingRight: '10px'}}>
 	    <input type="radio" value="imputed" id="imputed" name="dtype" checked={dtype == 'imputed'} onChange={handleDataTypeChange} />
 	    <label>Imputed data</label>
@@ -205,7 +210,7 @@ export const VariantForm = (props) => {
 	    <label>Raw FinnGen chip data</label>
 	    </div>
 
-		<div><h3>{ variants != undefined ? variants.join(',') : props.props['variant']}</h3></div>
+		<div><h3>{data_freeze} { variants != undefined ? variants.join(',') : props.props['variant']}</h3></div>
 		<div style={{marginTop: "10px"}}>
 			    {anno}
 			    <div style={{display: 'flex', marginTop: "30px"}}>
@@ -289,51 +294,37 @@ export const VariantForm = (props) => {
 			    <div className="vl" style={{height: "100%", borderLeft: "1px solid #dddddd", marginLeft: "20px", marginRight: "20px"}}></div>
 
 			    <div style={{display: 'flex', flexDirection: 'column'}}>
-			    <div><h3 style={{marginBottom: "10px", marginTop: "0px"}}>Show</h3></div>
+			    <div><h3 style={{marginBottom: "10px", marginTop: "0px"}}>Download</h3></div>
 			    <div className="hl" style={{width: "100%", borderTop: "1px solid #dddddd", marginTop: "0px", marginBottom: "10px"}}></div>
 			    <div style={{display: 'flex', flexDirection: 'row'}}>
-
-				    <div onChange={optionChanged.bind(this, 'cntfreq')} className="buttonGroup">
-				    <div><input type="radio" value="gt_count" name="cntfreq" defaultChecked/><span>number of genotypes</span></div>
-				    <div><input type="radio" value="freq" name="cntfreq"/><span>allele frequency</span></div>
-				    </div>
-				    
-				    <div onChange={optionChanged.bind(this, 'bbreg')} className="buttonGroup">
-				    <div><input type="radio" value="biobank" name="bbreg" defaultChecked/><span>by biobank</span></div>
-				    <div><input type="radio" value="region" name="bbreg"/><span>by region of birth</span></div>
-				    </div>
-			    </div>
-			    </div>
-			    </div>
-			    </div>
-
-			    <div style={{display: 'flex', flexDirection: 'column', marginTop: "40px"}}>
-			    <div><h3 style={{marginBottom: "10px", marginTop: "0px"}}>Download</h3></div>
-			    <div style={{display: 'flex', flexDirection: 'row'}}>
 				    	<div>
-					    	<input type="radio" value="all" name="hethom" checked={filters.hethom == 'all'} onChange={filterChanged.bind(this, 'hethom', 'all')} />
+					    	<input type="radio" value="all" name="hethom" checked={downloadOptions.hethom == 'all'} onChange={downloadOptionChanged.bind(this, 'all')} />
 					    	<span>all</span>
 					    </div>
 					    <div>
-					    	<input type="radio" value="het" name="hethom" checked={filters.hethom == 'het'} onChange={filterChanged.bind(this, 'hethom', 'het')} />
+					    	<input type="radio" value="het" name="hethom" checked={downloadOptions.hethom == 'het'} onChange={downloadOptionChanged.bind(this, 'het')} />
 					    	<span>het</span>
 					    </div>
 					    <div>
-					    	<input type="radio" value="hom" name="hethom" checked={filters.hethom == 'hom'} onChange={filterChanged.bind(this, 'hethom', 'hom')} />
+					    	<input type="radio" value="hom" name="hethom" checked={downloadOptions.hethom == 'hom'} onChange={downloadOptionChanged.bind(this, 'hom')} />
 					    	<span>hom</span>
 					    </div>
 					    <div>
-					    	<input type="radio" value="hom" name="hethom" checked={filters.hethom == 'wt_hom'} onChange={filterChanged.bind(this, 'hethom', 'wt_hom')} />
+					    	<input type="radio" value="wt_hom" name="hethom" checked={downloadOptions.hethom == 'wt_hom'} onChange={downloadOptionChanged.bind(this, 'wt_hom')} />
 					    	<span>WT hom</span>
 					    </div>
 				   	<div style={{flexShrink: 1, marginLeft: "10px"}}>
 				    <button type="button" className="button" onClick={downloadRequested}>Download data</button>
 				    </div>
 			    </div>
+			    {hethom}
 
 			    </div>
-				{hethom}
+				
 			    </div> 
+
+			    </div>
+			    </div>
 		</div>
 	)
 

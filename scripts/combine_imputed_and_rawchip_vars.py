@@ -23,15 +23,22 @@ def main():
 
     # read tables
     start_time = timeit.default_timer()
-    matr_chip = pd.read_csv(chip_anno, sep="\t")
-    matr_impute = pd.read_csv(imputed_anno, compression='gzip', sep="\t")
-    cols = {col: col.lower().replace('#', '') for col in matr_impute.columns}
-    matr_impute = matr_impute.rename(columns=cols, inplace=False)
+    matr_chip = pd.read_csv(chip_anno, sep="\t", usecols=['#variant', 'chr', 'pos', 'rsid', 'gene_most_severe', 
+        'most_severe', 'GENOME_enrichment_nfee', 'EXOME_enrichment_nfsee', 'AF']).rename(
+            columns=str.lower)
+    matr_chip.columns=matr_chip.columns.str.replace('#','')
 
-    # split rsids
-    # TODO gets the first rsid.. whats the best rsid. At this point: get the first rsid
-    matr_impute['rsids'] = matr_impute['rsids'].apply(lambda x: x.split(',')[0])
-    matr_impute = matr_impute.rename(columns={'rsids': 'rsid'}, inplace=False)
+    #add the info field to the chip annotation file which was previously done in 'prepare_rawchip_vars.py'
+    matr_chip['info'] = np.NaN
+
+    # engine=c is important to avoid running out of memory since the file is very big
+    matr_impute = pd.read_csv(imputed_anno, sep="\t", engine="c",
+            usecols=['#variant', 'chr', 'pos', 'rsid', 'gene_most_severe', 'most_severe', 
+            'GENOME_enrichment_nfee', 'EXOME_enrichment_nfsee', 'INFO','AF']).rename(
+                    columns=str.lower)
+    matr_impute.columns=matr_impute.columns.str.replace('#','')
+
+    matr_impute.info()
 
     # raw chip: variant_rsid
     rownames_chip = matr_chip['variant'] + '_' + matr_chip['rsid']
