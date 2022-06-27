@@ -110,7 +110,7 @@ export const VariantForm = (props) => {
 		}
 	}
 
-	const hide_imputchip_radio = dtype != null ? dtype == 'chip' ? true : false : false
+	const hide_imputchip_radio = dtype == 'chip'
 
 	var render_imputchip_radio = ''
 	if (!hide_imputchip_radio){
