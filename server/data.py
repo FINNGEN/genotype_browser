@@ -267,6 +267,7 @@ class Datafetch(object):
             'info': info,
             'total_indiv': len(filtered_basic_info),
             'filters': filters,
+            'data_type': data_type,
             'geo_data': self.geo_data,
             'release_version': self.conf['release_version']
         }
@@ -389,6 +390,14 @@ class Datafetch(object):
         else:
             return False
 
+    def check_var_in_imput(self, variant):
+        chr, pos, ref, alt = utils.parse_variant(variant)
+        var_data = self._get_genotype_data(chr, pos, ref, alt, 'imputed')
+        if var_data is not None:
+            return True
+        else:
+            return False
+
     def write_variants(self, variants, filters, data_type):
         vars_data = []
         for variant in variants.split(','):
@@ -419,7 +428,7 @@ class Datafetch(object):
             # TODO should return non-200 maybes
             return {'status': 'failed', 'message': str(e)}
 
-    def get_gene_variants(self, gene, data_type):
+    def get_gene_variants(self, gene):
         if self.conn[threading.get_ident()].row_factory is None:
             self.conn[threading.get_ident()].row_factory = sqlite3.Row
         c = self.conn[threading.get_ident()].cursor()
@@ -428,7 +437,7 @@ class Datafetch(object):
         if len(gene_db) == 0:
             raise utils.NotFoundException()
         else:
-            vars_db = self.get_genomic_range_variants(gene_db[0]['chr'], gene_db[0]['start'], gene_db[0]['end'], data_type)
+            vars_db = self.get_genomic_range_variants(gene_db[0]['chr'], gene_db[0]['start'], gene_db[0]['end'])
             res_vars = vars_db['data']
         # drop columns we don't show
         exclude_cols = ['gene_most_severe', 'consequence_gnomad', 'chr', 'pos', 'in_data']
@@ -436,23 +445,28 @@ class Datafetch(object):
         return {
             'gene': gene,
             'columns': cols,
-            'data': res_vars,
-            'data_type': data_type
+            'data': res_vars
         }
 
-    def get_genomic_range_variants(self, chr, start, end, data_type):
-        in_data = 1 if data_type == 'imputed' else 2
+    def get_genomic_range_variants(self, chr, start, end):
         if self.conn[threading.get_ident()].row_factory is None:
             self.conn[threading.get_ident()].row_factory = sqlite3.Row
         c = self.conn[threading.get_ident()].cursor()
-        query = 'SELECT * FROM anno WHERE chr=%s AND pos>=%s AND pos<=%s AND (in_data=%s OR in_data=3);' % (chr, start, end, in_data)
+        query = 'SELECT * FROM anno WHERE chr=%s AND pos>=%s AND pos<=%s;' % (chr, start, end)
         c.execute(query)
         res = [dict(row) for row in c.fetchall()]
         if len(res) == 0:
             raise utils.NotFoundException()
         data = []
         for item in res:
-            item['variant'] = '-'.join(item['variant'].split(':'))
+            # item['variant'] = '-'.join(item['variant'].split(':'))
+            src = 'imputed,chip'
+            if item['in_data'] == 1:
+                src = 'imputed'
+            elif item['in_data'] == 2:
+                src = 'chip'
+            item['variant'] = "/variant/" + '-'.join(item['variant'].split(':'))
+            item['source'] = src
             data.append(item)
         genomic_range = "%s:%s-%s" % (chr, start, end)                     
         exclude_cols = ['gene_most_severe', 'consequence_gnomad', 'chr', 'pos', 'in_data']
@@ -460,6 +474,5 @@ class Datafetch(object):
         return {
             'range': genomic_range,
             'columns': cols,
-            'data': data,
-            'data_type': data_type
+            'data': data
         }

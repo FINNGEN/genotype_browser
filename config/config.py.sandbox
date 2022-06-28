@@ -5,7 +5,6 @@ red_bucket = ''
 green_bucket = ''
 
 sqlite_db = '/finngen/library-green/finngen_R9/finngen_R9_analysis_data/annotations/fgq.r9.1.db'
-
 basic_info_file = '/finngen/library-red/finngen_R9/phenotype_1.0/data/finngen_R9_gt_samples_info.txt.gz'
 cluster_plots_location = '/finngen/library-green/finngen_R9/cluster_plots/'
 

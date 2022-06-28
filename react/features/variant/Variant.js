@@ -6,7 +6,6 @@ import {
     gtCount,
     setData
 } from '../data/dataSlice'
-import { setDataType } from '../search/searchSlice'
 
 import { setOption } from '../data/dataSlice'
 
@@ -16,16 +15,17 @@ export const Variant = (props) => {
     const gtCnt = useSelector(gtCount)
     const dispatch = useDispatch()
     const data = useSelector(state => state.data)
-   	var dtype = props.props.data_type
-   	const source = dtype == 'imputed' ? 'Imputed data' : 'Raw chip data'
-   	const options = useSelector(state => state.data.options)
-
-   	// update state if variant was open in a separate window. Data type is obtained from the url params
-    useEffect(() => {
-		dispatch(setDataType({content: dtype}))
-    }, [])
-
+    const dtype = useSelector(state => state.data.data_type)  
     const search_status =  useSelector(state => state.search.status)
+    const source = dtype == 'imputed' ? 'Imputed data' : 'Raw chip data'
+    const options = useSelector(state => state.data.options) 
+
+    var varlen = 1
+    if (data != undefined){
+    	if ( data.variants!= undefined ){
+    		varlen = data.variants.length
+   		}
+    }
 
     useEffect(() => {
     if (search_status != 'failed'){
@@ -45,7 +45,7 @@ export const Variant = (props) => {
 	    }
 	}
     }
-    }, [data.filters, data.serverOptions, props])
+    }, [data.filters, data.serverOptions, props, data.data_type])
 
     const optionChanged = (opt, event) => {
 	dispatch(setOption({opt: opt, content: event.target.value}))
@@ -56,7 +56,7 @@ export const Variant = (props) => {
 	const errorMsg = data.error.status == 400 ?
 	      'Bad request, did you format the variant correctly? e.g. 7-5397122-C-T' :
 	      data.error.status == 404 ?
-	      `Variant not found in ${source.toLowerCase()}.` :
+	      	`Variant${varlen > 1 ? 's' : ''} not found in ${source.toLowerCase()}.` :
 	      data.error.status == 500 ?
 	      'Internal server error, let us know.' :
 	      `${data.error.status} oh no, something went wrong`

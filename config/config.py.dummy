@@ -5,7 +5,6 @@ red_bucket = ''
 green_bucket = ''
 
 sqlite_db = 'fgq.r6.4.db'
-
 basic_info_file = 'genotype_browser_dummy_data_50k_1.txt.gz'
 cluster_plots_location = 'cluster_plots/'
 

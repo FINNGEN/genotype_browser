@@ -19,7 +19,8 @@ const afFilter = (filter, row) => {
     }
 }
 
-export const getColumns = (gene, checked, handleCheck, handleCheckAll, dtype) => {
+export const getColumns = (gene, checked, handleCheck, handleCheckAll) => {
+
     if (!gene || !gene.columns) return []
     const cols = [
 	{
@@ -40,6 +41,7 @@ export const getColumns = (gene, checked, handleCheck, handleCheckAll, dtype) =>
 	    width: 150
 	}
     ]
+
     cols.push(...gene.columns.map(c => {
 	if (c == 'variant') {
 	    return {
@@ -47,7 +49,31 @@ export const getColumns = (gene, checked, handleCheck, handleCheckAll, dtype) =>
 		accessor: c,
 		style: {textAlign: 'right'},
 		headerStyle: {textAlign: 'right'},
-		Cell: props => <Link to={`/variant/${props.value.replace(/:/g, '-')}/${dtype}`} target="_blank">{props.value}</Link>
+		Cell: props => <Link to={props.value} target="_blank">{props.value.split('/')[2]}</Link>
+	    }
+	} else if (c == 'source') {
+	    return {
+		Header: "GT source",
+		accessor: c,
+		style: {textAlign: 'right'},
+		headerStyle: {textAlign: 'right'},
+		Cell: props => props.value
+	    }
+	} else if (c == 'url') {
+	    return {
+		Header: c,
+		accessor: c,
+		style: {textAlign: 'right'},
+		headerStyle: {textAlign: 'right'},
+		Cell: props => <Link to={props.value} target="_blank">{props.value.split('/')[2]}</Link>
+	    }
+	} else if (c == 'in_data') {
+	    return {
+		Header: c,
+		accessor: c,
+		style: {textAlign: 'right'},
+		headerStyle: {textAlign: 'right'},
+		Cell: props => props.value
 	    }
 	} else if (c == 'rsid') {
 	    return {
@@ -152,9 +178,7 @@ export const getColumns = (gene, checked, handleCheck, handleCheckAll, dtype) =>
 		},
 		filterMethod: numFilter
 	    }
-	} else {
-	    console.error(`unexpected gene column: ${c}`)
-	}
+	} 
     }))
     return cols
 }

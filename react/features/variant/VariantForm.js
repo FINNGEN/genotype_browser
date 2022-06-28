@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import { setFilter, setServerOption, setDownloadOption } from '../data/dataSlice'
-import { setDataType } from '../search/searchSlice'
+import { setFilter, setOption, setServerOption, setDataType, setDownloadOption } from '../data/dataSlice'
 import validator from 'validator'
 import './styles.css'
+
 
 export const VariantForm = (props) => {
 
@@ -14,19 +14,19 @@ export const VariantForm = (props) => {
     const write_status = useSelector(state => state.data.write_status)
     const write_result = useSelector(state => state.data.write_result)
     const [gp, setGP] = useState(filters.gpThres)
-    const data = useSelector(state => state.data.data)
-    const data_freeze = data != null ? `[${data.release_version}]` : null
+    const state_data = useSelector(state => state.data.data)
+    const dtype = useSelector(state => state.data.data_type) 
+    const data = useSelector(state => state.data)
+    
+    var source = null
+    if (state_data != null){
+    	source = state_data.data_type == 'imputed' ? 'Imputed data' : 'Raw chip data' 
+    }
+    
+    const data_freeze = state_data != null ? `[${state_data.release_version}]` : null
     const downloadOptions = useSelector(state => state.data.downloadOptions)
-
-    // update state if variant was open in a separate window and thus the
-    // data type is obtained from the url params
-    var dtype = props.props.data_type
-    const source = dtype == 'imputed' ? 'Imputed data' : 'Raw chip data'
-    useEffect(() => {
-		dispatch(setDataType({content: dtype}))
-    }, [])
-
     const search_status =  useSelector(state => state.search.status)
+
     const filterChanged = (filt, value, event) => {
 	if (event.target.type !== 'text') {
 	    if (filt == 'gtgp') {
@@ -40,6 +40,14 @@ export const VariantForm = (props) => {
 	    }
 	}
     }
+
+    const handleDataTypeChange = (event) => {
+		dispatch(setDataType({content: event.target.value}))
+    }
+
+    const optionChanged = (opt, event) => {
+		dispatch(setOption({opt: opt, content: event.target.value}))
+	}
 
     const downloadOptionChanged = (opt, event) => {
 		dispatch(setDownloadOption({opt: 'hethom', content: event.target.value}))
@@ -108,9 +116,7 @@ export const VariantForm = (props) => {
 		}
 	}
 
-	const hide_imputchip_radio = dtype != undefined ?
-		dtype == 'chip' ? true : false
-	: false
+	const hide_imputchip_radio = dtype == 'chip'
 
 	var render_imputchip_radio = ''
 	if (!hide_imputchip_radio){
@@ -197,7 +203,14 @@ export const VariantForm = (props) => {
 	var render_content = (
 
 		<div>
-		<div><h3>{data_freeze} {props.props['variant'] || '...'}</h3></div>
+		<div style={{paddingRight: '10px'}}>
+	    <input type="radio" value="imputed" id="imputed" name="dtype" checked={dtype == 'imputed'} onChange={handleDataTypeChange} />
+	    <label>Imputed data</label>
+		<input type="radio" value="chip" id="chip" name="dtype" checked={dtype == 'chip'} onChange={handleDataTypeChange} />
+	    <label>Raw FinnGen chip data</label>
+	    </div>
+
+		<div><h3>{data_freeze} { variants != undefined ? variants.join(',') : props.props['variant']}</h3></div>
 		<div style={{marginTop: "10px"}}>
 			    {anno}
 			    <div style={{display: 'flex', marginTop: "30px"}}>
