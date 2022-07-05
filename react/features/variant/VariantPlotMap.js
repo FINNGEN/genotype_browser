@@ -191,7 +191,7 @@ export const VariantPlotMap = () => {
     return (
     	<div style={{width: width, height: "600px", display: "inline-block", verticalAlign: "top"}}>
     		<p style={{width: width, textAlign: "center", marginTop: "10px", marginBottom: "10px"}}>{title}</p>
-			<svg ref={ref}></svg>
+			<svg style={{width: width, height: "550px"}} ref={ref}></svg>
 		</div>
     )
 }
