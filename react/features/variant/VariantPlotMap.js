@@ -10,8 +10,8 @@ export const VariantPlotMap = () => {
     const options = useSelector(state => state.data.options)
     const use_data = data.agg.regions
     var geo_data = data.geo_data['features']
-    // var values = options.cntfreq == 'freq' ? use_data.af : options.maphethom == 'het' ? use_data.gt_counts[0] : use_data.gt_counts[1]
-    var title =  options.cntfreq == 'freq' ? "Allele frequency by region of birth" : "Number of genotypes by region of birth"
+    var hethom_title = options.maphethom == 'het' ? 'heterozygous' : 'homozygous'
+    var title =  options.cntfreq == 'freq' ? "Allele frequency by region of birth" :  "Number of " + hethom_title + " genotypes by region of birth"
 
     const width = 800;
 	const height = 550;
@@ -53,12 +53,14 @@ export const VariantPlotMap = () => {
 
 	// choose min and max value for the plot
 	var min_val = Math.min.apply(Math, values)
+	// var min_val = 0
 	var max_val = Math.max.apply(Math, values)
 	if (options.cntfreq == 'freq'){
 		const af_thres = [0.001, 0.005, 0.01, 0.05]
 		for (i=0; i<af_thres.length; i++){
 			if (max_val < af_thres[i]){
 				max_val = af_thres[i]
+				min_val = 0
 				break
 			}
 		}
@@ -189,7 +191,7 @@ export const VariantPlotMap = () => {
     return (
     	<div style={{width: width, height: "600px", display: "inline-block", verticalAlign: "top"}}>
     		<p style={{width: width, textAlign: "center", marginTop: "10px", marginBottom: "10px"}}>{title}</p>
-			<svg ref={ref}></svg>
+			<svg style={{width: width, height: "550px"}} ref={ref}></svg>
 		</div>
     )
 }

@@ -58,6 +58,7 @@ export const dataSlice = createSlice({
 	write_status: 'idle',
 	write_result: null,
 	error: null,
+	data_type: 'imputed',
 	filters: {
 	    alive: 'all', // 'all', 'alive', 'dead' or 'unknown'
 	    sex: 'all', // 'all', 'female' or 'male'
@@ -72,6 +73,9 @@ export const dataSlice = createSlice({
 	    cntfreq: 'freq', // 'gt_count', 'indiv_count' or 'freq'
 	    barmap: 'map', // 'bar' or 'map'
 	    maphethom: 'het' // 'het' or 'hom'
+	},
+	downloadOptions : {
+	    hethom: 'all' // 'all', 'het', 'hom', 'wt_hom': specify individuals with which type of variant should be downloaded
 	},
 	serverOptions: {
 	    hethom: false // whether to count individuals heterozygous for more than one variant as homozygous
@@ -94,8 +98,14 @@ export const dataSlice = createSlice({
 	setOption: (state, action) => {
 	    state.options[action.payload.opt] = action.payload.content
 	},
+	setDownloadOption: (state, action) => {
+	    state.downloadOptions[action.payload.opt] = action.payload.content
+	},
 	setServerOption: (state, action) => {
 	    state.serverOptions[action.payload.opt] = action.payload.content
+	},
+	setDataType: (state, action) => {
+	    state.data_type = action.payload.content
 	}
     },
     extraReducers: {
@@ -109,11 +119,16 @@ export const dataSlice = createSlice({
 	    state.annotation = action.payload.annotation
 	    state.data = action.payload.data
 	    state.time = action.payload.time
-	    // console.log(action.payload)
+
+	    // in diff way!
+	    // const data_type = (action.payload.data_types.includes(1) || action.payload.data_types.includes(3)) ? 'imputed' : (action.payload.data_types.includes(2) || action.payload.data_types.includes(3)) ? 'chip' : null
+	    // state.data_types = action.payload.data_types
+	    // console.log("action.payload:", action.payload, "data_types:", action.payload.data_types)
+	    
 	    const ordered = {}
 	    Object.keys(action.payload.data.filters).sort().forEach(key => { ordered[key] = action.payload.data.filters[key] })
 	    try {
-		sessionStorage.setItem(`${action.payload.variants.join(',')}+${JSON.stringify(ordered)}+${action.payload.data_type}`, JSON.stringify(action.payload.data))
+		sessionStorage.setItem(`${action.payload.variants.join(',')}+${JSON.stringify(ordered)}+${state.data_type}`, JSON.stringify(action.payload.data))
 	    } catch(e) {
 		if (isQuotaExceeded(e)) {
 		    console.warn('sessionstorage quota exceeded (dataSlice), clear the storage!')
@@ -143,7 +158,7 @@ export const dataSlice = createSlice({
     }
 })
 
-export const { setFilter, setOption, setServerOption, setData } = dataSlice.actions
+export const { setFilter, setOption, setServerOption, setData, setDataType, setDownloadOption } = dataSlice.actions
 export const gtCount = state => (state.data.data && [state.data.data.het[0].length, state.data.data.hom_alt[0].length, state.data.data.wt_hom[0].length, state.data.data.missing[0].length])
 
 export default dataSlice.reducer

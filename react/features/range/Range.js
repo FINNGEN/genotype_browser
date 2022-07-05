@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from 'react-redux'
 import ReactTable from 'react-table-v6'
 import { fetchData, setData } from './rangeSlice'
 import { getColumns } from '../gene/GeneTable'
-import { setDataType } from '../search/searchSlice'
+import { setDataType } from '../data/dataSlice'
 
 export const Range = (props) => {
 
@@ -13,21 +13,15 @@ export const Range = (props) => {
     const [checked, setChecked] = useState([])
     const reactTable = useRef(null)
 
-    // const dtype = useSelector(state => state.search.result.data_type)
-    var dtype = props.match.params.data_type
-    useEffect(() => {
-		dispatch(setDataType({content: dtype}))
-    }, [])
-
     useEffect(() => {
 	if (range.status == 'idle') {
-	    dispatch(fetchData(`/api/v1/range/${props.match.params.range}?` + new URLSearchParams({...{'data_type': dtype}})))
+	    dispatch(fetchData(`/api/v1/range/${props.match.params.range}`))
 	} else {
-	    const stored = sessionStorage.getItem(`${props.match.params.range}_${dtype}`)
+	    const stored = sessionStorage.getItem(`${props.match.params.range}`)
 	    if (stored) {
 			dispatch(setData(JSON.parse(stored)))
 	    } else if (range.status != 'loading') {
-		dispatch(fetchData(`/api/v1/range/${props.match.params.range}?` + new URLSearchParams({...{'data_type': dtype}})))
+		dispatch(fetchData(`/api/v1/range/${props.match.params.range}`))
 	    }
 	}
     }, [props])
@@ -54,8 +48,8 @@ export const Range = (props) => {
     }
 
     const goToVariant = event => {
-	const variants = checked.map((c, i) => c ? range.data[i].variant.replace(/:/g, '-') : null).filter(d => d!==null).join(',')
-	window.open(`${window.location.origin}/variant/${variants}/${dtype}`, '_blank')
+	const variants = checked.map((c, i) => c ? range.data[i].variant.replace(/:/g, '-').replace(/\/variant\//g, '') : null).filter(d => d!==null).join(',')
+	window.open(`${window.location.origin}/variant/${variants}`, '_blank')
     }
     
     let content = (<div>loading...</div>)
@@ -71,7 +65,7 @@ export const Range = (props) => {
     }
     if (range.status == 'done') {// && checked.length > 0) {
 	// maybe need to get every time because checkboxes are react-controlled
-	const columns = getColumns(range, checked, handleCheck, handleCheckAll, dtype)
+	const columns = getColumns(range, checked, handleCheck, handleCheckAll)
 	const numShown = (reactTable.current && reactTable.current.getResolvedState().sortedData.length) || range.data.length
 	const numSelected = checked.filter(c => c).length
 	content =  (
