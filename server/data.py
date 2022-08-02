@@ -27,12 +27,30 @@ class Datafetch(object):
             info_file = self.conf['basic_info_file']
         info = pd.read_csv(info_file, sep='\t').fillna('NA')
 
+        info.index = info['FINNGENID']
+
         if select_chip:
-            info.index = info['FINNGENID']
             tabix_iter = self.tabix_files_chip[threading.get_ident()][0]
-            h = tabix_iter.header[len(tabix_iter.header) - 1].split('\t')
-            chip_samples = h[9:]
-            info = info.loc[info.index.intersection(chip_samples), :]
+        else:
+            tabix_iter = self.tabix_files_imputed[threading.get_ident()][0]
+
+        # get the header from vcf files
+        h = tabix_iter.header[len(tabix_iter.header) - 1].split('\t')
+        samples = pd.DataFrame({'finngen_id': h[9:]})
+        samples['row_id'] = samples.index
+        samples.index = samples['finngen_id']
+
+        # get intersection of samples in vcf file and basic info file - order of samples 
+        # must be preserved due to further gt extraction and additon to the output file. 
+        # Required for chip data: excluding samples that are uniquily present in vcf files
+        samples_intersection = samples.index.intersection(info.index)
+
+        # extract intersecting samples from info and vcf header (in the same order that they are present in VCF)
+        # info = info.loc[info.index.intersection(samples), :]
+        info = info.loc[samples_intersection, :]
+        samples = samples.loc[samples_intersection, : ]
+        samples.reset_index(drop=True, inplace=True)   
+
         # make a copy for writing data out with male/female texts
         info_orig = info.copy()
         # info_orig['SEX'] = np.where(info_orig['SEX'] == 1, 'female', 'male')
@@ -49,21 +67,22 @@ class Datafetch(object):
         region_idx = {region:i for i,region in enumerate(region_list)}
         info['regionofbirth'] = info['regionofbirthname'].map(region_idx)
         info = info.drop(columns=['FINNGENID', 'regionofbirthname'])
-        info.reset_index(drop=True, inplace=True)
         info_columns = info.columns.tolist()
 
         # remove index
         info.reset_index(drop=True, inplace=True)
         info_orig.reset_index(drop=True, inplace=True)
-        return info, info_orig, cohort_list, region_list, info_columns
+        return info, info_orig, cohort_list, region_list, info_columns, samples
 
     def __init__(self, conf):
         self.conf=conf
         self._init_tabix()
         self._init_db()
         self._init_geo_data()
-        self.info, self.info_orig, self.cohort_list, self.region_list, self.info_columns = self._init_info(select_chip=False)
-        self.info_chip, self.info_orig_chip, self.cohort_list_chip, self.region_list_chip, self.info_columns_chip = self._init_info(select_chip=True)
+        self.info, self.info_orig, self.cohort_list, self.region_list, self.info_columns, \
+            self.samples_imput = self._init_info(select_chip=False)
+        self.info_chip, self.info_orig_chip, self.cohort_list_chip, self.region_list_chip, \
+            self.info_columns_chip, self.samples_chip = self._init_info(select_chip=True)
 
     def _get_annotation(self, chr, pos, ref, alt, data_type):
         in_data = 1 if data_type == 'imputed' else 2
@@ -82,15 +101,23 @@ class Datafetch(object):
         chr_var = chr if chr != 23 else 'X'
         if data_type == 'imputed':
             tabix_iter = self.tabix_files_imputed[threading.get_ident()][chr-1].fetch('chr'+str(chr_var), pos-1, pos)
+            samples = list(self.samples_imput['row_id'])
         else:
             tabix_iter = self.tabix_files_chip[threading.get_ident()][chr-1].fetch('chr'+str(chr_var), pos-1, pos)
+            samples = list(self.samples_chip['row_id'])
         var_data = None
         for row in tabix_iter:
             data = row.split('\t')            
             if data[3] == ref and data[4] == alt:
                 var_data = data
                 break
-        return var_data[9:] if var_data is not None else None
+
+        # get only those samples that have information in basic info file
+        if var_data is not None:
+            res = np.array(var_data[9:])
+            return list(res[samples])
+        else:
+            return None
 
     def _get_chips(self, chr, pos, ref, alt):
         if self.conn[threading.get_ident()].row_factory is None:
