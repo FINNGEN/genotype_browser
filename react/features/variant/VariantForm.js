@@ -49,8 +49,8 @@ export const VariantForm = (props) => {
 		dispatch(setOption({opt: opt, content: event.target.value}))
 	}
 
-    const downloadOptionChanged = (opt, event) => {
-		dispatch(setDownloadOption({opt: 'hethom', content: event.target.value}))
+    const downloadOptionChanged = (event) => {
+		dispatch(setDownloadOption({opt: event.target.name, content: event.target.checked}))
     }
 
     const gpThresChanged = event => {
@@ -98,8 +98,6 @@ export const VariantForm = (props) => {
 			null
 		cols[key] = element
 	})
-
-	console.log("cols:", cols)
 
 	const annotation_info = annotation != undefined ?
 		annotation[0].info == 'NA' ? 'NA': annotation[0].info.toPrecision(3)
@@ -305,21 +303,21 @@ export const VariantForm = (props) => {
 			    <div><h3 style={{marginBottom: "10px", marginTop: "0px"}}>Download</h3></div>
 			    <div className="hl" style={{width: "100%", borderTop: "1px solid #dddddd", marginTop: "0px", marginBottom: "10px"}}></div>
 			    <div style={{display: 'flex', flexDirection: 'row'}}>
-				    	<div>
-					    	<input type="radio" value="all" name="hethom" checked={downloadOptions.hethom == 'all'} onChange={downloadOptionChanged.bind(this, 'all')} />
-					    	<span>all</span>
-					    </div>
 					    <div>
-					    	<input type="radio" value="het" name="hethom" checked={downloadOptions.hethom == 'het'} onChange={downloadOptionChanged.bind(this, 'het')} />
+					    	<input type="checkbox" value={downloadOptions.het} name="het" id="het" onChange={downloadOptionChanged.bind(this)} />
 					    	<span>het</span>
 					    </div>
 					    <div>
-					    	<input type="radio" value="hom" name="hethom" checked={downloadOptions.hethom == 'hom'} onChange={downloadOptionChanged.bind(this, 'hom')} />
+					    	<input type="checkbox" value={downloadOptions.hom} name="hom" id="hom" onChange={downloadOptionChanged.bind(this)} />
 					    	<span>hom</span>
 					    </div>
 					    <div>
-					    	<input type="radio" value="wt_hom" name="hethom" checked={downloadOptions.hethom == 'wt_hom'} onChange={downloadOptionChanged.bind(this, 'wt_hom')} />
+					    	<input type="checkbox" value={downloadOptions.wt_hom} name="wt_hom" id="wt_hom" onChange={downloadOptionChanged.bind(this)} />
 					    	<span>WT hom</span>
+					    </div>
+					    <div>
+					    	<input type="checkbox" value={downloadOptions.missing} name="missing" id="missing" onChange={downloadOptionChanged.bind(this)} />
+					    	<span>missing</span>
 					    </div>
 				   	<div style={{flexShrink: 1, marginLeft: "10px"}}>
 				    <button type="button" className="button" onClick={downloadRequested}>Download data</button>

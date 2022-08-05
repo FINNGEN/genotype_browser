@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 from collections import defaultdict, Counter
 import geojson 
+import json
 import utils
 import re
 
@@ -349,22 +350,24 @@ class Datafetch(object):
             missing['gt'] = '.|.'
 
             # if specified the type of variants to be saved
-            if 'hethom' in filters:
-                if filters['hethom'] == 'hom':
-                    df = hom_alt
-                elif filters['hethom'] == 'het':
-                    df = het
-                elif filters['hethom'] == 'wt_hom':
-                    df = wt_hom
-                else:
-                    # append all data frames: wt, het, hom, wt_hom
-                    df = hom_alt.append(het, ignore_index=True).append(wt_hom, ignore_index=True).append(missing, ignore_index=True)
+            df = pd.DataFrame(columns = het.columns.values.tolist())
+            if json.loads(filters['hom']):
+                df = df.append(hom_alt, ignore_index=True)
+            
+            if json.loads(filters['het']):
+                df = df.append(het, ignore_index=True)
+            
+            if json.loads(filters['wt_hom']):
+                df = df.append(wt_hom, ignore_index=True)
+            
+            if json.loads(filters['missing']):
+                df = df.append(missing, ignore_index=True)
 
             # append data frames
             df = self._filter(df, filters, chips)
             df['variant'] = variants[i].replace('-', ':')
             df['COHORT_SOURCE'] = cohort_source
-            df['COHORT_NAME'] = df['variant'] + '-' + df['gt']
+            df['COHORT_NAME'] = df['variant'] + '-' + df['gt']            
             df_list.append(df)
         
         elapsed = timeit.default_timer() - start_time
@@ -441,9 +444,11 @@ class Datafetch(object):
             for key in ['array', 'impchip', 'data_type']:
                 del filters[key]
             filename = variants.replace(',', '_') + '__rawchip_data__' + '_'.join([k+'_'+v for k,v in filters.items()]) + '.tsv'
+    
         data = data.drop(columns=['AGE_AT_DEATH_OR_NOW'])
         data['SEX'] = np.where(data['SEX'] == 1, 'female', 'male')
         data = data.sort_values(by=['FINNGENID'])           
+    
         try:
             data.to_csv(sep='\t', index=False, na_rep='NA')
             output = make_response(data.to_csv(sep='\t', index=False, na_rep='NA'))
