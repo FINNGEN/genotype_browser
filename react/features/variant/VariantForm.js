@@ -79,21 +79,27 @@ export const VariantForm = (props) => {
 	  <span>{annotation[0].gene_most_severe}</span> :
 	  null
 
-    const enr_exomes = annotation && annotation.length == 1 ?
-	  annotation[0].enrichment_nfsee_exomes == 'NA' ?
-	  'NA' :
-	  annotation[0].enrichment_nfsee_exomes == 1e6 || annotation[0].enrichment_nfsee_exomes == 'Inf' || annotation[0].enrichment_nfsee_exomes == 'inf' ?
-	  'inf' :
-	  annotation[0].enrichment_nfsee_exomes.toPrecision(3) :
-	  null
+	var cols = {
+		'enrichment_nfsee_exomes': null, 
+		'enrichment_nfee_genomes': null, 
+		'af_nfsee_exomes': null, 
+		'af_nfee_genomes': null, 
+		'af_fin_exomes': null, 
+		'af_fin_genomes': null
+	}
 
-    const enr_genomes = annotation && annotation.length == 1 ?
-	  annotation[0].enrichment_nfsee_genomes == 'NA' ?
-	  'NA' :
-	  annotation[0].enrichment_nfsee_genomes == 1e6 || annotation[0].enrichment_nfsee_genomes == 'Inf' || annotation[0].enrichment_nfsee_genomes == 'inf'?
-	  'inf' :
-	  annotation[0].enrichment_nfsee_genomes.toPrecision(3) :
-	  null
+	Object.keys(cols).forEach(function(key, index) {
+		var element = annotation && annotation.length == 1 ?
+			annotation[0][key] == 'NA' ?
+			'NA' :
+			annotation[0][key] == 1e6 || annotation[0][key] == 'Inf' || annotation[0][key] == 'inf' ?
+			'inf' :
+			annotation[0][key].toPrecision(3) :
+			null
+		cols[key] = element
+	})
+
+	console.log("cols:", cols)
 
 	const annotation_info = annotation != undefined ?
 		annotation[0].info == 'NA' ? 'NA': annotation[0].info.toPrecision(3)
@@ -179,9 +185,10 @@ export const VariantForm = (props) => {
 					<th>GT source</th>
 					<th>Gene most severe</th>
 					<th>Concequence most severe</th>
-					<th>AF</th>
+					<th>AF (FinnGen data)</th>
 					<th>Info</th>
-					<th>Fin enr gnomad2 genomes/exomes</th>
+					<th>Enr fin gnomad2 genomes/exomes</th>
+					<th>AF fin gnomad2 genomes/exomes</th>
 				</tr>
 				</thead>
 				<tbody>
@@ -192,7 +199,8 @@ export const VariantForm = (props) => {
 					<td>{annotation[0].most_severe.replace(/_/g, ' ')}</td>
 					<td>{af}</td>
 					<td>{annotation_info}</td>
-					<td>{enr_genomes}/{enr_exomes}</td>
+					<td>{cols['enrichment_nfee_genomes']}/{cols['enrichment_nfsee_exomes']}</td>
+					<td>{cols['af_fin_genomes']}/{cols['af_fin_exomes']}</td>
 				</tr>
 				</tbody>
 			</table>

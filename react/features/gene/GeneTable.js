@@ -42,7 +42,16 @@ export const getColumns = (gene, checked, handleCheck, handleCheckAll) => {
 	}
     ]
 
-    cols.push(...gene.columns.map(c => {
+    var gene_columns = gene.columns.reduce(function(result, col){
+		if (col !== 'af_nfee_genomes' && col !== 'af_nfsee_exomes'){
+			result.push(col);
+		} 
+		return result;
+	}, [])
+
+	console.log("gene_columns:", gene_columns)
+
+    cols.push(...gene_columns.map(c => {
 	if (c == 'variant') {
 	    return {
 		Header: c,
@@ -134,21 +143,21 @@ export const getColumns = (gene, checked, handleCheck, handleCheckAll) => {
 		Cell: props => props.value == 'NA' ? 'NA' : (props.value).toExponential(2),
 		filterMethod: afFilter
 	    }
-	} else if (c == 'af_genomes') {
+	} else if (c == 'af_fin_genomes') {
 	    return {
-	    Header: c.replace('af_', 'fin af gnomad2 '),
+	    Header: c.replace('af_fin_', 'fin af gnomad2 '),
 		accessor: c,
 		style: {textAlign: 'right'},
-		headerStyle: {textAlign: 'right'},
+		headerStyle: {textAlign: 'right', 'whiteSpace': 'break-spaces'},
 		Cell: props => props.value == 'NA' ? 'NA' : (props.value).toExponential(2),
 		filterMethod: afFilter
 	    }
-	} else if (c == 'af_exomes') {
+	} else if (c == 'af_fin_exomes') {
 	    return {
-	    Header: c.replace('af_', 'fin af gnomad2 '),
+	    Header: c.replace('af_fin_', 'fin af gnomad2 '),
 		accessor: c,
 		style: {textAlign: 'right'},
-		headerStyle: {textAlign: 'right'},
+		headerStyle: {textAlign: 'right', 'whiteSpace': 'break-spaces'},
 		Cell: props => props.value == 'NA' ? 'NA' : (props.value).toExponential(2),
 		filterMethod: afFilter
 	    }
@@ -157,16 +166,16 @@ export const getColumns = (gene, checked, handleCheck, handleCheckAll) => {
 		Header: c,
 		accessor: c,
 		style: {textAlign: 'right'},
-		headerStyle: {textAlign: 'right'},
+		headerStyle: {textAlign: 'center', 'whiteSpace': 'break-spaces'},
 		Cell: props => props.value == 'NA' ? 'NA' : (props.value).toPrecision(3) ,
 		filterMethod: numFilter
 	    }
-	} else if (c.startsWith('enrichment_nfsee')) {
+	} else if (c.startsWith('enrichment_nfsee') || c.startsWith('enrichment_nfee')) {
 	    return {
-		Header: c.replace('enrichment_nfsee_', 'fin enr gnomad2 '),
+		Header: c.replace('enrichment_nfsee_', 'fin enr gnomad2 ').replace('enrichment_nfee_', 'fin enr gnomad2 '),
 		accessor: c,
 		style: {textAlign: 'right'},
-		headerStyle: {textAlign: 'right'},
+		headerStyle: {textAlign: 'right', 'whiteSpace': 'break-spaces'},
 		Cell: props => {
 			if (props.value == 'NA'){
 				return 'NA'
