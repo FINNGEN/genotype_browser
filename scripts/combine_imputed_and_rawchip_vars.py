@@ -22,20 +22,24 @@ def main():
     output = args['output']
 
     # read tables
+    print("\nReading annotation for the chip data.")
     start_time = timeit.default_timer()
     matr_chip = pd.read_csv(chip_anno, sep="\t", usecols=['#variant', 'chr', 'pos', 'rsid', 'gene_most_severe', 
-        'most_severe', 'GENOME_enrichment_nfee', 'EXOME_enrichment_nfsee', 'AF']).rename(
+        'most_severe', 'GENOME_enrichment_nfee', 'EXOME_enrichment_nfsee', 'AF', 'GENOME_AF_fin', 'EXOME_AF_fin', 'GENOME_AF_nfee', 'EXOME_AF_nfsee']).rename(
             columns=str.lower)
     matr_chip.columns=matr_chip.columns.str.replace('#','')
+    print("\tData read.")
 
     #add the info field to the chip annotation file which was previously done in 'prepare_rawchip_vars.py'
     matr_chip['info'] = np.NaN
 
     # engine=c is important to avoid running out of memory since the file is very big
+    print("\nReading annotation for the imputed data.")
     matr_impute = pd.read_csv(imputed_anno, sep="\t", engine="c",
             usecols=['#variant', 'chr', 'pos', 'rsid', 'gene_most_severe', 'most_severe', 
-            'GENOME_enrichment_nfee', 'EXOME_enrichment_nfsee', 'INFO','AF']).rename(
+            'GENOME_enrichment_nfee', 'EXOME_enrichment_nfsee', 'INFO','AF', 'GENOME_AF_fin', 'EXOME_AF_fin', 'GENOME_AF_nfee', 'EXOME_AF_nfsee']).rename(
                     columns=str.lower)
+    print("\tData read.")
     matr_impute.columns=matr_impute.columns.str.replace('#','')
 
     matr_impute.info()
@@ -82,7 +86,7 @@ def main():
     # matr_imp_chip_sorted = matr_imp_chip_sorted.replace(np.nan, 'NA', regex=True)
     print("Fill NA with a string.")
     for col in matr_imp_chip_sorted.columns:
-        print(col)
+        print(col, "out of", matr_imp_chip_sorted.columns)
         matr_imp_chip_sorted[col]=matr_imp_chip_sorted[col].fillna('NA')
 
     # save output
