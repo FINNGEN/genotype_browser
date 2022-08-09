@@ -303,19 +303,19 @@ export const VariantForm = (props) => {
 			    <div className="hl" style={{width: "100%", borderTop: "1px solid #dddddd", marginTop: "0px", marginBottom: "10px"}}></div>
 			    <div style={{display: 'flex', flexDirection: 'row'}}>
 					    <div>
-					    	<input type="checkbox" value={downloadOptions.het} name="het" id="het" onChange={downloadOptionChanged.bind(this)} />
+					    	<input type="checkbox" value={downloadOptions.het} checked={downloadOptions.het} name="het" id="het" onChange={downloadOptionChanged.bind(this)} />
 					    	<span>het</span>
 					    </div>
 					    <div>
-					    	<input type="checkbox" value={downloadOptions.hom} name="hom" id="hom" onChange={downloadOptionChanged.bind(this)} />
+					    	<input type="checkbox" value={downloadOptions.hom} checked={downloadOptions.hom} name="hom" id="hom" onChange={downloadOptionChanged.bind(this)} />
 					    	<span>hom</span>
 					    </div>
 					    <div>
-					    	<input type="checkbox" value={downloadOptions.wt_hom} name="wt_hom" id="wt_hom" onChange={downloadOptionChanged.bind(this)} />
+					    	<input type="checkbox" value={downloadOptions.wt_hom} checked={downloadOptions.wt_hom} name="wt_hom" id="wt_hom" onChange={downloadOptionChanged.bind(this)} />
 					    	<span>WT hom</span>
 					    </div>
 					    <div>
-					    	<input type="checkbox" value={downloadOptions.missing} name="missing" id="missing" onChange={downloadOptionChanged.bind(this)} />
+					    	<input type="checkbox" value={downloadOptions.missing} checked={downloadOptions.missing} name="missing" id="missing" onChange={downloadOptionChanged.bind(this)} />
 					    	<span>missing</span>
 					    </div>
 				   	<div style={{flexShrink: 1, marginLeft: "10px"}}>

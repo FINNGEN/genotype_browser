@@ -75,10 +75,10 @@ export const dataSlice = createSlice({
 	},
 	downloadOptions : {
 		// het', 'hom', 'wt_hom', 'missing': specify individuals with which type of variant should be downloaded
-		'het': false, 
-		'hom': false, 
-		'wt_hom': false, 
-		'missing': false
+		'het': true, 
+		'hom': true, 
+		'wt_hom': true, 
+		'missing': true
 	},
 	serverOptions: {
 	    hethom: false // whether to count individuals heterozygous for more than one variant as homozygous
