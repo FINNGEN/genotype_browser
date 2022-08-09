@@ -97,6 +97,16 @@ class Datafetch(object):
             return dict(res)
         else:
             raise utils.NotFoundException(str(chr) + '-' + str(pos) + '-' + ref + '-' + alt)
+
+    def _get_gt_source(self, variant):
+        exists_in_imput = self.check_var_in_vcf(variant, 'imputed')
+        exists_in_chip = self.check_var_in_vcf(variant, 'chip')
+        if exists_in_chip and exists_in_imput:
+            return 3
+        elif exists_in_imput:
+            return 1
+        else:
+            return 2
         
     def _get_genotype_data(self, chr, pos, ref, alt, data_type):
         chr_var = chr if chr != 23 else 'X'
@@ -295,7 +305,6 @@ class Datafetch(object):
             'info': info,
             'total_indiv': len(filtered_basic_info),
             'filters': filters,
-            'data_type': data_type,
             'geo_data': self.geo_data,
             'release_version': self.conf['release_version']
         }
@@ -373,7 +382,7 @@ class Datafetch(object):
         elapsed = timeit.default_timer() - start_time
         return pd.concat(df_list)
 
-    def get_variants(self, variants, filters, data_type):
+    def get_variants(self, variants, filters, data_type):        
         start_time = timeit.default_timer()
         filters = {k:(True if v=="true" else v) for k,v in filters.items()}
         filters = {k:(False if v=="false" else v) for k,v in filters.items()}
@@ -384,45 +393,51 @@ class Datafetch(object):
         vars = []
         for variant in variants.split(','):
             chr, pos, ref, alt = utils.parse_variant(variant)
-            var_data = self._get_genotype_data(chr, pos, ref, alt, data_type)
+            src = self._get_gt_source(variant)                        
+            if data_type == "imputed":
+                if src != 1 and src != 3:
+                    data_type_searched = "chip"
+                else:
+                    data_type_searched = data_type
+            else:
+                if src != 2 and src != 3:
+                    data_type_searched = "imputed"
+                else:
+                    data_type_searched = data_type
+
+            var_data = self._get_genotype_data(chr, pos, ref, alt, data_type_searched)
             if var_data is not None:
                 vars_data.append(var_data)
                 vars.append('-'.join([str(s) for s in [chr, pos, ref, alt]]))
-                anno.append(self._get_annotation(chr, pos, ref, alt, data_type))
+                anno.append(self._get_annotation(chr, pos, ref, alt, data_type_searched))
         if len(vars_data) == 0:
             raise utils.NotFoundException()
+
         fetch_time = timeit.default_timer() - start_time
         start_time = timeit.default_timer()
         chips = self._get_chips(chr, pos, ref, alt) if len(vars_data) == 1 else set()
-        if data_type == 'chip':
+        if data_type_searched == 'chip':
             if 'impchip' in filters:
                 del filters['impchip']
             if 'gtgp' in filters:
                 del filters['gtgp']
-        data = self._count_gt(vars_data, filters, chips, data_type)
+        data = self._count_gt(vars_data, filters, chips, data_type_searched)
         munge_time = timeit.default_timer() - start_time
         return {
             'variants': vars,
             'annotation': anno,
+            'gt_src_extracted': data_type_searched,
             'data': data,
+            'gt_source': src,
             'time': {
                 'fetch': fetch_time,
                 'munge': munge_time
-            },
-            'data_type': data_type
+            }
         }
 
-    def check_var_in_chip(self, variant):
+    def check_var_in_vcf(self, variant, data_type):
         chr, pos, ref, alt = utils.parse_variant(variant)
-        var_data = self._get_genotype_data(chr, pos, ref, alt, 'chip')
-        if var_data is not None:
-            return True
-        else:
-            return False
-
-    def check_var_in_imput(self, variant):
-        chr, pos, ref, alt = utils.parse_variant(variant)
-        var_data = self._get_genotype_data(chr, pos, ref, alt, 'imputed')
+        var_data = self._get_genotype_data(chr, pos, ref, alt, data_type)
         if var_data is not None:
             return True
         else:
@@ -491,7 +506,6 @@ class Datafetch(object):
             raise utils.NotFoundException()
         data = []
         for item in res:
-            # item['variant'] = '-'.join(item['variant'].split(':'))
             src = 'imputed,chip'
             if item['in_data'] == 1:
                 src = 'imputed'

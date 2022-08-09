@@ -26,6 +26,7 @@ function isQuotaExceeded(e) {
 
 export const fetchData = createAsyncThunk('data/fetchData', async (url, { rejectWithValue }) => {
     try {
+  console.log("FETCHING URL (dataSlice):", url)
 	const response = await fetch(url)
 	if (response.status == 200) {
 	    return response.json()
@@ -121,12 +122,14 @@ export const dataSlice = createSlice({
 	    state.status = 'done'
 	    state.variants = action.payload.variants
 	    state.annotation = action.payload.annotation
+	    state.gt_src_extracted = action.payload.gt_src_extracted
+	    state.gt_source = action.payload.gt_source
 	    state.data = action.payload.data
 	    state.time = action.payload.time	    
 	    const ordered = {}
 	    Object.keys(action.payload.data.filters).sort().forEach(key => { ordered[key] = action.payload.data.filters[key] })
 	    try {
-		sessionStorage.setItem(`${action.payload.variants.join(',')}+${JSON.stringify(ordered)}+${state.data_type}`, JSON.stringify(action.payload.data))
+		sessionStorage.setItem(`${action.payload.variants.join(',')}+${JSON.stringify(ordered)}+${state.gt_src_extracted}`, JSON.stringify(action.payload.data))
 	    } catch(e) {
 		if (isQuotaExceeded(e)) {
 		    console.warn('sessionstorage quota exceeded (dataSlice), clear the storage!')

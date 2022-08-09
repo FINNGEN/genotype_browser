@@ -14,18 +14,14 @@ export const VariantForm = (props) => {
     const write_status = useSelector(state => state.data.write_status)
     const write_result = useSelector(state => state.data.write_result)
     const [gp, setGP] = useState(filters.gpThres)
+    const dtype = useSelector(state => state.data.data_type)
     const state_data = useSelector(state => state.data.data)
-    const dtype = useSelector(state => state.data.data_type) 
-    const data = useSelector(state => state.data)
-    
-    var source = null
-    if (state_data != null){
-    	source = state_data.data_type == 'imputed' ? 'Imputed data' : 'Raw chip data' 
-    }
-    
+    const gt_src_extracted = useSelector(state => state.data.gt_src_extracted)    
+    const gt_source = useSelector(state => state.data.gt_source)   
     const data_freeze = state_data != null ? `[${state_data.release_version}]` : null
     const downloadOptions = useSelector(state => state.data.downloadOptions)
     const search_status =  useSelector(state => state.search.status)
+    const source = gt_src_extracted == 'imputed' ? 'Imputed data' : 'Raw chip data' 
 
     const filterChanged = (filt, value, event) => {
 	if (event.target.type !== 'text') {
@@ -206,15 +202,18 @@ export const VariantForm = (props) => {
 
 	</div> : null
 
+	const gt_src_radio = gt_src_extracted != undefined ?
+		<div style={{paddingRight: '10px'}}>
+		    <input type="radio" value="imputed" id="imputed" name="dtype" checked={dtype == 'imputed'} disabled={gt_source == 2} onChange={handleDataTypeChange} />
+		    <label style={{ color: gt_source == 2 ? "#d3d3d3" : "black"}}>Imputed data</label>
+			<input type="radio" value="chip" id="chip" name="dtype" checked={dtype == 'chip'} disabled={gt_source == 1} onChange={handleDataTypeChange} />
+		    <label style={{ color: gt_source == 1 ? "#d3d3d3" : "black"}}>Raw FinnGen chip data</label>
+		</div> : null
+
 	var render_content = (
 
 		<div>
-		<div style={{paddingRight: '10px'}}>
-	    <input type="radio" value="imputed" id="imputed" name="dtype" checked={dtype == 'imputed'} onChange={handleDataTypeChange} />
-	    <label>Imputed data</label>
-		<input type="radio" value="chip" id="chip" name="dtype" checked={dtype == 'chip'} onChange={handleDataTypeChange} />
-	    <label>Raw FinnGen chip data</label>
-	    </div>
+		{gt_src_radio}
 
 		<div><h3>{data_freeze} { variants != undefined ? variants.join(',') : props.props['variant']}</h3></div>
 		<div style={{marginTop: "10px"}}>

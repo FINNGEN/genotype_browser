@@ -4,21 +4,24 @@ import { VariantPlots } from './VariantPlots'
 import {
     fetchData,
     gtCount,
-    setData
+    setData,
+    setDataType
 } from '../data/dataSlice'
 
 import { setOption } from '../data/dataSlice'
 
 
 export const Variant = (props) => {
-
+	
     const gtCnt = useSelector(gtCount)
     const dispatch = useDispatch()
     const data = useSelector(state => state.data)
     const dtype = useSelector(state => state.data.data_type)  
+    const gt_src_extracted = useSelector(state => state.data.gt_src_extracted)        
     const search_status =  useSelector(state => state.search.status)
-    const source = dtype == 'imputed' ? 'Imputed data' : 'Raw chip data'
     const options = useSelector(state => state.data.options) 
+    const gt_source = useSelector(state => state.data.gt_source)   
+    const source = gt_src_extracted == 'imputed' ? 'Imputed data' : 'Raw chip data' 
 
     var varlen = 1
     if (data != undefined){
@@ -43,10 +46,13 @@ export const Variant = (props) => {
 	    } else if (data.status != 'loading') {
 	    	dispatch(fetchData(`/api/v1/variants/${props.props.variant}?` + new URLSearchParams({...data.filters, ...data.serverOptions, ...{'data_type': dtype}})))
 	    }
-	}
-    }
-    }, [data.filters, data.serverOptions, props, data.data_type])
+	}}
+    }, [data.filters, data.serverOptions, props, dtype])
 
+    useEffect(() => {
+	 	dispatch(setDataType({content: gt_src_extracted}))
+    }, [gt_src_extracted])
+    
     const optionChanged = (opt, event) => {
 	dispatch(setOption({opt: opt, content: event.target.value}))
     }
