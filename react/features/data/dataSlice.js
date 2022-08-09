@@ -122,7 +122,9 @@ export const dataSlice = createSlice({
 	    state.variants = action.payload.variants
 	    state.annotation = action.payload.annotation
 	    state.data = action.payload.data
-	    state.time = action.payload.time	    
+	    state.time = action.payload.time
+	    state.data_freeze =`[${action.payload.release_version}]` 
+	    state.geo_data = action.payload.geo_data['features']
 	    const ordered = {}
 	    Object.keys(action.payload.data.filters).sort().forEach(key => { ordered[key] = action.payload.data.filters[key] })
 	    try {
@@ -140,7 +142,6 @@ export const dataSlice = createSlice({
 	[fetchData.rejected]: (state, action) => {
 	    state.status = 'failed'
 	    state.error = action.payload
-	    // console.log("dataSlice.js state.error:", action.payload)
 	},
 	[writeData.pending]: (state, action) => {
 	    state.write_status = 'writing'

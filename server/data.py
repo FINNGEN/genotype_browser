@@ -106,6 +106,7 @@ class Datafetch(object):
         else:
             tabix_iter = self.tabix_files_chip[threading.get_ident()][chr-1].fetch('chr'+str(chr_var), pos-1, pos)
             samples = list(self.samples_chip['row_id'])
+
         var_data = None
         for row in tabix_iter:
             data = row.split('\t')            
@@ -295,9 +296,7 @@ class Datafetch(object):
             'info': info,
             'total_indiv': len(filtered_basic_info),
             'filters': filters,
-            'data_type': data_type,
-            'geo_data': self.geo_data,
-            'release_version': self.conf['release_version']
+            'data_type': data_type
         }
     
     def _count_gt_for_write(self, variants, data, filters, chips, data_type):
@@ -382,6 +381,7 @@ class Datafetch(object):
         vars_data = []
         anno = []
         vars = []
+        
         for variant in variants.split(','):
             chr, pos, ref, alt = utils.parse_variant(variant)
             var_data = self._get_genotype_data(chr, pos, ref, alt, data_type)
@@ -409,20 +409,13 @@ class Datafetch(object):
                 'fetch': fetch_time,
                 'munge': munge_time
             },
-            'data_type': data_type
+            'geo_data': self.geo_data,
+            'release_version': self.conf['release_version']
         }
 
-    def check_var_in_chip(self, variant):
+    def check_var_in_vcf(self, variant, data_type):
         chr, pos, ref, alt = utils.parse_variant(variant)
-        var_data = self._get_genotype_data(chr, pos, ref, alt, 'chip')
-        if var_data is not None:
-            return True
-        else:
-            return False
-
-    def check_var_in_imput(self, variant):
-        chr, pos, ref, alt = utils.parse_variant(variant)
-        var_data = self._get_genotype_data(chr, pos, ref, alt, 'imputed')
+        var_data = self._get_genotype_data(chr, pos, ref, alt, data_type)
         if var_data is not None:
             return True
         else:

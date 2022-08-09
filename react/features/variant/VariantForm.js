@@ -17,15 +17,14 @@ export const VariantForm = (props) => {
     const state_data = useSelector(state => state.data.data)
     const dtype = useSelector(state => state.data.data_type) 
     const data = useSelector(state => state.data)
-    
-    var source = null
-    if (state_data != null){
-    	source = state_data.data_type == 'imputed' ? 'Imputed data' : 'Raw chip data' 
-    }
-    
-    const data_freeze = state_data != null ? `[${state_data.release_version}]` : null
+    const data_freeze = useSelector(state => state.data.data_freeze)
     const downloadOptions = useSelector(state => state.data.downloadOptions)
     const search_status =  useSelector(state => state.search.status)
+
+    var source = null
+	if (state_data != null){
+	    source = state_data.data_type == 'imputed' ? 'Imputed data' : 'Raw chip data' 
+	}
 
     const filterChanged = (filt, value, event) => {
 	if (event.target.type !== 'text') {
@@ -210,11 +209,11 @@ export const VariantForm = (props) => {
 
 		<div>
 		<div style={{paddingRight: '10px'}}>
-	    <input type="radio" value="imputed" id="imputed" name="dtype" checked={dtype == 'imputed'} onChange={handleDataTypeChange} />
-	    <label>Imputed data</label>
-		<input type="radio" value="chip" id="chip" name="dtype" checked={dtype == 'chip'} onChange={handleDataTypeChange} />
-	    <label>Raw FinnGen chip data</label>
-	    </div>
+        <input type="radio" value="imputed" id="imputed" name="dtype" checked={dtype == 'imputed'} onChange={handleDataTypeChange} />
+        <label>Imputed data</label>
+        <input type="radio" value="chip" id="chip" name="dtype" checked={dtype == 'chip'} onChange={handleDataTypeChange} />
+        <label>Raw FinnGen chip data</label>
+        </div>
 
 		<div><h3>{data_freeze} { variants != undefined ? variants.join(',') : props.props['variant']}</h3></div>
 		<div style={{marginTop: "10px"}}>

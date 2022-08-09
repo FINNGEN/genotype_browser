@@ -49,8 +49,6 @@ export const getColumns = (gene, checked, handleCheck, handleCheckAll) => {
 		return result;
 	}, [])
 
-	console.log("gene_columns:", gene_columns)
-
     cols.push(...gene_columns.map(c => {
 	if (c == 'variant') {
 	    return {

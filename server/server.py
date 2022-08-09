@@ -45,7 +45,7 @@ def find(query):
 @app.route('/api/v1/variants/<variants>')
 def variants(variants):
     try:
-        data_type = request.args.get('data_type')       
+        data_type = request.args.get('data_type')     
         data = fetch.get_variants(variants, request.args.to_dict(), data_type)
     except ParseException as e:
         abort(400, 'could not parse given variant(s)')
@@ -91,7 +91,7 @@ def clusterplot(plot_type, variant):
         var = re.sub('-', '_', variant)
         arr = var.split('_')
         arr[0] = 'X' if arr[0] == '23' else arr[0] 
-        exists_in_chip = fetch.check_var_in_chip(variant)
+        exists_in_chip = fetch.check_var_in_vcf(variant, 'chip')
         filename = config['cluster_plots_location'] + '/' + plot_type + '/' + '_'.join(arr) + '.png'
         if (config['use_gcp_buckets']):
             data = cloud_storage.read_bytes(config['green_bucket'], filename)
