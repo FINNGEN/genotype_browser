@@ -413,7 +413,7 @@ class Datafetch(object):
             'release_version': self.conf['release_version']
         }
 
-    def check_var_in_vcf(self, variant, data_type):
+    def vcf_contains_var(self, variant, data_type):
         chr, pos, ref, alt = utils.parse_variant(variant)
         var_data = self._get_genotype_data(chr, pos, ref, alt, data_type)
         if var_data is not None:
