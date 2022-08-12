@@ -16,6 +16,7 @@ export const VariantClusterPlot = () => {
     const [data, setIntensityData] = useState(null);
     const [error_message, setError] = useState(null);
     const [drop_plot, setDropPlot] = useState(null);
+    const gb_data = useSelector(state => state.data)
 
     let vizWidth = window.innerWidth;
     let vizHeight = window.innerHeight;
@@ -77,7 +78,7 @@ export const VariantClusterPlot = () => {
             }
         }
         getData();
-    }, [])
+    }, [gb_data.data])
 
     useEffect(()=> {
         if (data !== null){
@@ -290,6 +291,7 @@ export const VariantClusterPlot = () => {
                 else {
                     zoom_x = e.transform.x;
                     zoom_y = e.transform.y;
+                    e.transform.k = zoom_k;
 
                     zoom_extent_x = [(extent_ref[0] - zoom_x*5) / zoom_k, (extent_ref[1] - zoom_x) / zoom_k];
                     zoom_extent_y = [(extent_alt[0] + zoom_y*5) / zoom_k, (extent_alt[1] + zoom_y) / zoom_k];
@@ -310,7 +312,7 @@ export const VariantClusterPlot = () => {
                     drawDots(data_visible);
                     drawExomeLocations();
                 }
-            }));
+            })).on('wheel.zoom', null);
 
             //Graph buttons
             d3.select('#b_selection_filtered').data(data_total).on("click",function(){
@@ -784,7 +786,7 @@ export const VariantClusterPlot = () => {
                     g_rect.append('p')
                     .attr('class', 'g_heading_key')
                     .style('clear', 'both')
-                    .text(function(i){
+                    .text(function(){
                         if (i===0){return 'FinnGen ID: '}
                         else if (i===1){return 'Batch: '}
                         else if (i===2){return 'Sex: '}
@@ -795,7 +797,7 @@ export const VariantClusterPlot = () => {
                     })
                     g_rect.append('p')
                     .attr('class', 'g_heading_value')
-                    .text(function(i){
+                    .text(function(){
                         if (i===0){return d.FINNGENID}
                         else if (i===1){return renameBatch(d.batch)}
                         else if (i===2){return rename(d.sex)}
