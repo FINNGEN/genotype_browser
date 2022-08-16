@@ -7,6 +7,8 @@ from utils import parse_chr, parse_region, ParseException, NotFoundException
 from data import Datafetch
 from search import Search
 from cloud_storage import CloudStorage
+import pandas as pd
+import os
 
 app = Flask(__name__, template_folder='../templates', static_folder='../static')
 Compress(app)
@@ -85,31 +87,31 @@ def range(range):
         abort(404, 'genomic range not in data')
     return jsonify(data)
 
-@app.route('/api/v1/clusterplot/<plot_type>/<variant>')
-def clusterplot(plot_type, variant):
+@app.route('/api/v1/clusterplot/<variant>')
+def clusterplot(variant):
     try:
         var = re.sub('-', '_', variant)
         arr = var.split('_')
         arr[0] = 'X' if arr[0] == '23' else arr[0] 
+        chr = arr[0]
         exists_in_chip = fetch.check_var_in_chip(variant)
-        filename = config['cluster_plots_location'] + '/' + plot_type + '/' + '_'.join(arr) + '.png'
+        filename = config['intensity_files_location'] + '/' + chr + '/' + '_'.join(arr) + '.tsv'
+        filename = re.sub('//', '/', filename)
         if (config['use_gcp_buckets']):
-            data = cloud_storage.read_bytes(config['green_bucket'], filename)
+            data = cloud_storage.read_bytes(config['red_bucket'], filename)
             if data is None:
                 raise FileNotFoundError("Requested cluster plot not found!")
         else:
             with open(filename, 'rb') as f:
                 data = f.read()
-        
     except ParseException as e:
         abort(400, 'could not parse given variant')
     except FileNotFoundError as e:
         if exists_in_chip:
             abort(404, 'varaint exists in raw chip but no plot was found')
         else:
-            abort(410, 'varaint does not exist in raw chip and no plot was found')
+            return {}
     return data
-
 
 if __name__ == '__main__':
     app.run()

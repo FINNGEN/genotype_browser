@@ -6,7 +6,7 @@ green_bucket = ''
 
 sqlite_db = '/mnt/nfs/juha/FGQ/fgq.r6.2.db'
 basic_info_file = '/mnt/nfs/r6/pheno/finngen_R6_gt_samples_info_2.txt.gz'
-cluster_plots_location = ''
+intensity_files_location = ''
 
 geojson = 'finmap.geojson'
 release_version = 'DF9'
