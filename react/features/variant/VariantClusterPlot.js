@@ -15,7 +15,7 @@ export const VariantClusterPlot = () => {
     const [status, setStatus] = useState(null);
     const [data, setIntensityData] = useState(null);
     const [error_message, setError] = useState(null);
-    const [drop_plot, setDropPlot] = useState(null);
+    const [drop_plot, setDropPlot] = useState(true);
     const gb_data = useSelector(state => state.data)
 
     let vizWidth = window.innerWidth;
@@ -80,17 +80,6 @@ export const VariantClusterPlot = () => {
         getData();
     }, [gb_data.data])
 
-    useEffect(()=> {
-        if (data !== null){
-            if (data.length > 0 && variant.length == 1) {
-                setDropPlot(false)
-            } else {
-                setDropPlot(true)
-            }
-        } else {
-            setDropPlot(true)
-        }
-    }, [data, variant])
 
     // build svg
     useEffect(()=> {
