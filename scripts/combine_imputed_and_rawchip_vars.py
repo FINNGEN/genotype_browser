@@ -43,20 +43,18 @@ def main():
     matr_impute.columns=matr_impute.columns.str.replace('#','')
 
     matr_impute.info()
+    matr_chip.info()
 
-    # raw chip: variant_rsid
-    rownames_chip = matr_chip['variant'] + '_' + matr_chip['rsid']
-    matr_chip.index = rownames_chip
-    print("\nNumber of duplicated variant_rsid pairs in chip anno table: %s" % sum(rownames_chip.duplicated()))
+    # raw chip indices
+    matr_chip.index = matr_chip['variant']
 
-    # imputed: variant_rsid
-    rows_imputed = matr_impute['variant'] + '_' + matr_impute['rsid']
-    matr_impute['variant_rsid_tmp'] = rows_imputed
-    print("Number of duplicated variant_rsid pairs in imputed table: %s" % sum(rows_imputed.duplicated()))
+    # imputed indices
+    matr_impute.index = matr_impute['variant']
+    matr_impute['variant_rsid_tmp'] = matr_impute['variant']
 
     # unique and intersecting between imputed and chip
-    ints = list(set.intersection(set(rownames_chip), set(rows_imputed)))
-    unique_chip = list(set.difference(set(rownames_chip), set(rows_imputed)))
+    ints = list(set.intersection(set(matr_chip.index), set(matr_impute.index)))
+    unique_chip = list(set.difference(set(matr_chip.index), set(matr_impute.index)))
 
     # append unique chips to the matrix and add in_data
     # in_data = 1 when data is in imputed source
@@ -86,8 +84,7 @@ def main():
     # matr_imp_chip_sorted = matr_imp_chip_sorted.replace(np.nan, 'NA', regex=True)
     print("Fill NA with a string.")
     for col in matr_imp_chip_sorted.columns:
-        print(col, "out of", matr_imp_chip_sorted.columns)
-        matr_imp_chip_sorted[col]=matr_imp_chip_sorted[col].fillna('NA')
+        matr_imp_chip_sorted[col]=matr_imp_chip_sorted[col].fillna('NA')    
 
     # save output
     matr_imp_chip_sorted.to_csv(output, sep="\t", header=True, index=False)
@@ -97,3 +94,6 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+
+
