@@ -80,12 +80,6 @@ def main():
     matr_imp_chip_sorted.chr = matr_imp_chip_sorted.chr.astype('int')
     print("Data sorted, saving the table.")
 
-    # replace NAs
-    # matr_imp_chip_sorted = matr_imp_chip_sorted.replace(np.nan, 'NA', regex=True)
-    print("Fill NA with a string.")
-    for col in matr_imp_chip_sorted.columns:
-        matr_imp_chip_sorted[col]=matr_imp_chip_sorted[col].fillna('NA')    
-
     # save output
     matr_imp_chip_sorted.to_csv(output, sep="\t", header=True, index=False)
     print(str((timeit.default_timer() - start_time)/60) +
