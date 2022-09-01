@@ -70,11 +70,11 @@ export const VariantForm = (props) => {
 	  <span>count individuals heterozygous for more than one variant as homozygous</span>
 	  </div> : null
 
-    const rsid_tag = annotation && annotation[0].rsid != 'NA' ?
+    const rsid_tag = annotation && annotation[0].rsid != '' ?
 	  <span>{annotation[0].rsid}</span> :
-	  null
+	  'NA'
     
-    const gene_tag = annotation && annotation[0].gene_most_severe != 'NA' ?
+    const gene_tag = annotation && annotation[0].gene_most_severe != '' ?
 	  <span>{annotation[0].gene_most_severe}</span> :
 	  null
 
@@ -89,7 +89,7 @@ export const VariantForm = (props) => {
 
 	Object.keys(cols).forEach(function(key, index) {
 		var element = annotation && annotation.length == 1 ?
-			annotation[0][key] == 'NA' ?
+			annotation[0][key] == '' ?
 			'NA' :
 			annotation[0][key] == 1e6 || annotation[0][key] == 'Inf' || annotation[0][key] == 'inf' ?
 			'inf' :
@@ -99,20 +99,20 @@ export const VariantForm = (props) => {
 	})
 
 	const annotation_info = annotation != undefined ?
-		annotation[0].info == 'NA' ? 'NA': annotation[0].info.toPrecision(3)
+		annotation[0].info == '' ? 'NA': annotation[0].info.toPrecision(3)
 	: null
 
 	var af = ''
 	if (annotation != undefined) {
 		if ('af' in annotation[0]){
-			const annotation_af = annotation[0].af == 'NA' ? 'NA': annotation[0].af.toPrecision(3)
+			const annotation_af = annotation[0].af == '' ? 'NA': annotation[0].af.toPrecision(3)
 			af = (
 				<span>{annotation_af}</span>
 			)
 		}
 		else {
-			const annotation_af_genomes = annotation[0].af_genomes == 'NA' ? 'NA': annotation[0].af_genomes.toPrecision(3)
-			const annotation_af_exomes = annotation[0].af_exomes == 'NA' ? 'NA': annotation[0].af_exomes.toPrecision(3)
+			const annotation_af_genomes = annotation[0].af_genomes == '' ? 'NA': annotation[0].af_genomes.toPrecision(3)
+			const annotation_af_exomes = annotation[0].af_exomes == '' ? 'NA': annotation[0].af_exomes.toPrecision(3)
 			af = (
 			 	<span style={{paddingLeft: '20px'}}>fin af gnomad2 genomes/exomes {annotation_af_genomes}/{annotation_af_exomes}</span>
 			)

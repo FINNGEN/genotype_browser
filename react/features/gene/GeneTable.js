@@ -88,7 +88,7 @@ export const getColumns = (gene, checked, handleCheck, handleCheckAll) => {
 		accessor: c,
 		style: {textAlign: 'right'},
 		headerStyle: {textAlign: 'right'},
-		Cell: props => props.value
+		Cell: props => props.value == '' ? 'NA' : props.value
 	    }
 	} else if (c == 'most_severe') {
 	    return {
@@ -138,7 +138,7 @@ export const getColumns = (gene, checked, handleCheck, handleCheckAll) => {
 		accessor: c,
 		style: {textAlign: 'right'},
 		headerStyle: {textAlign: 'right'},
-		Cell: props => props.value == 'NA' ? 'NA' : (props.value).toExponential(2),
+		Cell: props => props.value == '' ? 'NA' : (props.value).toExponential(2),
 		filterMethod: afFilter
 	    }
 	} else if (c == 'af_fin_genomes') {
@@ -147,7 +147,7 @@ export const getColumns = (gene, checked, handleCheck, handleCheckAll) => {
 		accessor: c,
 		style: {textAlign: 'right'},
 		headerStyle: {textAlign: 'right', 'whiteSpace': 'break-spaces'},
-		Cell: props => props.value == 'NA' ? 'NA' : (props.value).toExponential(2),
+		Cell: props => props.value == '' ? 'NA' : (props.value).toExponential(2),
 		filterMethod: afFilter
 	    }
 	} else if (c == 'af_fin_exomes') {
@@ -156,7 +156,7 @@ export const getColumns = (gene, checked, handleCheck, handleCheckAll) => {
 		accessor: c,
 		style: {textAlign: 'right'},
 		headerStyle: {textAlign: 'right', 'whiteSpace': 'break-spaces'},
-		Cell: props => props.value == 'NA' ? 'NA' : (props.value).toExponential(2),
+		Cell: props => props.value == '' ? 'NA' : (props.value).toExponential(2),
 		filterMethod: afFilter
 	    }
 	} else if (c == 'info') {
@@ -165,7 +165,7 @@ export const getColumns = (gene, checked, handleCheck, handleCheckAll) => {
 		accessor: c,
 		style: {textAlign: 'right'},
 		headerStyle: {textAlign: 'center', 'whiteSpace': 'break-spaces'},
-		Cell: props => props.value == 'NA' ? 'NA' : (props.value).toPrecision(3) ,
+		Cell: props => props.value == '' ? 'NA' : (props.value).toPrecision(3) ,
 		filterMethod: numFilter
 	    }
 	} else if (c.startsWith('enrichment_nfsee') || c.startsWith('enrichment_nfee')) {
@@ -175,7 +175,7 @@ export const getColumns = (gene, checked, handleCheck, handleCheckAll) => {
 		style: {textAlign: 'right'},
 		headerStyle: {textAlign: 'right', 'whiteSpace': 'break-spaces'},
 		Cell: props => {
-			if (props.value == 'NA'){
+			if (props.value == ''){
 				return 'NA'
 			} else if (props.value == 1e6 || props.value == 'inf' || props.value == 'Inf') {
 				return 'inf'
