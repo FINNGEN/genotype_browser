@@ -430,14 +430,20 @@ class Datafetch(object):
                 vars_data.append(var_data)
         chips = self._get_chips(chr, pos, ref, alt) if len(vars_data) == 1 else set()
         data = self._count_gt_for_write(variants.split(','), vars_data, filters, chips, data_type)
+
+        gt_download_keys = ['het', 'hom', 'wt_hom', 'missing']
+        gt_download = '_'.join([k.replace('_', '') for k in gt_download_keys if filters[k] == 'true'])
+        for key in gt_download_keys:
+                del filters[key]
+
         if data_type == 'imputed':
             del filters['data_type']
-            filename = variants.replace(',', '_') + '__imputed_data__' + '_'.join([k+'_'+v for k,v in filters.items()]) + '.tsv'
+            filename = variants.replace(',', '_') + '__imputed_data__' + '_'.join([k+'_'+v for k,v in filters.items()]) + '_' + gt_download + '.tsv'
         else:
             for key in ['array', 'impchip', 'data_type']:
                 del filters[key]
-            filename = variants.replace(',', '_') + '__rawchip_data__' + '_'.join([k+'_'+v for k,v in filters.items()]) + '.tsv'
-    
+            filename = variants.replace(',', '_') + '__rawchip_data__' + '_'.join([k+'_'+v for k,v in filters.items()]) + '_' + gt_download + '.tsv'
+
         data = data.drop(columns=['AGE_AT_DEATH_OR_NOW'])
         data['SEX'] = np.where(data['SEX'] == 1, 'female', 'male')
         data = data.sort_values(by=['FINNGENID'])           
