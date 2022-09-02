@@ -521,7 +521,7 @@ export const VariantClusterPlot = () => {
             })
             
             d3.select('#b_export_chart_svg').on('click', function(){
-                const svg = document.querySelector('#v3c-body').cloneNode(true);
+                const svg = document.querySelector('#v3c-svg').cloneNode(true);
                 document.body.appendChild(svg);
                 svg.setAttribute('width', svg.getBoundingClientRect().width)
                 svg.setAttribute('height', svg.getBoundingClientRect().height + 20)
@@ -536,7 +536,7 @@ export const VariantClusterPlot = () => {
             })
 
             d3.select('#b_export_chart_jpg').on('click', function(){
-                const svg = d3.select("svg").node();
+                const svg = d3.select("#v3c-svg").node();
                 var width = svg.getBoundingClientRect().width,
                     height = svg.getBoundingClientRect().height;
               
