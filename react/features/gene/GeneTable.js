@@ -42,13 +42,7 @@ export const getColumns = (gene, checked, handleCheck, handleCheckAll) => {
 	}
     ]
 
-    var gene_columns = gene.columns.reduce(function(result, col){
-		if (col !== 'af_nfee_genomes' && col !== 'af_nfsee_exomes'){
-			result.push(col);
-		} 
-		return result;
-	}, [])
-
+	var gene_columns = gene.columns.filter(col => col !== 'af_nfee_genomes' && col !== 'af_nfsee_exomes')
     cols.push(...gene_columns.map(c => {
 	if (c == 'variant') {
 	    return {
