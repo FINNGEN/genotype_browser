@@ -47,7 +47,7 @@ def find(query):
 @app.route('/api/v1/variants/<variants>')
 def variants(variants):
     try:
-        data_type = request.args.get('data_type')       
+        data_type = request.args.get('data_type')     
         data = fetch.get_variants(variants, request.args.to_dict(), data_type)
     except ParseException as e:
         abort(400, 'could not parse given variant(s)')
@@ -93,8 +93,8 @@ def clusterplot(variant):
         var = re.sub('-', '_', variant)
         arr = var.split('_')
         arr[0] = 'X' if arr[0] == '23' else arr[0] 
+        exists_in_chip = fetch.vcf_contains_var(variant, 'chip')
         chr = arr[0]
-        exists_in_chip = fetch.check_var_in_chip(variant)
         filename = config['intensity_files_location'] + '/' + chr + '/' + '_'.join(arr) + '.tsv'
         filename = re.sub('//', '/', filename)
         if (config['use_gcp_buckets']):
@@ -108,7 +108,7 @@ def clusterplot(variant):
         abort(400, 'could not parse given variant')
     except FileNotFoundError as e:
         if exists_in_chip:
-            abort(404, 'varaint exists in raw chip but no plot was found')
+            abort(404, 'variant exists in raw chip but no plot was found')
         else:
             return {}
     return data

@@ -17,15 +17,14 @@ export const VariantForm = (props) => {
     const state_data = useSelector(state => state.data.data)
     const dtype = useSelector(state => state.data.data_type) 
     const data = useSelector(state => state.data)
-    
-    var source = null
-    if (state_data != null){
-    	source = state_data.data_type == 'imputed' ? 'Imputed data' : 'Raw chip data' 
-    }
-    
-    const data_freeze = state_data != null ? `[${state_data.release_version}]` : null
+    const data_freeze = useSelector(state => state.data.data_freeze)
     const downloadOptions = useSelector(state => state.data.downloadOptions)
     const search_status =  useSelector(state => state.search.status)
+
+    var source = null
+	if (state_data != null){
+	    source = state_data.data_type == 'imputed' ? 'Imputed data' : 'Raw chip data' 
+	}
 
     const filterChanged = (filt, value, event) => {
 	if (event.target.type !== 'text') {
@@ -49,8 +48,8 @@ export const VariantForm = (props) => {
 		dispatch(setOption({opt: opt, content: event.target.value}))
 	}
 
-    const downloadOptionChanged = (opt, event) => {
-		dispatch(setDownloadOption({opt: 'hethom', content: event.target.value}))
+    const downloadOptionChanged = (event) => {
+		dispatch(setDownloadOption({opt: event.target.name, content: event.target.checked}))
     }
 
     const gpThresChanged = event => {
@@ -71,45 +70,49 @@ export const VariantForm = (props) => {
 	  <span>count individuals heterozygous for more than one variant as homozygous</span>
 	  </div> : null
 
-    const rsid_tag = annotation && annotation[0].rsid != 'NA' ?
+    const rsid_tag = annotation && annotation[0].rsid != '' ?
 	  <span>{annotation[0].rsid}</span> :
-	  null
+	  'NA'
     
-    const gene_tag = annotation && annotation[0].gene_most_severe != 'NA' ?
+    const gene_tag = annotation && annotation[0].gene_most_severe != '' ?
 	  <span>{annotation[0].gene_most_severe}</span> :
 	  null
 
-    const enr_exomes = annotation && annotation.length == 1 ?
-	  annotation[0].enrichment_nfsee_exomes == 'NA' ?
-	  'NA' :
-	  annotation[0].enrichment_nfsee_exomes == 1e6 || annotation[0].enrichment_nfsee_exomes == 'Inf' || annotation[0].enrichment_nfsee_exomes == 'inf' ?
-	  'inf' :
-	  annotation[0].enrichment_nfsee_exomes.toPrecision(3) :
-	  null
+	var cols = {
+		'enrichment_nfsee_exomes': null, 
+		'enrichment_nfee_genomes': null, 
+		'af_nfsee_exomes': null, 
+		'af_nfee_genomes': null, 
+		'af_fin_exomes': null, 
+		'af_fin_genomes': null
+	}
 
-    const enr_genomes = annotation && annotation.length == 1 ?
-	  annotation[0].enrichment_nfsee_genomes == 'NA' ?
-	  'NA' :
-	  annotation[0].enrichment_nfsee_genomes == 1e6 || annotation[0].enrichment_nfsee_genomes == 'Inf' || annotation[0].enrichment_nfsee_genomes == 'inf'?
-	  'inf' :
-	  annotation[0].enrichment_nfsee_genomes.toPrecision(3) :
-	  null
+	Object.keys(cols).forEach(function(key, index) {
+		var element = annotation && annotation.length == 1 ?
+			annotation[0][key] == '' ?
+			'NA' :
+			annotation[0][key] == 1e6 || annotation[0][key] == 'Inf' || annotation[0][key] == 'inf' ?
+			'inf' :
+			annotation[0][key].toPrecision(3) :
+			null
+		cols[key] = element
+	})
 
 	const annotation_info = annotation != undefined ?
-		annotation[0].info == 'NA' ? 'NA': annotation[0].info.toPrecision(3)
+		annotation[0].info == '' ? 'NA': annotation[0].info.toPrecision(3)
 	: null
 
 	var af = ''
 	if (annotation != undefined) {
 		if ('af' in annotation[0]){
-			const annotation_af = annotation[0].af == 'NA' ? 'NA': annotation[0].af.toPrecision(3)
+			const annotation_af = annotation[0].af == '' ? 'NA': annotation[0].af.toPrecision(3)
 			af = (
 				<span>{annotation_af}</span>
 			)
 		}
 		else {
-			const annotation_af_genomes = annotation[0].af_genomes == 'NA' ? 'NA': annotation[0].af_genomes.toPrecision(3)
-			const annotation_af_exomes = annotation[0].af_exomes == 'NA' ? 'NA': annotation[0].af_exomes.toPrecision(3)
+			const annotation_af_genomes = annotation[0].af_genomes == '' ? 'NA': annotation[0].af_genomes.toPrecision(3)
+			const annotation_af_exomes = annotation[0].af_exomes == '' ? 'NA': annotation[0].af_exomes.toPrecision(3)
 			af = (
 			 	<span style={{paddingLeft: '20px'}}>fin af gnomad2 genomes/exomes {annotation_af_genomes}/{annotation_af_exomes}</span>
 			)
@@ -179,9 +182,10 @@ export const VariantForm = (props) => {
 					<th>GT source</th>
 					<th>Gene most severe</th>
 					<th>Concequence most severe</th>
-					<th>AF</th>
+					<th>AF (FinnGen data)</th>
 					<th>Info</th>
-					<th>Fin enr gnomad2 genomes/exomes</th>
+					<th>Enr fin gnomad2 genomes/exomes</th>
+					<th>AF fin gnomad2 genomes/exomes</th>
 				</tr>
 				</thead>
 				<tbody>
@@ -192,7 +196,8 @@ export const VariantForm = (props) => {
 					<td>{annotation[0].most_severe.replace(/_/g, ' ')}</td>
 					<td>{af}</td>
 					<td>{annotation_info}</td>
-					<td>{enr_genomes}/{enr_exomes}</td>
+					<td>{cols['enrichment_nfee_genomes']}/{cols['enrichment_nfsee_exomes']}</td>
+					<td>{cols['af_fin_genomes']}/{cols['af_fin_exomes']}</td>
 				</tr>
 				</tbody>
 			</table>
@@ -204,11 +209,11 @@ export const VariantForm = (props) => {
 
 		<div>
 		<div style={{paddingRight: '10px'}}>
-	    <input type="radio" value="imputed" id="imputed" name="dtype" checked={dtype == 'imputed'} onChange={handleDataTypeChange} />
-	    <label>Imputed data</label>
-		<input type="radio" value="chip" id="chip" name="dtype" checked={dtype == 'chip'} onChange={handleDataTypeChange} />
-	    <label>Raw FinnGen chip data</label>
-	    </div>
+        <input type="radio" value="imputed" id="imputed" name="dtype" checked={dtype == 'imputed'} onChange={handleDataTypeChange} />
+        <label>Imputed data</label>
+        <input type="radio" value="chip" id="chip" name="dtype" checked={dtype == 'chip'} onChange={handleDataTypeChange} />
+        <label>Raw FinnGen chip data</label>
+        </div>
 
 		<div><h3>{data_freeze} { variants != undefined ? variants.join(',') : props.props['variant']}</h3></div>
 		<div style={{marginTop: "10px"}}>
@@ -297,21 +302,21 @@ export const VariantForm = (props) => {
 			    <div><h3 style={{marginBottom: "10px", marginTop: "0px"}}>Download</h3></div>
 			    <div className="hl" style={{width: "100%", borderTop: "1px solid #dddddd", marginTop: "0px", marginBottom: "10px"}}></div>
 			    <div style={{display: 'flex', flexDirection: 'row'}}>
-				    	<div>
-					    	<input type="radio" value="all" name="hethom" checked={downloadOptions.hethom == 'all'} onChange={downloadOptionChanged.bind(this, 'all')} />
-					    	<span>all</span>
-					    </div>
 					    <div>
-					    	<input type="radio" value="het" name="hethom" checked={downloadOptions.hethom == 'het'} onChange={downloadOptionChanged.bind(this, 'het')} />
+					    	<input type="checkbox" value={downloadOptions.het} checked={downloadOptions.het} name="het" id="het" onChange={downloadOptionChanged.bind(this)} />
 					    	<span>het</span>
 					    </div>
 					    <div>
-					    	<input type="radio" value="hom" name="hethom" checked={downloadOptions.hethom == 'hom'} onChange={downloadOptionChanged.bind(this, 'hom')} />
+					    	<input type="checkbox" value={downloadOptions.hom} checked={downloadOptions.hom} name="hom" id="hom" onChange={downloadOptionChanged.bind(this)} />
 					    	<span>hom</span>
 					    </div>
 					    <div>
-					    	<input type="radio" value="wt_hom" name="hethom" checked={downloadOptions.hethom == 'wt_hom'} onChange={downloadOptionChanged.bind(this, 'wt_hom')} />
+					    	<input type="checkbox" value={downloadOptions.wt_hom} checked={downloadOptions.wt_hom} name="wt_hom" id="wt_hom" onChange={downloadOptionChanged.bind(this)} />
 					    	<span>WT hom</span>
+					    </div>
+					    <div>
+					    	<input type="checkbox" value={downloadOptions.missing} checked={downloadOptions.missing} name="missing" id="missing" onChange={downloadOptionChanged.bind(this)} />
+					    	<span>missing</span>
 					    </div>
 				   	<div style={{flexShrink: 1, marginLeft: "10px"}}>
 				    <button type="button" className="button" onClick={downloadRequested}>Download data</button>

@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 from collections import defaultdict, Counter
 import geojson 
+import json
 import utils
 import re
 
@@ -105,6 +106,7 @@ class Datafetch(object):
         else:
             tabix_iter = self.tabix_files_chip[threading.get_ident()][chr-1].fetch('chr'+str(chr_var), pos-1, pos)
             samples = list(self.samples_chip['row_id'])
+
         var_data = None
         for row in tabix_iter:
             data = row.split('\t')            
@@ -294,9 +296,7 @@ class Datafetch(object):
             'info': info,
             'total_indiv': len(filtered_basic_info),
             'filters': filters,
-            'data_type': data_type,
-            'geo_data': self.geo_data,
-            'release_version': self.conf['release_version']
+            'data_type': data_type
         }
     
     def _count_gt_for_write(self, variants, data, filters, chips, data_type):
@@ -349,22 +349,24 @@ class Datafetch(object):
             missing['gt'] = '.|.'
 
             # if specified the type of variants to be saved
-            if 'hethom' in filters:
-                if filters['hethom'] == 'hom':
-                    df = hom_alt
-                elif filters['hethom'] == 'het':
-                    df = het
-                elif filters['hethom'] == 'wt_hom':
-                    df = wt_hom
-                else:
-                    # append all data frames: wt, het, hom, wt_hom
-                    df = hom_alt.append(het, ignore_index=True).append(wt_hom, ignore_index=True).append(missing, ignore_index=True)
+            df = pd.DataFrame(columns = het.columns.values.tolist())
+            if json.loads(filters['hom']):
+                df = df.append(hom_alt, ignore_index=True)
+            
+            if json.loads(filters['het']):
+                df = df.append(het, ignore_index=True)
+            
+            if json.loads(filters['wt_hom']):
+                df = df.append(wt_hom, ignore_index=True)
+            
+            if json.loads(filters['missing']):
+                df = df.append(missing, ignore_index=True)
 
             # append data frames
             df = self._filter(df, filters, chips)
             df['variant'] = variants[i].replace('-', ':')
             df['COHORT_SOURCE'] = cohort_source
-            df['COHORT_NAME'] = df['variant'] + '-' + df['gt']
+            df['COHORT_NAME'] = df['variant'] + '-' + df['gt']            
             df_list.append(df)
         
         elapsed = timeit.default_timer() - start_time
@@ -379,6 +381,7 @@ class Datafetch(object):
         vars_data = []
         anno = []
         vars = []
+        
         for variant in variants.split(','):
             chr, pos, ref, alt = utils.parse_variant(variant)
             var_data = self._get_genotype_data(chr, pos, ref, alt, data_type)
@@ -406,20 +409,13 @@ class Datafetch(object):
                 'fetch': fetch_time,
                 'munge': munge_time
             },
-            'data_type': data_type
+            'geo_data': self.geo_data,
+            'release_version': self.conf['release_version']
         }
 
-    def check_var_in_chip(self, variant):
+    def vcf_contains_var(self, variant, data_type):
         chr, pos, ref, alt = utils.parse_variant(variant)
-        var_data = self._get_genotype_data(chr, pos, ref, alt, 'chip')
-        if var_data is not None:
-            return True
-        else:
-            return False
-
-    def check_var_in_imput(self, variant):
-        chr, pos, ref, alt = utils.parse_variant(variant)
-        var_data = self._get_genotype_data(chr, pos, ref, alt, 'imputed')
+        var_data = self._get_genotype_data(chr, pos, ref, alt, data_type)
         if var_data is not None:
             return True
         else:
@@ -434,16 +430,24 @@ class Datafetch(object):
                 vars_data.append(var_data)
         chips = self._get_chips(chr, pos, ref, alt) if len(vars_data) == 1 else set()
         data = self._count_gt_for_write(variants.split(','), vars_data, filters, chips, data_type)
+
+        gt_download_keys = ['het', 'hom', 'wt_hom', 'missing']
+        gt_download = '_'.join([k.replace('_', '') for k in gt_download_keys if filters[k] == 'true'])
+        for key in gt_download_keys:
+                del filters[key]
+
         if data_type == 'imputed':
             del filters['data_type']
-            filename = variants.replace(',', '_') + '__imputed_data__' + '_'.join([k+'_'+v for k,v in filters.items()]) + '.tsv'
+            filename = variants.replace(',', '_') + '__imputed_data__' + '_'.join([k+'_'+v for k,v in filters.items()]) + '_' + gt_download + '.tsv'
         else:
             for key in ['array', 'impchip', 'data_type']:
                 del filters[key]
-            filename = variants.replace(',', '_') + '__rawchip_data__' + '_'.join([k+'_'+v for k,v in filters.items()]) + '.tsv'
+            filename = variants.replace(',', '_') + '__rawchip_data__' + '_'.join([k+'_'+v for k,v in filters.items()]) + '_' + gt_download + '.tsv'
+
         data = data.drop(columns=['AGE_AT_DEATH_OR_NOW'])
         data['SEX'] = np.where(data['SEX'] == 1, 'female', 'male')
         data = data.sort_values(by=['FINNGENID'])           
+    
         try:
             data.to_csv(sep='\t', index=False, na_rep='NA')
             output = make_response(data.to_csv(sep='\t', index=False, na_rep='NA'))

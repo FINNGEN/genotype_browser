@@ -65,8 +65,7 @@ export const dataSlice = createSlice({
 	    array: 'all', // 'all', 'finngen' or 'legacy'
 	    impchip: 'all', // 'all', 'imp' or 'chip'
 	    gtgp: 'gt', // 'gt' or 'gp'
-	    gpThres: 0.95, // if you change this, change also in VariantForm to allow caching
-	    hethom: 'all' // 'all', 'het', 'hom', 'wt_hom': specify individuals with which type of variant should be downloaded
+	    gpThres: 0.95 // if you change this, change also in VariantForm to allow caching
 	},
 	options: {
 	    bbreg: 'region', // 'biobank' or 'region'
@@ -75,7 +74,11 @@ export const dataSlice = createSlice({
 	    maphethom: 'het' // 'het' or 'hom'
 	},
 	downloadOptions : {
-	    hethom: 'all' // 'all', 'het', 'hom', 'wt_hom': specify individuals with which type of variant should be downloaded
+		// het', 'hom', 'wt_hom', 'missing': specify individuals with which type of variant should be downloaded
+		'het': true, 
+		'hom': true, 
+		'wt_hom': true, 
+		'missing': true
 	},
 	serverOptions: {
 	    hethom: false // whether to count individuals heterozygous for more than one variant as homozygous
@@ -96,6 +99,7 @@ export const dataSlice = createSlice({
 	    }
 	},
 	setOption: (state, action) => {
+			// console.log("dataSlice: action.payload.opt:", action.payload.opt, "action.payload.content:", action.payload.opt)
 	    state.options[action.payload.opt] = action.payload.content
 	},
 	setDownloadOption: (state, action) => {
@@ -119,12 +123,8 @@ export const dataSlice = createSlice({
 	    state.annotation = action.payload.annotation
 	    state.data = action.payload.data
 	    state.time = action.payload.time
-
-	    // in diff way!
-	    // const data_type = (action.payload.data_types.includes(1) || action.payload.data_types.includes(3)) ? 'imputed' : (action.payload.data_types.includes(2) || action.payload.data_types.includes(3)) ? 'chip' : null
-	    // state.data_types = action.payload.data_types
-	    // console.log("action.payload:", action.payload, "data_types:", action.payload.data_types)
-	    
+	    state.data_freeze =`[${action.payload.release_version}]` 
+	    state.geo_data = action.payload.geo_data['features']
 	    const ordered = {}
 	    Object.keys(action.payload.data.filters).sort().forEach(key => { ordered[key] = action.payload.data.filters[key] })
 	    try {
@@ -142,7 +142,6 @@ export const dataSlice = createSlice({
 	[fetchData.rejected]: (state, action) => {
 	    state.status = 'failed'
 	    state.error = action.payload
-	    // console.log("dataSlice.js state.error:", action.payload)
 	},
 	[writeData.pending]: (state, action) => {
 	    state.write_status = 'writing'

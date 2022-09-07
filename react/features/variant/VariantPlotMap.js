@@ -9,17 +9,16 @@ export const VariantPlotMap = () => {
     const data = useSelector(state => state.data.data)
     const options = useSelector(state => state.data.options)
     const use_data = data.agg.regions
-    var geo_data = data.geo_data['features']
-    var hethom_title = options.maphethom == 'het' ? 'heterozygous' : 'homozygous'
-    var title =  options.cntfreq == 'freq' ? "Allele frequency by region of birth" :  "Number of " + hethom_title + " genotypes by region of birth"
-
-    const width = 800;
-	const height = 550;
-	const colors = ["#F5F9FF", "#BBD1EB", "#599DCC", "#1C5BA6", "#0A2258"]
-	var regions = ["Region_ceded_to_Soviet", "NA", "Abroad"]
+    var geo_data = useSelector(state => state.data.geo_data)
+    var hethom = options.maphethom == 'het' ? 'heterozygous' : 'homozygous'
+    var hethom_title = "Number of " + hethom + " genotypes by region of birth"
+    var title =  options.cntfreq == 'freq' ? "Allele frequency by region of birth" :  hethom_title
 	var text = options.cntfreq == 'freq' ? "AF" : "GT count" 
-	var leg_title = options.cntfreq == 'freq' ? "Allele frequency" : "Genotype count" 
+	var leg_title = options.cntfreq == 'freq' ? "Allele frequency" : "Genotype count" 	
+	const width = 800
+	const height = 550
 
+	// create data for svg 
     var svg_data=[]
     var values = []
     for (var i=0; i<geo_data.length; i++){
@@ -29,7 +28,8 @@ export const VariantPlotMap = () => {
     	var id = use_data.names.findIndex(obj => { return obj == feature['properties']['shapeName_gb'] })
     	var fg_stats = {}
     	if (id !== -1){
-    		var element = options.cntfreq == 'freq' ? use_data.af[id] : options.maphethom == 'het' ? use_data.gt_counts[0][id] : use_data.gt_counts[1][id]
+    		var element = options.cntfreq == 'freq' ? use_data.af[id] : options.maphethom == 'het' ? 
+    				use_data.gt_counts[0][id] : use_data.gt_counts[1][id]
     		fg_stats = {
     			'value': element
     		}
@@ -45,6 +45,7 @@ export const VariantPlotMap = () => {
     				   'geometry': geom})
 	}
 
+	// create projection 
 	var projection = d3.geoMercator()
 		.center([23, 61])
 		.scale(1200)
@@ -71,6 +72,7 @@ export const VariantPlotMap = () => {
 	} 
 
 	// bin data for the legend
+	const colors = ["#F5F9FF", "#BBD1EB", "#599DCC", "#1C5BA6", "#0A2258"]
 	var len = colors.length
 	var step = (max_val - min_val) / (len - 1)
 	var val_seq = [min_val]
@@ -113,7 +115,8 @@ export const VariantPlotMap = () => {
 		    .on("mouseover",function(e, d) {
 		   		tooltip.html(
 		   				"<b>Region: </b>" + d.properties.shapeName_gb + "<br />" +
-		   				"<b>" + text + ": </b>"+ `${ options.cntfreq == 'freq' ? parseFloat(d.properties.value).toFixed(6) : d.properties.value}`
+		   				"<b>" + text + ": </b>"+ `${ options.cntfreq == 
+		   					'freq' ? parseFloat(d.properties.value).toFixed(6) : d.properties.value}`
 		   			)
 		        	.style("left", (event.clientX + 4) + "px")
 		        	.style("top", (event.clientY - 4) + "px")

@@ -17,8 +17,8 @@ export const Variant = (props) => {
     const data = useSelector(state => state.data)
     const dtype = useSelector(state => state.data.data_type)  
     const search_status =  useSelector(state => state.search.status)
-    const source = dtype == 'imputed' ? 'Imputed data' : 'Raw chip data'
     const options = useSelector(state => state.data.options) 
+    const source = dtype == 'imputed' ? 'Imputed data' : 'Raw chip data' 
 
     var varlen = 1
     if (data != undefined){
