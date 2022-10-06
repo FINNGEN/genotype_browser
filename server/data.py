@@ -340,13 +340,15 @@ class Datafetch(object):
                 het['three_gt_probs'] = gt_probs_het
                 hom_alt['three_gt_probs'] = gt_probs_hom
                 wt_hom['three_gt_probs'] = gt_probs_wt_hom
-                missing['three_gt_probs'] = gt_probs_missing                
+                missing['three_gt_probs'] = gt_probs_missing
+                missing['gt'] = '.|.'
+            else:
+                missing['gt'] = './.'        
 
             # add main gt and probs for three genotypes (and missing data for raw chip)
             het['gt'] = gt_het
             hom_alt['gt'] = gt_hom
             wt_hom['gt'] = gt_wt_hom
-            missing['gt'] = '.|.'
 
             # if specified the type of variants to be saved
             df = pd.DataFrame(columns = het.columns.values.tolist())
@@ -422,6 +424,7 @@ class Datafetch(object):
             return False
 
     def write_variants(self, variants, filters, data_type):
+
         vars_data = []
         for variant in variants.split(','):
             chr, pos, ref, alt = utils.parse_variant(variant)
