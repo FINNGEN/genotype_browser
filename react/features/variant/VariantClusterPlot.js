@@ -18,13 +18,11 @@ export const VariantClusterPlot = () => {
     const [drop_plot, setDropPlot] = useState(true);
     const gb_data = useSelector(state => state.data)
 
-    let vizWidth = window.innerWidth;
+    let vizWidth = window.innerWidth
     let vizHeight = window.innerHeight;
 
-    //let svg_height = vizHeight - 285;
-    // let svg_width = vizWidth - 820;
-    let svg_height = 800;
-    let svg_width = 800;
+    let svg_height = vizHeight - 285;
+    let svg_width = vizWidth - 900;
     let m = 8;
     let u = svg_height/12;
     let x_axis = svg_width - u - m;
@@ -58,16 +56,19 @@ export const VariantClusterPlot = () => {
                     .map(e=>{
                         const values = e.split("\t");
                         return {
-                            "FINNGENID":       values[0],
-                            "batch":           values[1],
-                            "sex":             values[2],
-                            "intensity_ref":   parseFloat(values[3]),
-                            "intensity_alt":   parseFloat(values[4]),
-                            "raw":             parseFloat(values[5]),
-                            "imputed":         parseFloat(values[6]),
-                            "exome":           parseFloat(values[8]),
-                            "COHORT_SOURCE":   "V3C_v3",
-                            "COHORT_NAME":     varname,
+                            "FINNGENID": values[0],
+                            "batch": values[1],
+                            "sex": values[2],
+                            "intensity_ref": parseFloat(values[3]),
+                            "intensity_alt": parseFloat(values[4]),
+                            "raw": parseFloat(values[5]),
+                            "imputed": parseFloat(values[6]),
+                            "exome": parseFloat(values[8]),
+                            "COHORT_SOURCE": "V3C_v3",
+                            "COHORT_NAME": varname,
+                            "probeID": values[9],
+                            "birth_year": parseFloat(values[10]),
+                            "biobank": values[11],
                 }})
 
                 var dataFilt = data_reader.filter(e => typeof e.batch === 'string')
@@ -127,20 +128,24 @@ export const VariantClusterPlot = () => {
                 data_visible = data_total,
                 data_selection = [];
 
-            var dataBatch_Keys   = Array.from(d3.rollup(data_total, v => v.length, d => d.batch).keys()),
+            var dataProbeID_Keys = Array.from(d3.rollup(data_total, v => v.length, d => d.probeID).keys()),
+                dataBatch_Keys   = Array.from(d3.rollup(data_total, v => v.length, d => d.batch).keys()),
                 dataSex_Keys     = Array.from(d3.rollup(data_total, v => v.length, d => d.sex).keys()),
                 dataRaw_Keys     = Array.from(d3.rollup(data_total, v => v.length, d => d.raw).keys()),
                 dataImputed_Keys = Array.from(d3.rollup(data_total, v => v.length, d => d.imputed).keys()),
                 dataExome_Keys   = Array.from(d3.rollup(data_total, v => v.length, d => d.exome).keys()),
-                dataManual_Keys  = [2, 1, 0, -1, undefined];
+                dataManual_Keys  = [2, 1, 0, -1, undefined],
+                dataSource_Keys = Array.from(d3.rollup(data_total, v => v.length, d => d.biobank).keys()).sort();
 
             let visibility = {
-                batch:     [],
-                sex:       [],
-                raw:       [],
-                imputed:   [],
-                exome:     [],
-                manual:    [],
+                source: [],
+                probeID: [],
+                batch: [],
+                sex: [],
+                raw: [],
+                imputed: [],
+                exome: [],
+                manual: [],
             }
 
             var extent_ref = d3.extent(data_total, d => d.intensity_ref),
@@ -154,16 +159,13 @@ export const VariantClusterPlot = () => {
             let cx = d3.scaleLog().domain(zoom_extent_x).range([u, x_axis + u]),
                 cy = d3.scaleLog().domain(zoom_extent_y).range([y_axis, m]);
             
-            function rename(a){
+            function renameCall(a){
+
                 if      (a === 0)         return ref + ref;
                 else if (a === 1)         return ref + alt;
                 else if (a === 2)         return alt + alt;
-                else if (a === -1)        return 'No call';
-                else if (a === '-1')      return 'No call';
-                else if (a === null)      return 'Null'; 
                 else if (a === 'male')    return 'Male';
                 else if (a === 'female')  return 'Female';
-                else if (a === undefined) return 'Null';
                 else                      return 'Null'
             };
 
@@ -171,6 +173,23 @@ export const VariantClusterPlot = () => {
                 while(a.charAt(0) === 'b')
                 {a = a.substring(1);}
                 return a
+            }
+
+            function renameSource(a){
+                if (a==='-1' | a===-1) return 'Null'
+                else {
+                    let b = a.replace(/_|-|\./g, " ").replace(/#/g, "")
+                    let c = b.replace('BIOBANK', '').replace('OF ', '').replace('  ',' ')
+                    return c
+                }
+            }
+    
+            function rename(a){
+                if (a==='-1' | a===-1) return 'Null'
+                else {
+                    let b = a.replace(/_|-|\./g, " ").replace(/#/g, "")
+                    return b
+                }
             }
 
             function colorCalls(a){
@@ -262,7 +281,7 @@ export const VariantClusterPlot = () => {
                 
                 g_heading.append('p')
                     .attr('class', 'g_heading_key')
-                    .text(function(d,i){return rename(d.type)});
+                    .text(function(d,i){return renameCall(d.type)});
 
                 g_heading.append('p')
                     .attr('class', 'g_heading_value')
@@ -523,7 +542,7 @@ export const VariantClusterPlot = () => {
             d3.select('#b_export_chart_svg').on('click', function(){
                 const svg = document.querySelector('#v3c-svg').cloneNode(true);
                 document.body.appendChild(svg);
-                svg.setAttribute('width', svg.getBoundingClientRect().width)
+                svg.setAttribute('width', svg.getBoundingClientRect().width )
                 svg.setAttribute('height', svg.getBoundingClientRect().height + 20)
                 svg.setAttribute('class', 'transparent')
 
@@ -643,7 +662,7 @@ export const VariantClusterPlot = () => {
                     .attr('y', y_axis + u/1.4 + m)
                     .attr('text-anchor', 'middle')
                     .style('font-family', 'Helvetica')
-                    .style('font-size', '15')
+                    .style('font-size', '15px')
                     .html(ref + ' intensity')
 
                 g_axis.append('text')
@@ -654,7 +673,7 @@ export const VariantClusterPlot = () => {
                     .style('transform-box','fill-box')
                     .style('transform-origin','center')
                     .style('font-family', 'Helvetica')
-                    .style('font-size', '15')
+                    .style('font-size', '15px')
                     .html(alt + ' intensity')
             }
             
@@ -673,9 +692,9 @@ export const VariantClusterPlot = () => {
                     .style('fill',  function(d){
                         if      (d3.select('#p_color_raw').classed('button_active'))        return colorCalls(d.raw)
                         else if (d3.select('#p_color_imputed').classed('button_active'))    return colorCalls(d.imputed)
-                        else if (d3.select('#p_color_sex').classed('button_active'))             return colorSex(d.sex)
+                        else if (d3.select('#p_color_sex').classed('button_active'))        return colorSex(d.sex)
                         else if (d3.select('#p_color_manual').classed('button_active'))     return colorCalls(d.manual)
-                        else if (d3.select('#p_color_exome').classed('button_active'))           return colorCalls(d.exome)
+                        else if (d3.select('#p_color_exome').classed('button_active'))      return colorCalls(d.exome)
                     })
                     .attr('class',  function(d){return 'g_dots'})
                     .attr('id', function(d){return d.FINNGENID + '-circle'})
@@ -736,26 +755,27 @@ export const VariantClusterPlot = () => {
 
             //Click specification
             function drawSpecification(d){
+                let Xunit = 8
                 d3.select('#v3c-svg').append('circle')
                     .attr('cx', cx(d.intensity_ref))
                     .attr('cy', cy(d.intensity_alt))
                     .attr('r', 3)
                     .attr('class', 'g_dots_click')
                     .attr('id', d.FINNGENID + '-hovercircle')
-
+                
                 var g_rect = d3.select('#v3c-body').append('div')
                     .attr('class', 'g_rect')
-                    .attr('id', function(){return d.FINNGENID + '-div'})
-                    .style('left', function(){return cx(d.intensity_ref) + 17 + 'px'})
-                    .style('top', function(){return cy(d.intensity_alt) + 75 + 'px'});
+                    .attr('id', d.FINNGENID + '-div')
+                    .style('left', cx(d.intensity_ref) + 17 + 'px')
+                    .style('top', cy(d.intensity_alt) + 75 + 'px');
 
                 var g_exit = g_rect.append('svg')
                     .style('position', 'absolute')
-                    .style('right', m)
+                    .style('right', 15)
                     .style('background-color', '#fff')
-                    .style('width', m + 'px')
-                    .style('height', m + 'px')
-                    .attr('id', function(){return d.FINNGENID})
+                    .style('width', Xunit + 'px')
+                    .style('height', Xunit + 'px')
+                    .attr('id', d.FINNGENID)
                     .on('click', function(){
                         d3.select(this.parentNode).remove()
                         d3.select('#' + d.FINNGENID + '-hovercircle').remove()
@@ -763,37 +783,52 @@ export const VariantClusterPlot = () => {
                 
                 g_exit.append('line')
                     .attr('class', 'line')
-                    .attr('x1', 0).attr('x2', m)
-                    .attr('y1', 0).attr('y2', m);
+                    .attr('x1', 0).attr('x2', Xunit)
+                    .attr('y1', 0).attr('y2', Xunit);
             
                 g_exit.append('line')
                     .attr('class', 'line')
-                    .attr('x1', m).attr('x2', 0)
-                    .attr('y1', 0).attr('y2', m);
+                    .attr('x1', Xunit).attr('x2', 0)
+                    .attr('y1', 0).attr('y2', Xunit);
 
-                for (var i=0; i<7; i+=1){
-                    g_rect.append('p')
-                    .attr('class', 'g_heading_key')
-                    .style('clear', 'both')
-                    .text(function(){
-                        if (i===0){return 'FinnGen ID: '}
-                        else if (i===1){return 'Batch: '}
-                        else if (i===2){return 'Sex: '}
-                        else if (i===3){return ref + ' intensity: '}
-                        else if (i===4){return alt + ' intensity: '}
-                        else if (i===5){return 'Raw call: '}
-                        else if (i===6){return 'Imputed call: '}
+                    for (var i=0; i<15; i+=1){
+                        g_rect.append('div')
+                        .attr('class', 'g_rect_key')
+                        .text(()=>{
+                            if (i===0) return 'FinnGen ID'
+                            else if (i===1) return 'Source'
+                            else if (i===2) return 'Probe ID'
+                            else if (i===3) return 'Batch'
+                            else if (i===4) return ''
+                            else if (i===5) return 'Birth'
+                            else if (i===6) return 'Sex'
+                            else if (i===7) return ''
+                            else if (i===8) return ref + ' intensity'
+                            else if (i===9) return alt + ' intensity'
+                            else if (i===10) return ''
+                            else if (i===11) return 'Raw'
+                            else if (i===12) return 'Imputed'
+                            else if (i===13) return 'Manual'
+                            else if (i===14) return 'Exome'
                     })
-                    g_rect.append('p')
-                    .attr('class', 'g_heading_value')
-                    .text(function(){
-                        if (i===0){return d.FINNGENID}
-                        else if (i===1){return renameBatch(d.batch)}
-                        else if (i===2){return rename(d.sex)}
-                        else if (i===3){return d3.format(".2f")(d.intensity_ref)}
-                        else if (i===4){return d3.format(".2f")(d.intensity_alt)}
-                        else if (i===5){return rename(d.raw)}
-                        else if (i===6){return rename(d.imputed)}
+                    g_rect.append('div')
+                    .attr('class', 'g_rect_val')
+                    .text(()=>{
+                        if (i===0) return d.FINNGENID
+                        else if (i===1) return rename(d.biobank)
+                        else if (i===2) return d.probeID
+                        else if (i===3) return renameBatch(d.batch)
+                        else if (i===4) return ''
+                        else if (i===5) return d.birth_year
+                        else if (i===6) return renameCall(d.sex)
+                        else if (i===7) return ''
+                        else if (i===8) return d3.format(".2f")(d.intensity_ref)
+                        else if (i===9) return d3.format(".2f")(d.intensity_alt)
+                        else if (i===10) return ''
+                        else if (i===11) return renameCall(d.raw)
+                        else if (i===12) return renameCall(d.imputed)
+                        else if (i===13) return renameCall(d.manual)
+                        else if (i===14) return renameCall(d.exome)
                     })
                 }
             }
@@ -804,7 +839,7 @@ export const VariantClusterPlot = () => {
                     .text('Remove from selection')
                     .on('click', function(){
                         var erased = a.FINNGENID;
-                            data_selection = data_selection.filter(el => el.FINNGENID !== erased);
+                            data_selection = data_selection.filter(el => el.FINNGENID != erased);
                         eraseTable();
                         drawRows(data_selection);
                         drawSums(data_selection);
@@ -831,7 +866,7 @@ export const VariantClusterPlot = () => {
 
             // TABLE
             d3.select('#table').style('height', svg_height + 111 + 'px')
-            d3.select('#t_rows').style('height', svg_height - 102 + 'px')
+            d3.select('#t_rows').style('height', svg_height - 120 + 'px')
             d3.select('#t_manual_add').style('height', svg_height + 42 + 'px')
             
             var t_sum = d3.select('#t_sums')
@@ -856,53 +891,59 @@ export const VariantClusterPlot = () => {
                 var t_row = d3.select('#t_rows').selectAll('div')
                     .data(a).enter()
                     .append('div').attr('class', 't_complete_row')
-                
-                t_row.append('div').attr('class', 't_row t_cell_l').html(function(d){return d.FINNGENID}).on('click', function(e, d){drawSpecification(d); drawRemoveButton(d);});
-                t_row.append('div').attr('class', 't_row t_cell_s').html(function(d){return renameBatch(d.batch)}).on('click', function(e, d){drawSpecification(d); drawRemoveButton(d);});
-                t_row.append('div').attr('class', 't_row t_cell_m sex').html(function(d){return rename(d.sex)}).on('click', function(e, d){drawSpecification(d); drawRemoveButton(d);});
-                t_row.append('div').attr('class', 't_row t_cell_xl').html(function(d){return d3.format(".2f")(d.intensity_ref)}).on('click', function(e, d){drawSpecification(d); drawRemoveButton(d);});
-                t_row.append('div').attr('class', 't_row t_cell_xl').html(function(d){return d3.format(".2f")(d.intensity_alt)}).on('click', function(e, d){drawSpecification(d); drawRemoveButton(d);});
-                t_row.append('div').attr('class', 't_row t_cell_m raw').html(function(d){return rename(d.raw)}).on('click', function(e, d){drawSpecification(d); drawRemoveButton(d);});
-                t_row.append('div').attr('class', 't_row t_cell_m imputed').html(function(d){return rename(d.imputed)}).on('click', function(e, d){drawSpecification(d); drawRemoveButton(d);});
-                t_row.append('div').attr('class', 't_row t_cell_m exome').html(function(d){return rename(d.exome)}).on('click', function(e, d){drawSpecification(d); drawRemoveButton(d);});
-                t_row.append('div').attr('class', 't_row t_cell_m manual').html(function(d){return rename(d.manual)})
-                    .on('click', function(e, d){
-                        var selected = d3.select(this).attr('data-selected') === 'selected'
-                        if (!selected) {
-                            d3.select(this).text('')
-                            addManualCall(this)
-                        }
+                    .on('mouseover', (e,d)=>{
+                        d3.select('#v3c-svg').append('circle')
+                            .attr('cx', cx(d.intensity_ref))
+                            .attr('cy', cy(d.intensity_alt))
+                            .attr('class', 'g_dots_hover')
+                        d3.select('#v3c-svg').append('line')
+                            .style('stroke-width','0.25px')
+                            .style('stroke', '#000')
+                            .attr('x1', cx(d.intensity_ref)).attr('x2', cx(d.intensity_ref))
+                            .attr('y1', 0).attr('y2', y_axis + m)
+                            .attr('class', 'g_dots_hover');
+                        d3.select('#v3c-svg').append('line')
+                            .style('stroke-width','0.25px')
+                            .style('stroke', '#000')
+                            .attr('x1', u).attr('x2', x_axis + u + m)
+                            .attr('y1', cy(d.intensity_alt)).attr('y2', cy(d.intensity_alt))
+                            .attr('class', 'g_dots_hover');
                     })
-                    .classed('transparent', document.body.contains(document.getElementById("b_manual_add")))
+                    .on('mouseout', ()=>{
+                        d3.selectAll('.g_dots_hover').remove();
+                
+                    })
 
-                t_row.select('.sex').append('div').attr('class', 't_table_circle').style('background-color', function(d){return colorSex(d.sex)});
-                t_row.select('.raw').append('div').attr('class', 't_table_circle').style('background-color', function(d){return colorCalls(d.raw)});
-                t_row.select('.imputed').append('div').attr('class', 't_table_circle').style('background-color', function(d){return colorCalls(d.imputed)});
-                t_row.select('.exome').append('div').attr('class', 't_table_circle').style('background-color', function(d){return colorCalls(d.exome)});
-                t_row.select('.manual').append('div').attr('class', 't_table_circle').style('background-color', function(d){return colorCalls(d.manual)});
+                    t_row.append('div').attr('class', 'spec cell_l finngen').html(d=>d.FINNGENID)
+                    t_row.append('div').attr('class', 'spec cell_s probe').html(d=> d.probeID)
+                    t_row.append('div').attr('class', 'spec cell_xs batch').html(d=>renameBatch(d.batch))
+    
+                    t_row.append('div').attr('class', 'spec cell_m raw').html(d=>renameCall(d.raw))
+                        .append('div').attr('class', 't_circle').style('background-color', d=>colorCalls(d.raw));
+                    t_row.append('div').attr('class', 'spec cell_m imputed').html(d=>renameCall(d.imputed))
+                        .append('div').attr('class', 't_circle').style('background-color', d=>colorCalls(d.imputed));
+                    t_row.append('div').attr('class', 'spec cell_m exome').html(d=>renameCall(d.exome))
+                        .append('div').attr('class', 't_circle').style('background-color', d=>colorCalls(d.exome));
+    
+                    t_row.append('div').attr('class', 'cell_m manual')
+                        .classed('transparent', document.body.contains(document.getElementById("b_manual_add")))
+                        .html(d=> renameCall(d.manual))
+                        .on('click', function(e,d){
+                            var selected = d3.select(this).attr('data-selected') === 'selected'
+                            if (!selected) {d3.select(this).text(''); addManualCall(this)}
+                        })
+                        .append('div').attr('class', 't_circle').style('background-color', d=>colorCalls(d.manual));
+    
+                    t_row.append('div').attr('class', 'spec cell_s ref').html(d=>d3.format(".2f")(d.intensity_ref))
+                    t_row.append('div').attr('class', 'spec cell_s alt').html(d=>d3.format(".2f")(d.intensity_alt))
+    
+                    t_row.append('div').attr('class', 'spec cell_xs birth').html(d=> d.birth_year)
+                    t_row.append('div').attr('class', 'spec cell_m sex').html(d=>renameCall(d.sex))
+                        .append('div').attr('class', 't_circle').style('background-color', d=>colorSex(d.sex));
+                    t_row.append('div').attr('class', 'spec cell_xl source').html(d=>renameSource(d.biobank))
+    
+                    t_row.selectAll('.spec').on('click', (e,d)=>{drawSpecification(d); drawRemoveButton(d);})    
 
-                t_row.on('mouseover', function(e, d){
-                    d3.select("#v3c-svg").append('circle')
-                        .attr('cx', cx(d.intensity_ref))
-                        .attr('cy', cy(d.intensity_alt))
-                        .attr('class', 'g_dots_hover')
-                    d3.select("#v3c-svg").append('line')
-                        .style('stroke-width','0.25px')
-                        .style('stroke', '#000')
-                        .attr('x1', cx(d.intensity_ref)).attr('x2', cx(d.intensity_ref))
-                        .attr('y1', 0).attr('y2', y_axis + m)
-                        .attr('class', 'g_dots_hover');
-                    d3.select("#v3c-svg").append('line')
-                        .style('stroke-width','0.25px')
-                        .style('stroke', '#000')
-                        .attr('x1', u).attr('x2', x_axis + u + m)
-                        .attr('y1', cy(d.intensity_alt)).attr('y2', cy(d.intensity_alt))
-                        .attr('class', 'g_dots_hover');
-                })
-
-                t_row.on('mouseout', function(){
-                    d3.selectAll('.g_dots_hover').remove();
-                })
             }
 
             function drawSums(a){
@@ -926,34 +967,35 @@ export const VariantClusterPlot = () => {
                     max_raw     = d3.max(dataRaw, d => d.value),
                     max_imputed = d3.max(dataImputed, d => d.value),
                     max_exome   = d3.max(dataExome, d => d.value);
-
-                t_sum.select('#t_sum_count').select('p').text(function(){return a.length})
-                t_sum.select('#t_sum_sex').select('svg').selectAll('rect').data(dataSex).enter().append('rect')
-                    .attr('x', 0)
-                    .attr('y', function(d,i){return i*10})
-                    .attr('width', function(d){return d.value/max_sex*100})
-                    .attr('height', function(d){return 10})
-                    .attr('fill', function(d){return colorSex(d.type)})
-                t_sum.select('#t_sum_ref').select('p').text(function(){return d3.format(".2f")(d3.sum(a, item => item.intensity_ref) / a.length)})
-                t_sum.select('#t_sum_alt').select('p').text(function(){return d3.format(".2f")(d3.sum(a, item => item.intensity_alt) / a.length)})
+                
+                t_sum.select('#t_sum_count').select('p').text(()=>a.length)
                 t_sum.select('#t_sum_raw').select('svg').selectAll('rect').data(dataRaw).enter().append('rect')
                     .attr('x', 0)
-                    .attr('y', function(d,i){return i*10})
-                    .attr('width', function(d){return d.value/max_raw*100})
-                    .attr('height', function(d){return 10})
-                    .attr('fill', function(d){return colorCalls(d.type)})
+                    .attr('y', (d,i)=>i*10)
+                    .attr('width', d=>d.value/max_raw*100)
+                    .attr('height', d=>10)
+                    .attr('fill', d=>colorCalls(d.type))
                 t_sum.select('#t_sum_imputed').select('svg').selectAll('rect').data(dataImputed).enter().append('rect')
                     .attr('x', 0)
-                    .attr('y', function(d,i){return i*10})
-                    .attr('width', function(d){return d.value/max_imputed*100})
-                    .attr('height', function(d){return 10})
-                    .attr('fill', function(d){return colorCalls(d.type)})
+                    .attr('y', (d,i)=>i*10)
+                    .attr('width', d=>d.value/max_imputed*100)
+                    .attr('height', d=>10)
+                    .attr('fill', d=>colorCalls(d.type))
                 t_sum.select('#t_sum_exome').select('svg').selectAll('rect').data(dataExome).enter().append('rect')
                     .attr('x', 0)
-                    .attr('y', function(d,i){return i*10})
-                    .attr('width', function(d){return d.value/max_exome*100})
-                    .attr('height', function(d){return 10})
-                    .attr('fill', function(d){return colorCalls(d.type)})
+                    .attr('y', (d,i)=>i*10)
+                    .attr('width', d=>d.value/max_exome*100)
+                    .attr('height', d=>10)
+                    .attr('fill', d=>colorCalls(d.type))
+                t_sum.select('#t_sum_ref').select('p').text(()=>d3.format(".2f")(d3.sum(a, item => item.intensity_ref) / a.length))
+                t_sum.select('#t_sum_alt').select('p').text(()=>d3.format(".2f")(d3.sum(a, item => item.intensity_alt) / a.length))
+                t_sum.select('#t_sum_birth').select('p').text(()=>Math.round(d3.sum(a, item => item.birth_year) / a.length))
+                t_sum.select('#t_sum_sex').select('svg').selectAll('rect').data(dataSex).enter().append('rect')
+                    .attr('x', 0)
+                    .attr('y', (d,i)=>i*10)
+                    .attr('width', d=>d.value/max_sex*100)
+                    .attr('height', d=>10)
+                    .attr('fill', d=>colorSex(d.type))
 
                 drawCount(data_selection, 'table');
             }
@@ -1007,6 +1049,7 @@ export const VariantClusterPlot = () => {
 
                 d3.select('#t_sums').selectAll('rect').remove();
                 t_sum.select('#t_sum_count').select('p').text('-');
+                t_sum.select('#t_sum_birth').select('p').text('-');
                 t_sum.select('#t_sum_ref').select('p').text('-');
                 t_sum.select('#t_sum_alt').select('p').text('-');
 
@@ -1035,7 +1078,7 @@ export const VariantClusterPlot = () => {
                 drawCount(data_visible, 'graph');
                 drawDots(data_visible);
                 d3.selectAll('.manual').classed('transparent', false);
-                d3.select('#t_manual_add').remove();
+                d3.select('#t_manual_add').classed('transparent', true);
                 d3.select('#t_table').style('width', '100%');
             })
 
@@ -1055,8 +1098,8 @@ export const VariantClusterPlot = () => {
                             var i_total = data_total.map(e=>e.FINNGENID).indexOf(d.FINNGENID)
                             data_total[i_total].manual = new_manual
                             
-                            d3.select('#t_sums').classed('transparent', true);
-                            d3.select('#b_manual_change').classed('transparent', false).html('Change all the manual calls of the selection into ' + rename(new_manual))
+                            d3.select('#t_sums').style('display', 'none');
+                            d3.select('#b_manual_change').classed('transparent', false).html('Change all the manual calls of the selection into ' + renameCall(new_manual))
 
                             getDataVisible();
                             drawDots(data_visible);
@@ -1066,7 +1109,7 @@ export const VariantClusterPlot = () => {
                         .selectAll('option').data([null, 0, 1, 2, -1]).enter()
                             .append('option')
                             .attr('value', function(d) {return d})
-                            .html(function(d) {return rename(d)})
+                            .html(function(d) {return renameCall(d)})
             }
 
             d3.select('#b_manual_change').data(data_total).on('click', function(){
@@ -1085,7 +1128,7 @@ export const VariantClusterPlot = () => {
                 drawDots(data_visible);
                 d3.selectAll('.manual').classed('transparent', false);
                 d3.select(this).classed('transparent', true);
-                d3.select('#t_sums').classed('transparent', false);
+                d3.select('#t_sums').style('display', 'flex');
             })
 
             d3.select('#t_instruction_cta').select('u').on('click', function(){
@@ -1121,6 +1164,7 @@ export const VariantClusterPlot = () => {
 
             //PANEL
             // d3.select('#panel').style('width', svg_width + 793 + 'px')
+            d3.select('#panel').style('width', svg_width + 863 + 'px')
             drawGroupFilterButtons()
             drawDensityButtons(data_total);
 
@@ -1136,6 +1180,11 @@ export const VariantClusterPlot = () => {
             //Filter buttons
             function drawGroupFilterButtons(){
                 var data_group_filters = [
+                {
+                    'id': 'probeID',
+                    'name': 'Probe ID',
+                    'buttons': dataProbeID_Keys,
+                },
                 {
                     'id': 'batch',
                     'name': 'Batch',
@@ -1165,6 +1214,11 @@ export const VariantClusterPlot = () => {
                     'id': 'manual',
                     'name': 'Manual',
                     'buttons': dataManual_Keys,
+                },
+                {
+                    'id': 'source',
+                    'name': 'Source',
+                    'buttons': dataSource_Keys,
                 },
             ]
 
@@ -1198,15 +1252,27 @@ export const VariantClusterPlot = () => {
                         .data(b)
                         .enter()
                         .append('button')
-                        .attr('class', 'button_secondary v3c-button')
-                        .text(function (d){
+                        // .attr('class', 'button_secondary v3c-button')
+                        .attr('class', 'button_secondary p_button v3c-button')
+                        .classed('thl', d => {
+                            if (typeof d === 'string') return d.includes('THL')
+                            else return false
+                        })
+                        .html(function (d){
+                        // .text(function (d){
                             if (a === 'batch') return renameBatch(d)
-                            else return rename(d)}
-                        )
+                            // else return rename(d)}
+                        // )
+                            else if (a === 'source') return renameSource(d)
+                            else if (a === 'probeID') return d
+                            else return renameCall(d)
+                        })
                         .on('click', function(e,d){
                             if (d3.select(this).classed('button_secondary_active')) {
                                 d3.select(this).classed('button_secondary_active', false);
-                                if      (a === 'batch')    visibility.batch      = visibility.batch.filter(el => el !== d)
+                                if      (a === 'source')   visibility.source     = visibility.source.filter(el => el !== d)
+                                else if (a === 'probeID')  visibility.probeID    = visibility.probeID.filter(el => el !== d)
+                                else if (a === 'batch')    visibility.batch      = visibility.batch.filter(el => el !== d)
                                 else if (a === 'sex')      visibility.sex        = visibility.sex.filter(el => el !== d)
                                 else if (a === 'raw')      visibility.raw        = visibility.raw.filter(el => el !== d)
                                 else if (a === 'imputed')  visibility.imputed    = visibility.imputed.filter(el => el !== d)
@@ -1215,7 +1281,9 @@ export const VariantClusterPlot = () => {
                                 
                             } else {
                                 d3.select(this).classed('button_secondary_active', true);
-                                if      (a === 'batch')    visibility.batch.push(d)
+                                if      (a === 'source')   visibility.source.push(d)
+                                else if (a === 'probeID')  visibility.probeID.push(d)
+                                else if (a === 'batch')    visibility.batch.push(d)
                                 else if (a === 'sex')      visibility.sex.push(d)
                                 else if (a === 'raw')      visibility.raw.push(d)
                                 else if (a === 'imputed')  visibility.imputed.push(d)
@@ -1226,26 +1294,52 @@ export const VariantClusterPlot = () => {
                             drawCount(data_visible, 'graph')
                             drawDots(data_visible)
                     })
+                    if (a === 'source') drawAllTHL()
                 }
             }
-
+            
             function getDataVisible(){
                 data_visible = []
-                data_total.forEach(el => {if ((visibility.raw.includes(el.raw) || !d3.select('#p_filter_raw').select('button').classed('button_active')) && (visibility.imputed.includes(el.imputed) || !d3.select('#p_filter_imputed').select('button').classed('button_active')) && (visibility.sex.includes(el.sex) || !d3.select('#p_filter_sex').select('button').classed('button_active')) && (visibility.exome.includes(el.exome) || !d3.select('#p_filter_exome').select('button').classed('button_active')) && (visibility.batch.includes(el.batch) || !d3.select('#p_filter_batch').select('button').classed('button_active')) && (visibility.manual.includes(el.manual) || !d3.select('#p_filter_manual').select('button').classed('button_active'))) data_visible.push(el)})
+                data_total.forEach(el => {if ((visibility.source.includes(el.biobank) || !d3.select('#p_filter_source').select('button').classed('button_active')) && (visibility.probeID.includes(el.probeID) || !d3.select('#p_filter_probeID').select('button').classed('button_active')) && (visibility.raw.includes(el.raw) || !d3.select('#p_filter_raw').select('button').classed('button_active')) && (visibility.imputed.includes(el.imputed) || !d3.select('#p_filter_imputed').select('button').classed('button_active')) && (visibility.sex.includes(el.sex) || !d3.select('#p_filter_sex').select('button').classed('button_active')) && (visibility.exome.includes(el.exome) || !d3.select('#p_filter_exome').select('button').classed('button_active')) && (visibility.batch.includes(el.batch) || !d3.select('#p_filter_batch').select('button').classed('button_active')) && (visibility.manual.includes(el.manual) || !d3.select('#p_filter_manual').select('button').classed('button_active'))) data_visible.push(el)})
+            }
+    
+            function drawAllTHL(){
+                const thl = []
+                dataSource_Keys.forEach(el => {if (el.includes("THL")) thl.push(el)})
+                if (thl.length > 1) d3.select('#p_filter_source').select('.button_container').append('button')
+                    .attr('class', 'button_secondary p_button v3c-button')
+                    .html('THL All sources')
+                    .on('click', function(e){
+                        if (d3.select(this).classed('button_secondary_active')) {
+                            d3.select(this).classed('button_secondary_active', false)
+                            d3.selectAll('.thl').classed('button_secondary_active', false)
+                            visibility.source = visibility.source.filter(el => !el.includes('THL'))
+                            getDataVisible()
+                            drawCount(data_visible, 'graph')
+                            drawDots(data_visible)
+                        } else {
+                            thl.forEach(el => {if (!visibility.source.includes(el)) visibility.source.push(el)})
+                            d3.select(this).classed('button_secondary_active', true)
+                            d3.selectAll('.thl').classed('button_secondary_active', true)
+                            getDataVisible()
+                            drawCount(data_visible, 'graph')
+                            drawDots(data_visible)
+                        }
+                    })
             }
 
             // Density buttons
             function drawDensityButtons(g){
-                var dataFiltered_Sex_Male = g.filter(el => el.sex === 'male'),
-                    dataFiltered_Sex_Female = g.filter(el => el.sex === 'female');
+                var dataFiltered_Sex_Male = g.filter(function(el){return el.sex == 'male'}),
+                    dataFiltered_Sex_Female = g.filter(function(el){return el.sex == 'female'});
 
-                var dataFiltered_Raw_RefRef = g.filter(el => el.raw === 0),
-                    dataFiltered_Raw_AltRef = g.filter(el => el.raw === 1),
-                    dataFiltered_Raw_AltAlt = g.filter(el => el.raw === 2);
+                var dataFiltered_Raw_RefRef = g.filter(function(el){return el.raw == 0}),
+                    dataFiltered_Raw_AltRef = g.filter(function(el){return el.raw == 1}),
+                    dataFiltered_Raw_AltAlt = g.filter(function(el){return el.raw == 2});
 
-                var dataFiltered_Imputed_RefRef = g.filter(el => el.imputed === 0),
-                    dataFiltered_Imputed_AltRef = g.filter(el => el.imputed === 1),
-                    dataFiltered_Imputed_AltAlt = g.filter(el => el.imputed === 2);
+                var dataFiltered_Imputed_RefRef = g.filter(function(el){return el.imputed == 0}),
+                    dataFiltered_Imputed_AltRef = g.filter(function(el){return el.imputed == 1}),
+                    dataFiltered_Imputed_AltAlt = g.filter(function(el){return el.imputed == 2});
 
                 var data_isolines = [
                     {
@@ -1360,8 +1454,8 @@ export const VariantClusterPlot = () => {
         window.addEventListener('resize', function(){
             console.log('ciao')
             svg_height = window.innerHeight - 285
-            svg_width = document.getElementsByTagName('body')[0].clientWidth - 820            
-            
+            svg_width = document.getElementsByTagName('body')[0].clientWidth - 900     
+                        
             u = svg_height/12
             x_axis = svg_width - u - m
             y_axis = svg_height - u - m
@@ -1369,16 +1463,18 @@ export const VariantClusterPlot = () => {
             cx = d3.scaleLog().domain(zoom_extent_x).range([u, x_axis + u]);
             cy = d3.scaleLog().domain(zoom_extent_y).range([y_axis, m]);
 
-            var arrayOfClickedSpots = [];
+            arrayOfClickedSpots = [];
 
-            d3.select('#panel').style('width', svg_width + 793 + 'px');
+            // d3.select('#panel').style('width', svg_width + 793 + 'px');
+            d3.select('#panel').style('width', svg_width + 863 + 'px');
             d3.select('#table').style('height', svg_height + 111 + 'px');
             d3.select('#g_axis').remove();
             drawAxes();
-            d3.select('#t_rows').style('height', svg_height - 102 + 'px')
+            d3.select('#t_rows').style('height', svg_height - 120 + 'px')
             d3.select('#t_manual_add').style('height', svg_height + 42 + 'px')
             d3.select('#b_overlay_density').selectAll('button').attr('class', 'button_secondary');
             d3.select('#g_isolines').selectAll('g').remove();
+            drawSums(data_selection)
             drawDots(data_visible);
             drawExomeLocations()
         }, true)
@@ -1388,6 +1484,9 @@ export const VariantClusterPlot = () => {
     }, [data])
 
     return (
+
+    <div id="flex-div" style={{display: "flex", flexDirection: "row", justifyContent: "left"}}>
+
     <div id="v3c-body">
 
     {
@@ -1403,7 +1502,7 @@ export const VariantClusterPlot = () => {
         </div>
     </div>
 
-    <div id="flex-div" style={{display: "flex", flexDirection: "row", justifyContent: "left"}}>
+    {/* <div id="flex-div" style={{display: "flex", flexDirection: "row", justifyContent: "left"}}> */}
 
     <div id="graph" className="transparent">
         <div className="heading button">
@@ -1440,29 +1539,36 @@ export const VariantClusterPlot = () => {
         <div className="heading count transparent" style={{marginBottom:'0'}}></div>
         <div id='t_table' className="transparent">
             <div id='t_firstrow'>
-                <div className='t_first t_cell_l'>FinnGen ID</div>
-                <div className='t_first t_cell_s'>Batch</div>
-                <div className='t_first t_cell_m'>Sex</div>
-                <div className='t_first t_cell_xl' id='t_first_ref'>R intensity</div>
-                <div className='t_first t_cell_xl' id='t_first_alt'>A intensity</div>
-                <div className='t_first t_cell_m'>Raw</div>
-                <div className='t_first t_cell_m'>Imputed</div>
-                <div className='t_first t_cell_m'>Exome</div>
-                <div className='t_first t_cell_m manual transparent'>Manual</div>
+                <div className='cell_l'>FinnGen ID</div>
+                <div className='cell_s'>Probe ID</div>
+                <div className='cell_xs'>Batch</div>
+                <div className='cell_m'>Raw</div>
+                <div className='cell_m'>Imputed</div>
+                <div className='cell_m'>Exome</div>
+                <div className='cell_m manual transparent'>Manual</div>
+                <div className='cell_s' id='t_first_ref'>Ref</div>
+                <div className='cell_s' id='t_first_alt'>Alt</div>
+                <div className='cell_xs'>Birth</div>
+                <div className='cell_m'>Sex</div>
+                <div className='cell_xl'>Source</div>
             </div>
             <div id='t_rows'></div>
             <div id='t_manual_change'>
                 <button id='b_manual_change' className='button_active transparent v3c-button'>Change selection manual calls into XX</button>
             </div>
             <div id='t_sums'>
-                <div id='t_sum_count'   className='t_row t_cell_l'>Count<p className='t_sum_value'>-</p></div>
-                <div className='t_row t_cell_s'></div>
-                <div id='t_sum_sex'     className='t_row t_cell_m'>Ratio<svg className='t_sum_graph'></svg></div>
-                <div id='t_sum_ref'     className='t_row t_cell_xl'>Mean<p className='t_sum_value'>-</p></div>
-                <div id='t_sum_alt'     className='t_row t_cell_xl'>Mean<p className='t_sum_value'>-</p></div>
-                <div id='t_sum_raw'     className='t_row t_cell_m'>Ratio<svg className='t_sum_graph'></svg></div>
-                <div id='t_sum_imputed' className='t_row t_cell_m'>Ratio<svg className='t_sum_graph'></svg></div>
-                <div id='t_sum_exome'   className='t_row t_cell_m'>Ratio<svg className='t_sum_graph'></svg></div>
+                <div id='t_sum_count' className='cell_l'>Count<p className='t_sum_value'>-</p></div>
+                <div className='cell_s'></div>
+                <div className='cell_xs'></div>
+                <div id='t_sum_raw' className='cell_m'>Ratio<svg className='t_sum_graph'></svg></div>
+                <div id='t_sum_imputed' className='cell_m'>Ratio<svg className='t_sum_graph'></svg></div>
+                <div id='t_sum_exome' className='cell_m'>Ratio<svg className='t_sum_graph'></svg></div>
+                <div className='cell_m manual transparent'></div>
+                <div id='t_sum_ref' className='cell_s'>Mean<p className='t_sum_value'>-</p></div>
+                <div id='t_sum_alt' className='cell_s'>Mean<p className='t_sum_value'>-</p></div>
+                <div id='t_sum_birth' className='cell_xs'>Mean<p className='t_sum_value'>-</p></div>
+                <div id='t_sum_sex' className='cell_m'>Ratio<svg className='t_sum_graph'></svg></div>
+                <div className='cell_xl'></div>
             </div>
         </div>
         <div id='t_manual_add' className='transparent'>
@@ -1481,9 +1587,9 @@ export const VariantClusterPlot = () => {
         </div>
     </div>
 
-    </div>
+    {/* </div> */}
 
-    <div id="panel" className="transparent">
+    <div id="panel" style={{width: "100%", "backgroundColor": "red"}}>
         <div className='panel' id='p_color'>
             <div className="p_inner">Color dots</div>
             <button id='p_color_sex'     className='p_color_all v3c-button'>Sex</button>
@@ -1506,6 +1612,8 @@ export const VariantClusterPlot = () => {
         </div>
     </div>
 
+
+    </div>
 
     </div>
     )
