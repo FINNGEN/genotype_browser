@@ -120,7 +120,7 @@ def getData(variant, filters, data_type):
 
         # check vcf files
         x = pysam.TabixFile(vcf, parser=None)
-        gt_data = x.fetch("chr%s" % chr, pos - 1, pos + 1)
+        gt_data = x.fetch("chr%s" % chr, pos - 1, pos)
         gt = None
         for row in gt_data:
             data = row.split('\t')      
@@ -139,7 +139,7 @@ def getData(variant, filters, data_type):
             dat_vcf = d[['FINNGENID', 'gt']]
             dat_vcf.index = list(dat_vcf['FINNGENID'])
 
-        # re-order        
+        # re-order
         if dat_gb is not None:
             dat_vcf = dat_vcf.loc[list(dat_gb.index), :]
 
