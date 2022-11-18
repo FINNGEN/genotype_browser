@@ -51,7 +51,7 @@ do
    export "$KEY"="$VALUE"
 done
 
-OUTPUT_PATH=${OUTPUT_PATH:-"$HOME/GB_out"}
+OUTPUT_PATH=${OUTPUT_PATH:-"$HOME/GB_out_$RELEASE_PREFIX"}
 mkdir -p "$OUTPUT_PATH"
 
 [ -z $GENE_ANNOTATION_REFERENCE_FILE_GTF ] && wget http://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_38/gencode.v38.annotation.gtf.gz -q -O ${OUTPUT_PATH}/gencode.v38.annotation.gtf.gz && GENE_ANNOTATION_REFERENCE_FILE_GTF=${OUTPUT_PATH}/gencode.v38.annotation.gtf.gz
@@ -102,6 +102,13 @@ python3 combine_imputed_and_rawchip_vars.py \
 -i "$IMPU_RELEASE_VARIANT_ANNOTATION_FILE" \
 -o "${OUTPUT_PATH}/VARIANT_ANNOTATION_FILE_COMBINED_IMPUTED_CHIP_${RELEASE_PREFIX}.csv"
 
+echo "Random sampling of variants for testing at STEP 6"
+
+# get 20(this value can be changed) random variants for testing in STEP 6
+# from the "${OUTPUT_PATH}/VARIANT_ANNOTATION_FILE_COMBINED_IMPUTED_CHIP_${RELEASE_PREFIX}.csv"
+
+time awk 'BEGIN{srand();k=20} NR==1 {next} {i = int(NR * rand()) } i < k { a[i] = $1 }END {for (i in a) {print a[i];}}' "${OUTPUT_PATH}/VARIANT_ANNOTATION_FILE_COMBINED_IMPUTED_CHIP_${RELEASE_PREFIX}.csv" > "${OUTPUT_PATH}/random_impvariant_sample.txt"
+
 gzip "${OUTPUT_PATH}/VARIANT_ANNOTATION_FILE_COMBINED_IMPUTED_CHIP_${RELEASE_PREFIX}.csv"
 
 
@@ -112,6 +119,59 @@ python3 populate_sqlite.py \
 --variant_chip_file "${OUTPUT_PATH}/CHIPVARS_FILE_${RELEASE_PREFIX}.txt.gz" \
 --genes_anno_file "${OUTPUT_PATH}/GENE_ANNOTATION_FILE.csv" \
 --sqlite_db ${OUTPUT_PATH}/fgq.${RELEASE_PREFIX#,,}.1.db
+
+echo "STEP 6. Test the genotypes in the genotype browser are the same as those we get from the vcfs"
+echo "IF the test fails, please inform the genotypebrowser developers."
+echo "Please also attach the test result file that is saved in the output directory you specified as test_result_<date>.txt"
+
+# arrays of the possible filters to randomly choose from
+data_type=("imputed" "chip" "both")
+alive=("all" "alive" "dead")
+sex=("all" "female" "male")
+array=("all" "finngen" "legacy")
+impchip=("all" "imp" "chip")
+gtgp=("gt" "gp")
+gpThres=("0.95")
+het=("true" "false")
+hom=("true" "false")
+wt_hom=("true" "false")
+missing=("false") # missing 'true' is removed because it causes discrepancy with the genotypes in the vcf
+
+printf '%.0s*' $(seq $(tput cols)) | tee -a "${OUTPUT_PATH}/test_result_$(date +"%F").txt"
+
+printf '\n\n'
+
+while read -r line; do
+  v="${line//:/-}"
+
+  # random sampling from the arrays using the $RANDOM function and the size of the arrays
+  data_type_rs=${data_type[(($RANDOM % 3))]}
+  alive_rs=${alive[(($RANDOM % 3))]}
+  sex_rs=${sex[(($RANDOM % 3))]}
+  array_rs=${array[(($RANDOM % 3))]}
+  impchip_rs=${impchip[(($RANDOM % 3))]}
+  gtgp_rs=${gtgp[(($RANDOM % 2))]}
+  gpThres_rs=${gpThres[(($RANDOM % 1))]}
+  het_rs=${het[(($RANDOM % 2))]}
+  hom_rs=${hom[(($RANDOM % 2))]}
+  wt_hom_rs=${wt_hom[(($RANDOM % 2))]}
+  missing_rs=${missing[(($RANDOM % 1))]}
+
+  echo "Testing variant: ${line}" | tee -a "${OUTPUT_PATH}/test_result_$(date +"%F").txt"
+
+  f='{"alive": "'"$alive_rs"'", "sex": "'"$sex_rs"'", "array": "'"$array_rs"'", "impchip": "'"$impchip_rs"'",
+      "gtgp": "'"$gtgp_rs"'", "gpThres": "'"$gpThres_rs"'", "het": "'"$het_rs"'", "hom": "'"$hom_rs"'", "wt_hom": "'"$wt_hom_rs"'",
+      "missing": "'"$missing_rs"'", "data_type": "'"$data_type_rs"'"}'
+
+  echo "The filters are :$f" | tee -a "${OUTPUT_PATH}/test_result_$(date +"%F").txt"
+
+  python3 ../server/gt_test.py -v "$v" -d "$data_type_rs" -f "$f" 2>&1| tee -a "${OUTPUT_PATH}/test_result_$(date +"%F").txt"
+
+  printf '%.0s*' $(seq $(tput cols)) | tee -a "${OUTPUT_PATH}/test_result_$(date +"%F").txt"
+
+  printf '\n\n'
+
+done < "${OUTPUT_PATH}/random_impvariant_sample.txt"
 
 FINISH=$(date "+%s")
 ELAPSED_SEC=$((FINISH - START))
