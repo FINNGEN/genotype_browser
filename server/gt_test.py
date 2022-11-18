@@ -131,6 +131,8 @@ def getData(variant, filters, data_type):
     if chr == 'X' or chr == '23':
         chr_search = 'X'
         chr = '23'
+    else:
+        chr_search = chr
     chr = int(chr)
     pos = int(pos)
     with app.app_context():
