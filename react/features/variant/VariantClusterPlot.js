@@ -6,13 +6,13 @@ import './v3c.css'
 
 export const VariantClusterPlot = () => {
 
-    const variant = useSelector(state => state.data.variants);
-    const varname = variant[0].replaceAll('-', '_');
+    const variants = useSelector(state => state.data.variants);
+    const varname = variants[0].replaceAll('-', '_');
     const [status, setStatus] = useState(null);
     const [data, setIntensityData] = useState(null);
     const [error_message, setError] = useState(null);
     const [drop_plot, setDropPlot] = useState(true);
-    const gb_data = useSelector(state => state.data)
+    const gb_data = useSelector(state => state.data);
 
     let vizWidth = window.innerWidth
     let vizHeight = window.innerHeight;
@@ -28,9 +28,9 @@ export const VariantClusterPlot = () => {
     useEffect (() => {
         const getData = async () => { 
             try {
-                const response = await fetch('/api/v1/clusterplot/' + variant);
+                const response = await fetch('/api/v1/clusterplot/' + variants[0]);
                 if (response.status == 404){
-                    var error = "Variant exists in FinnGen chip but no cluster plot was found. Contact helpdesk to report the issue.";
+                    var error = "Variant " + variants[0] + " exists in FinnGen chip but no cluster plot was found. Contact helpdesk to report the issue.";
                     throw new Error(error)
                 } else if (response.status == 400){
                     var error = "Error parsing the data.";
@@ -38,6 +38,8 @@ export const VariantClusterPlot = () => {
                 } else if (response.status == 500){
                     var error = "Internal server error, let us know.";
                     throw new Error(error)
+                } else{
+                    setError(null);
                 }
                 setStatus(response.status);
                 const server_data = await response.blob();
@@ -75,20 +77,22 @@ export const VariantClusterPlot = () => {
             }
         }
         getData();
-    }, [gb_data.data])
+    }, [gb_data.data, variants])
 
 
     // build svg
     useEffect(()=> {
-
+        
         if (data !== null){
-            if (data.length > 0 && variant.length == 1) {
+            if (data.length > 0 && variants.length == 1) {
                 setDropPlot(false)
                 d3.select('#graph').classed('transparent', false)
                 d3.select('#table').classed('transparent', false)
                 d3.select('#panel').classed('transparent', false)
                 drawChart(data, varname)
             } 
+        } else {
+            setDropPlot(true)
         }
 
         function drawChart(data_initial, data_current_filename, ref){
@@ -1105,24 +1109,25 @@ export const VariantClusterPlot = () => {
                 d3.select('#t_instruction_cta').classed('transparent', false);
             })
 
+
             // Selection
             g_svg.on('click', (e,d)=>{
                 if (d3.select('#b_selection_new').classed('button_active')){
-                    arrayOfClickedSpots.push([e.clientX - 5, e.clientY - 148]);
-    
+                    var plot = document.getElementById('v3c-svg').getBoundingClientRect();
+                    arrayOfClickedSpots.push([e.clientX - plot.left, e.clientY - plot.bottom + plot.height]);
                     g_svg.select('.g_selection_path')
                         .attr('d',`M${arrayOfClickedSpots.join('L')}Z`)
                         .attr('fill', '#555')
                         .attr('stroke', 'black')
                         .attr('stroke-width', '1px')
                         .attr('opacity', '0.2');
-    
+
                     g_svg.select('.g_selection_dots').append('circle')
-                        .attr('cx', e.clientX - 5)
-                        .attr('cy', e.clientY - 148)
+                        .attr('cx',e.clientX - plot.left)
+                        .attr('cy', e.clientY - plot.bottom + plot.height)
                         .attr('r', 2)
                         .attr('fill', '#000');
-    
+
                     drawDots(data_visible)
             }})
 
@@ -1437,9 +1442,10 @@ export const VariantClusterPlot = () => {
             d3.select('#t_manual_add').style('height', svg_height + 42 + 'px')
             d3.select('#b_overlay_density').selectAll('button').attr('class', 'button_secondary');
             d3.select('#g_isolines').selectAll('g').remove();
-            drawSums(data_selection)
+            drawSums(data_selection);
             drawDots(data_visible);
-            drawExomeLocations()
+            drawExomeLocations();
+            erasePolygon();
         }, true)
 
     }
@@ -1448,8 +1454,7 @@ export const VariantClusterPlot = () => {
 
     return (
 
-    <div id="flex-div" style={{display: "flex", flexDirection: "row", justifyContent: "left"}}>
-
+    <div id="flex-div" style={{display: drop_plot ? "none" : 'flex', flexDirection: "row", justifyContent: "left"}}>
     <div id="v3c-body">
 
     {
@@ -1464,8 +1469,6 @@ export const VariantClusterPlot = () => {
             <p></p>
         </div>
     </div>
-
-    {/* <div id="flex-div" style={{display: "flex", flexDirection: "row", justifyContent: "left"}}> */}
 
     <div id="graph" className="transparent">
         <div className="heading button">
