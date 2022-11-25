@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react'
 import { useHistory } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import validator from 'validator'
-import { search, setResult } from '../search/searchSlice'
+import { search, resetSearch } from '../search/searchSlice'
+import { resetData } from '../data/dataSlice'
+
 
 export const SearchForm = () => {
 
@@ -43,6 +45,8 @@ export const SearchForm = () => {
 	if (!event.key || event.key == 'Enter') {
 	    if (validator.matches(text, /^[A-Z|a-z|0-9|\-|_|:,]+$/)) {
 			setClientError(null)
+			dispatch(resetSearch())
+			dispatch(resetData())
 			dispatch(search(`/api/v1/find/${text}`))
 	    } else {
 		setClientError('invalid query')

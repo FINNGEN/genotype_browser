@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
+import { createSlice, createAsyncThunk, createAction } from '@reduxjs/toolkit'
 
 export const search = createAsyncThunk('search/search', async (url, { rejectWithValue }) => {
     try {
@@ -13,16 +13,21 @@ export const search = createAsyncThunk('search/search', async (url, { rejectWith
     }
 })
 
-export const searchSlice = createSlice({
-    name: 'search',
-    initialState: {
+
+export const reset = createAction('REVERT_ALL');
+const initialState = {
 	status: 'idle',
 	result: {}
-    },
+};
+
+export const searchSlice = createSlice({
+    name: 'search',
+    initialState: initialState,
     reducers: {
 	setResult: (state, action) => {
 	    state.result = action.payload
-	}
+	},
+	resetSearch: () => initialState
     },
     extraReducers: {
 	// automatically called by asyncthunks
@@ -45,6 +50,6 @@ export const searchSlice = createSlice({
     }
 })
 
-export const { setResult } = searchSlice.actions
+export const { setResult, resetSearch } = searchSlice.actions
 
 export default searchSlice.reducer

@@ -371,6 +371,24 @@ class Datafetch(object):
         
         elapsed = timeit.default_timer() - start_time
         return pd.concat(df_list)
+    
+    def _anno_contains_var(self, chr, pos, ref, alt):
+        if self.conn[threading.get_ident()].row_factory is None:
+            self.conn[threading.get_ident()].row_factory = sqlite3.Row
+        c = self.conn[threading.get_ident()].cursor()         
+        query = 'SELECT * FROM anno WHERE variant = "%s";' % (str(chr) + ':' + str(pos) + ':' + ref + ':' + alt)
+        c.execute(query)
+        res = c.fetchone()
+        r = [0, 0]
+        if len(res) > 0:
+            src = dict(res)['in_data']
+            if src == 3:
+                r = [1, 1] # both
+            elif src == 1:
+                r = [1, 0] # imputed only
+            else:
+                r = [0, 1] # chip only
+        return r
 
     def get_variants(self, variants, filters, data_type):
         start_time = timeit.default_timer()
@@ -412,15 +430,7 @@ class Datafetch(object):
             'geo_data': self.geo_data,
             'release_version': self.conf['release_version']
         }
-
-    def vcf_contains_var(self, variant, data_type):
-        chr, pos, ref, alt = utils.parse_variant(variant)
-        var_data = self._get_genotype_data(chr, pos, ref, alt, data_type)
-        if var_data is not None:
-            return True
-        else:
-            return False
-
+    
     def write_variants(self, variants, filters, data_type):
         vars_data = []
         for variant in variants.split(','):
@@ -507,3 +517,42 @@ class Datafetch(object):
             'columns': cols,
             'data': data
         }
+    
+    def vcf_contains_var(self, variant, data_type):
+        chr, pos, ref, alt = utils.parse_variant(variant)
+        var_data = self._get_genotype_data(chr, pos, ref, alt, data_type)
+        if var_data is not None:
+            return True
+        else:
+            return False
+
+    def get_var_sources(self, variants, search_data_type):
+
+        # extract possible datatypes for the variants in a query
+        # if var is not in the {data type} vcf or anno db, src is 0
+        vars_imp = []
+        vars_chip = []
+        for v in variants.split(','):
+
+            # check if var is in vcf
+            chr, pos, ref, alt = utils.parse_variant(v)
+            var_imputed_vcf = int(self.vcf_contains_var(v, 'imputed'))
+            var_chip_vcf = int(self.vcf_contains_var(v, 'chip'))
+            
+            # check if var is in annotation db
+            var_anno  = self._anno_contains_var(chr, pos, ref, alt)
+
+            # var exists in both, anno and vcf
+            var_imputed = (var_imputed_vcf and var_anno[0])
+            var_chip = (var_chip_vcf and var_anno[1])
+            vars_imp.append(var_imputed)
+            vars_chip.append(var_chip)
+
+        # check if the variants exist
+        src = {
+            'imputed': max(set(vars_imp)),
+            'chip': max(set(vars_chip))
+        }
+
+        return src
+    
