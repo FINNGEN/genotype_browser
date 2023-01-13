@@ -67,8 +67,6 @@ def variants(variants):
             if not data_src['chip'] and data_src['imputed']:
                 fetch_dtype = 'imputed'
         data = fetch.get_variants(variants, request.args.to_dict(), fetch_dtype)
-        
-        # append data to the 
         data['data_type'] = fetch_dtype
         data['dtype_src'] = data_src
         
