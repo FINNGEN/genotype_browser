@@ -136,25 +136,22 @@ def getData(variant, filters, data_type):
     chr = int(chr)
     pos = int(pos)
     with app.app_context():
+
         # get write data from genotype browser
         try:
             response = fetch.write_variants(variant, filters.copy(), data_type)
         except ValueError as e:
-            # print("ValueError :: %s" % e)
             dat_gb_full = None
         else:
             text = response.data
             dat_gb_full = pd.read_csv(io.StringIO(text.decode()), sep='\t', low_memory=False)
-            # dat_gb = dat_gb[['FINNGENID', 'gt']]
             dat_gb_full.index = list(dat_gb_full['FINNGENID'])
         
-        # extract genotypes directly from the vcf directly
+        # extract genotypes from the vcf directly
         if data_type == 'imputed':
             vcf = config['vcf_files']['imputed_data'][chr-1]
         else:
             vcf = config['vcf_files']['chip_data'][chr-1]
-        
-        # check vcf files
         x = pysam.TabixFile(vcf, parser=None)
         gt_data = x.fetch("chr%s" % chr_search, pos - 1, pos)
         gt = None
@@ -164,7 +161,7 @@ def getData(variant, filters, data_type):
                 gt = data
                 break
         
-        # construct data frame
+        # construct data frame containing genotypes extracted from vcf
         if gt is None:
             dat_vcf = None
         else:
@@ -175,11 +172,13 @@ def getData(variant, filters, data_type):
             dat_vcf = d[['FINNGENID', 'gt']]
             dat_vcf.index = list(dat_vcf['FINNGENID'])
         
-        # re-order
+        # re-order the dataframe containing genotypes extracted from vcf
+        # based on the sample order in the genotype browser's output
         dat_gb = None
         if dat_gb_full is not None:
             dat_gb = dat_gb_full[['FINNGENID', 'gt']].copy()
-            dat_vcf = dat_vcf.loc[list(dat_gb.index), :]
+            if  dat_vcf is not None:
+                dat_vcf = dat_vcf.loc[list(dat_gb.index), :]
     
     return dat_vcf, dat_gb, dat_gb_full
 
