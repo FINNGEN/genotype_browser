@@ -1,11 +1,12 @@
 # DATA PREPARATION FOR THE GENOTYPE BROWSER
 ## Requirements:
+ -      make sure you have cloned the genotype browser repo and that you have installed the required packages (please refer to the main readme)
  -	tabix package: apt-get update && apt-get install tabix
  -	to use pandas read_csv (>=0.24) to read gcs objects : pip install gcsfs 
  
 The inputs needed for preparing the sqlite database for genotype browser should be given in a text file (e.g. see ‘GB_input_R9.txt’ in this folder). These inputs include the following:
 
-1.	**OUTPUT_PATH**: The path for all the outputs of the ‘prepare_genotypeB_input.sh’, default is "$HOME/GB_out". 
+1.	**OUTPUT_PATH**: The path for all the outputs of the ‘prepare_genotypeB_input.sh’, default is "$HOME/GB_out_$RELEASE_PREFIX". 
 
 2.	**RELEASE_PREFIX**: The release number to be added to the output files in the format ^[rR][0-9]+$  e.g r9 or R9
 
@@ -38,5 +39,5 @@ The inputs needed for preparing the sqlite database for genotype browser should 
 
 ## How to run the script
 ```
-prepare_genotypeB_input.sh <file_containing_inputs e.g. GB_input_R9.txt>
+./prepare_genotypeB_input.sh <file_containing_inputs e.g. GB_input_R9.txt>
 ```
