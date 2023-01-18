@@ -38,6 +38,14 @@ def index(path):
 def find(query):
     try:
         result = search.search(query)
+        if result['type'] == 'variant':            
+            in_vcf = []
+            for v in result['ids']:
+                var_in_imputed = int(fetch.vcf_contains_var(v, 'imputed'))
+                var_in_chip = int(fetch.vcf_contains_var(v, 'chip'))
+                in_vcf.append(var_in_imputed or var_in_chip)
+            if sum(in_vcf) == 0:
+                raise NotFoundException(query)
     except ParseException as e:
         abort(400, 'could not parse given query to anything useful')
     except NotFoundException as e:
@@ -47,8 +55,21 @@ def find(query):
 @app.route('/api/v1/variants/<variants>')
 def variants(variants):
     try:
-        data_type = request.args.get('data_type')     
-        data = fetch.get_variants(variants, request.args.to_dict(), data_type)
+        data_type = request.args.get('data_type')
+        data_src = fetch.get_var_sources(variants, data_type)
+        fetch_dtype = data_type
+        if data_type == 'imputed':
+            # if variant exists in chip but not in imputed
+            if not data_src['imputed'] and data_src['chip']:
+                fetch_dtype = 'chip'
+        else:
+            # if variant exists in imputed but not in chip
+            if not data_src['chip'] and data_src['imputed']:
+                fetch_dtype = 'imputed'
+        data = fetch.get_variants(variants, request.args.to_dict(), fetch_dtype)
+        data['data_type'] = fetch_dtype
+        data['dtype_src'] = data_src
+        
     except ParseException as e:
         abort(400, 'could not parse given variant(s)')
     except NotFoundException as e:

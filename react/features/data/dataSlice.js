@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
+import { createSlice, createAsyncThunk, createAction } from '@reduxjs/toolkit'
 
 // http://crocodillon.com/blog/always-catch-localstorage-security-and-quota-exceeded-errors
 function isQuotaExceeded(e) {
@@ -50,9 +50,8 @@ export const writeData = createAsyncThunk('data/writeData', async (url, { reject
     }
 })
 
-export const dataSlice = createSlice({
-    name: 'data',
-    initialState: {
+export const reset = createAction('REVERT_ALL');
+const initialState = {
 	data: null,
 	status: 'idle',
 	write_status: 'idle',
@@ -83,7 +82,11 @@ export const dataSlice = createSlice({
 	serverOptions: {
 	    hethom: false // whether to count individuals heterozygous for more than one variant as homozygous
 	}
-    },
+}
+
+export const dataSlice = createSlice({
+    name: 'data',
+    initialState: initialState,
     reducers: {
 	setData: (state, action) => {
 	    state.data = action.payload
@@ -110,7 +113,8 @@ export const dataSlice = createSlice({
 	},
 	setDataType: (state, action) => {
 	    state.data_type = action.payload.content
-	}
+	},
+	resetData: () => initialState
     },
     extraReducers: {
 	// automatically called by asyncthunks
@@ -125,19 +129,21 @@ export const dataSlice = createSlice({
 	    state.time = action.payload.time
 	    state.data_freeze =`[${action.payload.release_version}]` 
 	    state.geo_data = action.payload.geo_data['features']
+		state.data_type = action.payload.data_type
+		state.dtype_src = action.payload.dtype_src
+
 	    const ordered = {}
 	    Object.keys(action.payload.data.filters).sort().forEach(key => { ordered[key] = action.payload.data.filters[key] })
-	    try {
-		sessionStorage.setItem(`${action.payload.variants.join(',')}+${JSON.stringify(ordered)}+${state.data_type}`, JSON.stringify(action.payload.data))
-	    } catch(e) {
-		if (isQuotaExceeded(e)) {
-		    console.warn('sessionstorage quota exceeded (dataSlice), clear the storage!')
-		    sessionStorage.clear()
-		} else {
-		    alert(e)
-		}
-	    }
-	    //console.log(`${action.payload.variants.join(',')}+${JSON.stringify(ordered)}`)
+		try {
+			sessionStorage.setItem(`${action.payload.variants.join(',')}+${JSON.stringify(ordered)}+${action.payload.data_type}`, JSON.stringify(action.payload.data))
+		} catch(e) {
+			if (isQuotaExceeded(e)) {
+				console.warn('sessionstorage quota exceeded (dataSlice), clear the storage!')
+				sessionStorage.clear()
+			} else {
+				alert(e)
+			}
+		}		
 	},
 	[fetchData.rejected]: (state, action) => {
 	    state.status = 'failed'
@@ -157,7 +163,7 @@ export const dataSlice = createSlice({
     }
 })
 
-export const { setFilter, setOption, setServerOption, setData, setDataType, setDownloadOption } = dataSlice.actions
+export const { setFilter, setOption, setServerOption, setData, setDataType, setDownloadOption, resetData } = dataSlice.actions
 export const gtCount = state => (state.data.data && [state.data.data.het[0].length, state.data.data.hom_alt[0].length, state.data.data.wt_hom[0].length, state.data.data.missing[0].length])
 
 export default dataSlice.reducer

@@ -18,7 +18,6 @@ export const Variant = (props) => {
     const dtype = useSelector(state => state.data.data_type)  
     const search_status =  useSelector(state => state.search.status)
     const options = useSelector(state => state.data.options) 
-    const source = dtype == 'imputed' ? 'Imputed data' : 'Raw chip data' 
 
     var varlen = 1
     if (data != undefined){
@@ -35,11 +34,10 @@ export const Variant = (props) => {
 	    const unordered = {...data.filters, ...data.serverOptions, ...{'data_type': dtype}}
 	    const ordered = {}
 	    Object.keys(unordered).sort().forEach(key => { ordered[key] = unordered[key] })
-	    // console.log('Variant.js:', `${props.props.variant}+${JSON.stringify(ordered)}`)
-	    const stored = sessionStorage.getItem(`${props.props.variant}+${JSON.stringify(ordered)}`)
+		// console.log('Variant.js:', `${props.props.variant}+${JSON.stringify(ordered)}`)
+		const stored = sessionStorage.getItem(`${props.props.variant}+${JSON.stringify(ordered)}`)
 	    if (stored) {
-			// console.log('cache hit')
-	    	dispatch(setData(JSON.parse(stored)))
+			dispatch(setData(JSON.parse(stored)))
 	    } else if (data.status != 'loading') {
 	    	dispatch(fetchData(`/api/v1/variants/${props.props.variant}?` + new URLSearchParams({...data.filters, ...data.serverOptions, ...{'data_type': dtype}})))
 	    }
@@ -56,7 +54,7 @@ export const Variant = (props) => {
 	const errorMsg = data.error.status == 400 ?
 	      'Bad request, did you format the variant correctly? e.g. 7-5397122-C-T' :
 	      data.error.status == 404 ?
-	      	`Variant${varlen > 1 ? 's' : ''} not found in ${source.toLowerCase()}.` :
+	      	`Variant${varlen > 1 ? 's' : ''} not found in either of the data sources.` :
 	      data.error.status == 500 ?
 	      'Internal server error, let us know.' :
 	      `${data.error.status} oh no, something went wrong`

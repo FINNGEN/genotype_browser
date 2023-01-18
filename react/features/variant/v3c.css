@@ -3,13 +3,11 @@
   font-weight: normal;
 }
 
-
 #v3c-body{
   margin: 0px;
   padding: 0px;
   position: relative;
   font-weight: 400;
-  /* background-color: black; */
   transition: background-color 1s;
   font-size: 13px !important;
   line-height: 18px;
@@ -53,10 +51,6 @@ u{
   width: 100%;
   color: white;
   height: 37px;
-  /*position: fixed;
-  background-color: black;
-  top: 50%;
-  transform: translate(0, -250px);*/
 }
 
 .floatleft{
@@ -74,7 +68,7 @@ u{
 #table{
   float: left;
   padding: 4px 4px 0 4px;
-  width: 780px;
+  width: 800px;   
   border-width: 0 1px 0 0;
   border-style: solid;
   border-color: black;
@@ -110,9 +104,6 @@ u{
 
 }
 
-.transparent{
-  display: none;
-}
 
 .g_heading_circle{
   margin: 8px 0 0 10px;
@@ -123,13 +114,14 @@ u{
 }
 
 .g_heading_key{
-  margin: 7px 0 0 6px !important;
+  margin: 6px 0 0 3px !important;
   float: left;
-  font-weight: 400;
+  font-weight: 600;
 }
 
+
 .g_heading_value{
-  margin: 7px 0 0 3px !important;
+  margin: 6px 0 0 3px !important;
   float: left;
   font-weight: 600;
 }
@@ -140,14 +132,26 @@ u{
 
 .g_rect{
   position: absolute;
-  padding: 5px 10px 8px 5px;
+  display: flex;
+  flex-flow: row wrap;
+  padding: 15px;
   border-radius: 0 0 5px 5px;
   border-width: 2px 1px 1px 1px;
   border-style: solid;
   border-color: black;
   background-color: #FAF9F7;
-  display: inline-block;
+  width: 300px;
+}
+
+.g_rect_key{
+  width: 120px;
+  font-weight: 400;
+  min-height: 10px;
+}
+
+.g_rect_val{
   width: 180px;
+  font-weight: 800;
 }
 
 .g_rect_text{
@@ -176,6 +180,7 @@ z-index: -1;
   background-color: transparent;
   color: black;
   transition: color 0.4s, background-color 0.4s, border-color 0.4s;
+  /* font-family: 'Arimo', Helvetica, sans-serif */
 }
 
 .button_isoline{
@@ -198,7 +203,7 @@ z-index: -1;
 
 .button_specification{
   clear: both;
-  margin: 10px 0 0 2px;
+  margin: 15px 0 0 2px;
   width: 100%
 }
 
@@ -313,10 +318,25 @@ z-index: -1;
   margin-top: 5px;
   width: 85.4%;
   transition: width 1s;
+  overflow-x: scroll;
+  scroll-behavior: smooth;
+}
+
+#t_table::-webkit-scrollbar{
+  width: 7px;
+  height: 8px;
+  border-radius: 3px;
+  border-color: black;
+  border-width: 1px;
+  border-style: solid;
+}
+
+#t_table_inner{
+  width: 1300px;
 }
 
 #t_rows{
-  width: 100%;
+  width: fit-content;
   overflow-y: scroll;
   scroll-behavior: smooth;
 }
@@ -335,14 +355,15 @@ z-index: -1;
   border-radius: 3px;
 }
 
-.t_first{
-  padding: 5px 0 8px 6px;
-  float: left;
-  font-weight: 600;
+#t_firstrow {
+  width: fit-content;
+  display: flex;
+  height: 32px;
+  font-weight: 800;
 }
 
 .t_complete_row{
-  clear: both;
+  display: flex;
   height: 24px;
 }
 
@@ -351,46 +372,40 @@ z-index: -1;
   color: white;
 }
 
-
-.t_row{
-  padding: 4px 0 2px 6px;
-  float: left;
-  font-weight: 400;
-}
-
 .t_manual{
   padding: 1.5px 5px 1.5px 5px;
   float: left;
   font-weight: 400;
 }
 
-.t_cell_xl{
-  width: 71px;
+.cell_xl{
+  width: 300px;
+  padding: 4px 0 2px 0;
+}
+
+.cell_l{
+  width: 110px;
+  padding: 4px 0 2px 4px;
+}
+
+.cell_m{
+  width: 90px;
+  padding: 4px 0 2px 0;
+}
+
+.cell_s{
+  width: 85px;
+  padding: 4px 20px 2px 0;
   text-align: right;
-  padding-right: 18px;
 }
 
-.t_cell_l{
-  width: 92px;
-}
-
-.t_cell_m{
-  width: 73px;
-}
-
-.t_cell_s{
-  width: 48px;
-}
-
-.t_cell_xs{
-  width: 15px;
-  height: 15px;
+.cell_xs{
+  width: 60px;
   padding: 4px 0 0 5px;
-  font-size: 11px;
 }
 
-.t_table_circle{
-  margin: 2px 6px 0 0;
+.t_circle{
+  margin: 3px 6px 0 0;
   float: left;
   width: 12px;
   height: 12px;
@@ -417,10 +432,10 @@ z-index: -1;
 
 #b_manual_change{
   margin: 40px auto 40px auto;
-  width: 60%;
-  left: 20%;
+  left: 50%;
   position: relative;
 }
+
 
 .b_zoom_controllers{
   opacity: 0;
@@ -431,8 +446,8 @@ z-index: -1;
   border-width: 1px 0 0 0;
   border-style: solid;
   border-color: black;
-  width: 100%;
-  float: left;
+  width: fit-content;
+  display: flex;
   margin: 26px 0 5px 0;
 }
 
@@ -442,9 +457,9 @@ z-index: -1;
 }
 
 .t_sum_graph{
-  width: 100%;
+  background-color: #EDECEA;
+  width: 90%;
   height: 40px;
-  background-color: #FAF9F7;
   margin: 10px 0 6px 0;
 }
 
@@ -463,6 +478,8 @@ select {
   border-radius: 4px;
   padding: 0 1em 0 0;
   margin: 0;
+  position: relative;
+  top: -2px;
   width: 100%;
   font-family: inherit;
   font-size: inherit;
@@ -475,7 +492,7 @@ select:hover{
   color: white;
 }
 
-body.waiting * {
+#v3c-body.waiting * {
   cursor: progress;
 }
 
@@ -498,4 +515,8 @@ body.waiting * {
 
 #h_reset{
   padding: 5px 5px 1px 5px;
+}
+
+.transparent{
+  display: none;
 }

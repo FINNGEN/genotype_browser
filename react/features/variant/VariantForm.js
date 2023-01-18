@@ -1,29 +1,33 @@
 import React, { useState, useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { setFilter, setOption, setServerOption, setDataType, setDownloadOption } from '../data/dataSlice'
-import validator from 'validator'
 import './styles.css'
 
 
 export const VariantForm = (props) => {
-
     const dispatch = useDispatch()
     const filters = useSelector(state => state.data.filters)
     const annotation = useSelector(state => state.data.annotation)
     const variants = useSelector(state => state.data.variants)
-    const write_status = useSelector(state => state.data.write_status)
-    const write_result = useSelector(state => state.data.write_result)
     const [gp, setGP] = useState(filters.gpThres)
-    const state_data = useSelector(state => state.data.data)
     const dtype = useSelector(state => state.data.data_type) 
     const data = useSelector(state => state.data)
     const data_freeze = useSelector(state => state.data.data_freeze)
     const downloadOptions = useSelector(state => state.data.downloadOptions)
-    const search_status =  useSelector(state => state.search.status)
+	// const search_status = useSelector(state => state.data.status)
+	const search_status = useSelector(state => state.search.status)
 
-    var source = null
-	if (state_data != null){
-	    source = state_data.data_type == 'imputed' ? 'Imputed data' : 'Raw chip data' 
+	useEffect(() => {
+		dispatch(setDataType({content: data.data_type}))
+	}, [data.data])
+
+    var source = null,
+		disable_imputed_btn = false,
+		disable_chip_btn = false;
+	if (data.data != null){
+	    source = data.data.data_type == 'imputed' ? 'Imputed data' : 'Raw chip data';
+		disable_imputed_btn = !data.dtype_src.imputed;
+		disable_chip_btn = !data.dtype_src.chip;
 	}
 
     const filterChanged = (filt, value, event) => {
@@ -206,16 +210,20 @@ export const VariantForm = (props) => {
 	</div> : null
 
 	var render_content = (
-
 		<div>
-		<div style={{paddingRight: '10px'}}>
-        <input type="radio" value="imputed" id="imputed" name="dtype" checked={dtype == 'imputed'} onChange={handleDataTypeChange} />
-        <label>Imputed data</label>
-        <input type="radio" value="chip" id="chip" name="dtype" checked={dtype == 'chip'} onChange={handleDataTypeChange} />
-        <label>Raw FinnGen chip data</label>
-        </div>
-
+			<div style={{paddingRight: '10px'}}>
+			<input type="radio" value="imputed" id="imputed" name="dtype" 
+				disabled={disable_imputed_btn} checked={dtype == 'imputed'} 
+				onChange={handleDataTypeChange} />
+			<label style={{ color: disable_imputed_btn ? "#D4D4D4" : "black"}} >Imputed data</label>
+			<input type="radio" value="chip" id="chip" name="dtype" 
+				disabled={disable_chip_btn} checked={dtype == 'chip'} 
+				onChange={handleDataTypeChange} />
+			<label style={{ color: disable_chip_btn ? "#D4D4D4" : "black"}} >Raw FinnGen chip data</label>
+			</div>
+		
 		<div><h3>{data_freeze} { variants != undefined ? variants.join(',') : props.props['variant']}</h3></div>
+
 		<div style={{marginTop: "10px"}}>
 			    {anno}
 			    <div style={{display: 'flex', marginTop: "30px"}}>
@@ -333,7 +341,7 @@ export const VariantForm = (props) => {
 		</div>
 	)
 
-     return (
-    	search_status == 'failed' ? '' : render_content
+    return (
+		search_status == 'failed' ? '' : render_content
     )
 }
