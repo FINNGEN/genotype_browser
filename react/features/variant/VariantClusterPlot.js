@@ -17,12 +17,14 @@ export const VariantClusterPlot = () => {
     let vizWidth = window.innerWidth
     let vizHeight = window.innerHeight;
 
-    let svg_height = vizHeight - 285;
-    let svg_width = vizWidth - 900;
+    let graph_height = vizHeight - 285;
+    let graph_width = vizWidth - 900;
+    let svg_size = 600
+    
     let m = 8;
-    let u = svg_height/12;
-    let x_axis = svg_width - u - m;
-    let y_axis = svg_height - u - m;
+    let u = svg_size/12;
+    let x_axis = svg_size - u - m;
+    let y_axis = svg_size - u - m;
 
     // add error handling here!
     useEffect (() => {
@@ -320,38 +322,42 @@ export const VariantClusterPlot = () => {
                     .text(d=>d.value);
             }
 
+            d3.select('#graph').style('width', graph_width + 'px')
+
             var g_svg = d3.select('#graph').select('svg')
                 .style('background-color', '#EDECEA')
                 .style('cursor', 'grab')
+                .attr('viewBox', `0 0 ${svg_size} ${svg_size}`)
+                .style('width',  graph_width + 'px')
+                .style('height', graph_height + 'px')
                 .on('mouseenter', ()=>{d3.selectAll('.b_zoom_controllers').style('opacity', '1');})
                 .on('mouseleave', ()=>{d3.selectAll('.b_zoom_controllers').style('opacity', '0');})
-                
-            g_svg.call(d3.zoom().on("zoom", e => {
-                if (d3.select('#b_selection_new').classed('button_active')) return null
-                else {
-                    zoom_x = e.transform.x;
-                    zoom_y = e.transform.y;
-                    e.transform.k = zoom_k;
-
-                    zoom_extent_x = [(extent_ref[0] - zoom_x*5) / zoom_k, (extent_ref[1] - zoom_x) / zoom_k];
-                    zoom_extent_y = [(extent_alt[0] + zoom_y*5) / zoom_k, (extent_alt[1] + zoom_y) / zoom_k];
-
-                    arrayOfClickedSpots = []
-
-                    if (zoom_extent_x[0] < 1) zoom_extent_x[0] = 1;
-                    if (zoom_extent_y[0] < 1) zoom_extent_y[0] = 1;
-                
-                    cx = d3.scaleLog().domain(zoom_extent_x).range([u, x_axis + u]);
-                    cy = d3.scaleLog().domain(zoom_extent_y).range([y_axis, m]);
-
-                    d3.select('#g_axis').remove();
-                    showZoomReset();
-                    erasePolygon();
-                    drawAxes();
-                    drawDots(data_visible);
-                    drawExomeLocations();
-                }
-            })).on('wheel.zoom', null);
+                .call(d3.zoom().on("zoom", e => {
+                    if (d3.select('#b_selection_new').classed('button_active')) return null
+                    else {
+                        zoom_x = e.transform.x;
+                        zoom_y = e.transform.y;
+    
+                        zoom_extent_x = [(extent_ref[0] - zoom_x*5) / zoom_k, (extent_ref[1] - zoom_x) / zoom_k];
+                        zoom_extent_y = [(extent_alt[0] + zoom_y*5) / zoom_k, (extent_alt[1] + zoom_y) / zoom_k];
+    
+                        arrayOfClickedSpots = []
+    
+                        if (zoom_extent_x[0] < 1) zoom_extent_x[0] = 1;
+                        if (zoom_extent_y[0] < 1) zoom_extent_y[0] = 1;
+                    
+                        cx = d3.scaleLog().domain(zoom_extent_x).range([u, x_axis + u]);
+                        cy = d3.scaleLog().domain(zoom_extent_y).range([y_axis, m]);
+    
+                        d3.select('#g_axis').remove();
+                        showZoomReset();
+                        erasePolygon();
+                        drawAxes();
+                        drawDots(data_visible);
+                        drawExomeLocations();
+                        g_svg.style('cursor', 'grab');
+                }}))
+                .on('wheel.zoom', null);
 
             //Graph buttons
             d3.select('#b_selection_filtered').data(data_total).on("click",function(){
@@ -633,11 +639,8 @@ export const VariantClusterPlot = () => {
 
             //Svg
             function drawAxes(){
-                d3.select('#graph').style('width', svg_width + 'px').style('height', svg_height + 111 + 'px')
-                g_svg.attr('height', svg_height).attr('width', svg_width)
-
                 var g_axis = g_svg.append('g').attr('id' , 'g_axis'),
-                    g_axis_x_translation = svg_height - 50,
+                    g_axis_x_translation = graph_height - 50,
                     g_axis_y_translation = 43;
 
                 var g_axis_x = d3.axisBottom().scale(cx).ticks(6, "~s");
@@ -840,9 +843,9 @@ export const VariantClusterPlot = () => {
             })}
 
             // TABLE
-            d3.select('#table').style('height', svg_height + 111 + 'px')
-            d3.select('#t_rows').style('height', svg_height - 120 + 'px')
-            d3.select('#t_manual_add').style('height', svg_height + 42 + 'px')
+            d3.select('#table').style('height', graph_height + 111 + 'px')
+            d3.select('#t_rows').style('height', graph_height - 120 + 'px')
+            d3.select('#t_manual_add').style('height', graph_height + 42 + 'px')
             
             var t_sum = d3.select('#t_sums')
 
@@ -1113,8 +1116,17 @@ export const VariantClusterPlot = () => {
             // Selection
             g_svg.on('click', (e,d)=>{
                 if (d3.select('#b_selection_new').classed('button_active')){
-                    var plot = document.getElementById('v3c-svg').getBoundingClientRect();
-                    arrayOfClickedSpots.push([e.clientX - plot.left, e.clientY - plot.bottom + plot.height]);
+                    // var plot = document.getElementById('v3c-svg').getBoundingClientRect();
+                    // arrayOfClickedSpots.push([e.clientX - plot.left, e.clientY - plot.bottom + plot.height]);
+                    var graph_scale = Math.min(graph_width, graph_height) / svg_size;
+                    var svg_X = document.getElementById('g_axis').getBoundingClientRect().x,
+                        svg_Y = document.getElementById('g_axis').getBoundingClientRect().y - 5*graph_scale;
+                    
+                    var coo_X = (e.clientX - svg_X) / graph_scale,
+                        coo_Y = (e.clientY - svg_Y) / graph_scale
+
+                    arrayOfClickedSpots.push([coo_X, coo_Y]);
+                    
                     g_svg.select('.g_selection_path')
                         .attr('d',`M${arrayOfClickedSpots.join('L')}Z`)
                         .attr('fill', '#555')
@@ -1123,8 +1135,10 @@ export const VariantClusterPlot = () => {
                         .attr('opacity', '0.2');
 
                     g_svg.select('.g_selection_dots').append('circle')
-                        .attr('cx',e.clientX - plot.left)
-                        .attr('cy', e.clientY - plot.bottom + plot.height)
+                        // .attr('cx',e.clientX - plot.left)
+                        // .attr('cy', e.clientY - plot.bottom + plot.height)
+                        .attr('cx', coo_X)
+                        .attr('cy', coo_Y)
                         .attr('r', 2)
                         .attr('fill', '#000');
 
@@ -1149,7 +1163,7 @@ export const VariantClusterPlot = () => {
 
             //PANEL
             // d3.select('#panel').style('width', svg_width + 793 + 'px')
-            d3.select('#panel').style('width', svg_width + 863 + 'px')
+            d3.select('#panel').style('width', graph_width + 863 + 'px')
             drawGroupFilterButtons()
             drawDensityButtons(data_total);
 
@@ -1390,7 +1404,7 @@ export const VariantClusterPlot = () => {
 
                     function getDataContours(a){
                         return d3.contourDensity().x(d => cx(d.intensity_ref)).y(d => cy(d.intensity_alt))
-                        .size([svg_width, svg_height]).bandwidth(30).thresholds(30)
+                        .size([graph_width, graph_height]).bandwidth(30).thresholds(30)
                         (a)
                     }
                 }
@@ -1419,33 +1433,21 @@ export const VariantClusterPlot = () => {
             })
 
         //RESPONSIVE
-        window.addEventListener('resize', function(){
-            console.log('ciao')
-            svg_height = window.innerHeight - 285
-            svg_width = document.getElementsByTagName('body')[0].clientWidth - 900     
-                        
-            u = svg_height/12
-            x_axis = svg_width - u - m
-            y_axis = svg_height - u - m
-
-            cx = d3.scaleLog().domain(zoom_extent_x).range([u, x_axis + u]);
-            cy = d3.scaleLog().domain(zoom_extent_y).range([y_axis, m]);
-
-            arrayOfClickedSpots = [];
-
-            // d3.select('#panel').style('width', svg_width + 793 + 'px');
-            d3.select('#panel').style('width', svg_width + 863 + 'px');
-            d3.select('#table').style('height', svg_height + 111 + 'px');
-            d3.select('#g_axis').remove();
-            drawAxes();
-            d3.select('#t_rows').style('height', svg_height - 120 + 'px')
-            d3.select('#t_manual_add').style('height', svg_height + 42 + 'px')
+        window.addEventListener('resize', () => {
+            graph_height = window.innerHeight - 285
+            graph_width = document.getElementsByTagName('body')[0].clientWidth - 900
+    
+            d3.select('#graph').style('width', graph_width + 'px')
+            d3.select('#graph').select('svg').style('width', graph_width + 'px').style('height', graph_height + 'px')
+            d3.select('#panel').style('width', graph_width + 863 + 'px');
+            d3.select('#table').style('height', graph_height + 111 + 'px');
+            d3.select('#t_rows').style('height', graph_height - 120 + 'px')
+            d3.select('#t_manual_add').style('height', graph_height + 42 + 'px')
             d3.select('#b_overlay_density').selectAll('button').attr('class', 'button_secondary');
             d3.select('#g_isolines').selectAll('g').remove();
             drawSums(data_selection);
-            drawDots(data_visible);
             drawExomeLocations();
-            erasePolygon();
+            // erasePolygon();
         }, true)
 
     }
@@ -1489,7 +1491,7 @@ export const VariantClusterPlot = () => {
             <button id='b_zoom_more' className="b_zoom_controllers v3c-button" style={{float: 'right', width: '30px'}}>+</button>
             <button id='b_zoom_k' className="b_zoom_controllers v3c-button" style={{float: 'right', width: '55px'}}>x1</button>
         </div>
-        <svg id="v3c-svg">
+        <svg id="v3c-svg" preserveAspectRatio="xMidYMid meet">
             <g id="g_dots"></g>
             <g id="g_isolines"  className="transparent"></g>
             <g id="g_exomelocations" className="transparent"></g>
