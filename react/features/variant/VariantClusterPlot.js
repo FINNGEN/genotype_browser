@@ -19,7 +19,7 @@ export const VariantClusterPlot = () => {
 
     let graph_height = vizHeight - 285;
     let graph_width = vizWidth - 900;
-    let svg_size = 600
+    let svg_size = 600;    
     
     let m = 8;
     let u = svg_size/12;
@@ -640,7 +640,7 @@ export const VariantClusterPlot = () => {
             //Svg
             function drawAxes(){
                 var g_axis = g_svg.append('g').attr('id' , 'g_axis'),
-                    g_axis_x_translation = graph_height - 50,
+                    g_axis_x_translation = svg_size - 50,
                     g_axis_y_translation = 43;
 
                 var g_axis_x = d3.axisBottom().scale(cx).ticks(6, "~s");
@@ -1456,8 +1456,7 @@ export const VariantClusterPlot = () => {
 
     return (
 
-    <div id="flex-div" style={{display: drop_plot ? "none" : 'flex', flexDirection: "row", justifyContent: "left"}}>
-    <div id="v3c-body">
+    <div id="flex-div" style={{display: "flex", flexDirection: "row", justifyContent: "left"}}>
 
     {
         drop_plot ? 
@@ -1465,6 +1464,8 @@ export const VariantClusterPlot = () => {
             <p style={{color: 'red'}}>{error_message}</p> 
         </div> : null
     }
+
+    <div id="v3c-body"  style={{display: drop_plot ? "none" : null }}>
 
     <div id="header" style={{backgroundColor: drop_plot ? null :  'black'}}>
         <div id="h_description">
