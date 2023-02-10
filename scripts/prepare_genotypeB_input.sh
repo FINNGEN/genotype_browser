@@ -14,8 +14,7 @@ OPTIONS:
    RELEASE_PREFIX :	should start with r or R and then the release number e.g. r9 or R9
    FGFACTORY_PASS_SAMPLES:	colon-separated file containing FinnGen factory pass samples and additional informatioon on the batch, cohort, number of variants, etc. ,found in red library
    FINNGEN_ENDPOINT :	FinnGen endpoints,found in red library
-   FINNGEN_MINIMUM_DATA :	FinnGen minimum phenotype data,found in red library
-   FINNGEN_COHORT_DATA :	tab-separated FinnGen cohort file with two columns,found in red library
+   FINNGEN_MINIMUM_COHORT_DATA :	FinnGen minimum phenotype data also containing cohort columns starting from df11,found in red library
    IMPU_RELEASE_VARIANT_ANNOTATION_FILE :    variant annotation file prepared by analysis team for imputed data
    CHIP_RELEASE_VARIANT_ANNOTATION_FILE :    variant annotation file prepared by analysis team for chip data
    
@@ -59,8 +58,7 @@ mkdir -p "$OUTPUT_PATH"
 [[ ! $RELEASE_PREFIX =~ ^[rR][0-9]+$ ]] && echo "--- Arg RELEASE_PREFIX missing OR not in the correct format ---" && usage
 [ -z $FGFACTORY_PASS_SAMPLES ] && echo "--- Arg FGFACTORY_PASS_SAMPLES missing ---" && usage
 [ -z $FINNGEN_ENDPOINT ] && echo "--- Arg FINNGEN_ENDPOINT missing ---" && usage
-[ -z $FINNGEN_MINIMUM_DATA ] && echo "--- Arg FINNGEN_MINIMUM_DATA missing ---" && usage
-[ -z $FINNGEN_COHORT_DATA ] && echo "--- Arg FINNGEN_COHORT_DATA missing ---" && usage
+[ -z $FINNGEN_MINIMUM_COHORT_DATA ] && echo "--- Arg FINNGEN_MINIMUM_COHORT_DATA missing ---" && usage
 [ -z $IMPU_RELEASE_VARIANT_ANNOTATION_FILE ] && echo "--- Arg IMPU_RELEASE_VARIANT_ANNOTATION_FILE missing ---" && usage
 [ -z $CHIP_RELEASE_VARIANT_ANNOTATION_FILE ] && echo "--- Arg CHIP_RELEASE_VARIANT_ANNOTATION_FILE missing ---" && usage
 
@@ -85,7 +83,7 @@ echo "STEP 1: Prepare basic info phenotype file"
 # make sure you are in the scripts directory or give the full path of the scripts
 
 python3 merge_basic_info.py -s "${OUTPUT_PATH}/SAMPLE_LIST_${RELEASE_PREFIX}.txt" -d "${OUTPUT_PATH}/FINNGEN_ENDPOINT_DEATH_EXTRACTED_${RELEASE_PREFIX}.txt" \
--m "$FINNGEN_MINIMUM_DATA" -c "$FINNGEN_COHORT_DATA" -a "$FGFACTORY_PASS_SAMPLES" -o "${OUTPUT_PATH}/BASIC_INFO_PHENOTYPE_FILE_${RELEASE_PREFIX}.txt"
+-m "$FINNGEN_MINIMUM_COHORT_DATA" -a "$FGFACTORY_PASS_SAMPLES" -o "${OUTPUT_PATH}/BASIC_INFO_PHENOTYPE_FILE_${RELEASE_PREFIX}.txt"
 
 echo "STEP 2. Prepare chips"
 
