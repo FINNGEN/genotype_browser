@@ -20,15 +20,12 @@ The inputs needed for preparing the sqlite database for genotype browser should 
 
 4.	**FINNGEN_ENDPOINT**: Finngen endpoint usually found in red library
 
-5.	**FINNGEN_MINIMUM_DATA**: FinnGen minimum phenotype data with the following columns:
+5.	**FINNGEN_MINIMUM_COHORT_DATA**: FinnGen minimum phenotype data containing also the cohort column starting from df11,with the following columns:
 	- FINNGENID: study ID;
 	- BL_YEAR: year of DNA sample collection;
 	- BL_AGE: age at DNA sample collection;
 	- SEX: gender of individual;
 	- regionofbirthname: regional councils numbers for region of birth according to Finnish Minister of the Interior.
-
-6.	**FINNGEN_COHORT_DATA**: tab-separated FinnGen cohort file with two columns:
-	- FINNGENID: study ID;
 	- cohort: includes name of the cohort which each sample belongs to.
 
 7.	**IMPU_RELEASE_VARIANT_ANNOTATION_FILE**: file produced by analysis team's annotation pipeline. File contains scraped fields from released imputed merged VCF files joined with external (e.g. VEP) annotation which includes annotation of variants with AF, INFO, consequence etc, one variant per row. Find more on file preparation in the following links: https://github.com/FINNGEN/finngen-analysis-overview#release-variant-annotation-file- and https://github.com/FINNGEN/commons/tree/master/variant_annotation. In short variants from each release (if they are different from the previous release or the VEP annotation need to be changed) are annotated with the VEP/hail pipeline. Then that annotation file is joined with INFO fields scraped from all the imputed vcf files using a version of the “scrape_annot[_VERSION].wdl” workflow depending on the version of the imputation panel used for imputation. As long as the imputation panel or the VEP annotation doesn’t change, this file stays the same across releases. The produced annotation file (starting from release9) will also contain rsids which are needed in latter steps.
