@@ -102,6 +102,7 @@ export const VariantPlotMap = () => {
 		svg.selectAll("*").remove()
 
 		svg.append("svg")
+			.attr("id", "mapSVG")
 			.selectAll('path')
 			.data(svg_data)
 		    .enter()
