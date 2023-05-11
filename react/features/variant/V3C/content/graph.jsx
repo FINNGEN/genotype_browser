@@ -82,7 +82,7 @@ function Graph (props) {
         svg.setAttribute('height', svg.getBoundingClientRect().height + 20)
         svg.setAttribute('class', 'transparent')
 
-        const source = (new XMLSerializer).serializeToString(svg);
+        const source = new XMLSerializer().serializeToString(svg);
         const image = `data:image/svg+xml,${encodeURIComponent(source)}`
 
         const link = document.getElementById("a_export_chart_svg")
@@ -91,29 +91,36 @@ function Graph (props) {
     }
 
     function exportChartJPG(){
-        const svg = d3.select("#g_svg").node();
-        var width = svg.getBoundingClientRect().width,
+        const svg = d3.select("#g_svg").attr('width', '2000px').attr('height', '2000px').node();
+        const width = svg.getBoundingClientRect().width,
             height = svg.getBoundingClientRect().height;
         
-        const source = new XMLSerializer().serializeToString(svg);
-        var DOMURL = window.self.URL || window.self.webkitURL || window.self;
-        var img = new Image();
-        var svgAbs = new Blob([source], {type: "image/svg+xml;charset=utf-8"});
-        var url = DOMURL.createObjectURL(svgAbs);
+        var source = new XMLSerializer().serializeToString(svg);
+        if(!source.match(/^<svg[^>]+xmlns="http\:\/\/www\.w3\.org\/2000\/svg"/)) source = source.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
+        if(!source.match(/^<svg[^>]+"http\:\/\/www\.w3\.org\/1999\/xlink"/)) source = source.replace(/^<svg/, '<svg xmlns:xlink="http://www.w3.org/1999/xlink"');
+        source = '<?xml version="1.0" standalone="no"?>\r\n' + source;
+        
+        /* eslint-disable-next-line no-restricted-globals */
+        var DOMURL = self.URL || self.webkitURL || self.mozURL || self;
+
+        const img = new Image();
+        const svgAbs = new Blob([source], {type: "image/svg+xml"});
+        const url = DOMURL.createObjectURL(svgAbs);
 
         img.onload = function() {
             let canvas = document.createElement('canvas')
             canvas.width = width;
             canvas.height = height;
-            var context = canvas.getContext("2d");
+            const context = canvas.getContext("2d");
             context.drawImage(img, 0, 0);
-            var image = canvas.toDataURL("image/jpeg", 1.0);
+            const image = canvas.toDataURL("image/jpeg", 1);
 
             const link = document.getElementById("a_export_chart_jpg")
             link.setAttribute("href", image)
-            link.setAttribute("download", "chart_" + chr + "_" + pos + "_" + vRef + "_" + vAlt + "_export_"+ props.date + ".jpg")
+            link.setAttribute("download", "chart_" + chr + "_" + pos + "_" + vRef + "_" + vAlt + "_export_" + props.date + ".jpg")
         };
         img.src = url;
+        d3.select("#g_svg").attr('width', undefined).attr('height', undefined)
     }
 
     useEffect(()=> {
@@ -197,9 +204,10 @@ function Graph (props) {
             })
     })
 
+
     return (
         <div id="graph" style={{width: contentWidth/2}}>
-            <div className="v3c-heading button">
+            <div className="heading button">
                 <button id='b_selection_new' className='button_primary button_fixed-width'>New selection</button>
                 <button id='b_selection_add' className='button_primary'>Add dots</button>
                 <button id='b_selection_filtered' className='button_primary'>Select all filtered dots</button>
