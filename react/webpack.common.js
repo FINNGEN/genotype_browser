@@ -36,7 +36,24 @@ module.exports = {
               enforce: "pre", 
               exclude: /node_modules/,
               use: ['source-map-loader']
-            }
+            },
+            { 
+              test: /\.jsx?$/,
+              exclude: /node_modules/,
+              loader: 'babel-loader',
+              options: { presets: ['@babel/env','@babel/preset-react'] }
+            },
+            {
+            test: /\.(woff(2)?|ttf|eot|svg)(\?v=\d+\.\d+\.\d+)?$/,
+            use: [
+                {
+                loader: 'file-loader',
+                options: {
+                    name: './font/[hash].[ext]'
+                }
+                }
+            ]
+              }
         ] 
     },
     plugins: [
