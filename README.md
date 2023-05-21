@@ -17,7 +17,12 @@ curl https://raw.githubusercontent.com/FINNGEN/genotype_browser/main/config/conf
 Run container from the above directory
 
 ```
-docker run -it -p 0.0.0.0:8080:8080/tcp -v `pwd`:/config finngen/genotype_browser:6373448
+docker run -it \-p 0.0.0.0:8080:8080/tcp -v `pwd`:/config finngen/genotype_browser:6373448
+```
+
+In case of accessing VCF files directly from Google Cloud Storage bucket, add the following flags when running docker image:
+```
+-e GCS_OAUTH_TOKEN=`gcloud auth print-access-token`
 ```
 
 ### Development
