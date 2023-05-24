@@ -3,14 +3,14 @@ FROM ubuntu:20.04
 ENV LC_ALL C.UTF-8
 ENV LANG C.UTF-8
 
-ARG HTSLIB_VER=1.10.2
+ARG HTSLIB_VER=1.17
 
 WORKDIR /tmp
 
 RUN apt-get update -y && apt-get upgrade -y
 
 # htslib (for tabix) requires zlib, bz2, lzma
-RUN apt-get install curl python3-pip zlib1g-dev libbz2-dev liblzma-dev -y
+RUN apt-get install curl python3-pip zlib1g-dev libbz2-dev liblzma-dev libcurl4-openssl-dev -y
 
 # add node archive
 RUN curl -sL https://deb.nodesource.com/setup_16.x | bash -
