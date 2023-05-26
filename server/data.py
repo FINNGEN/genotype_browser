@@ -11,8 +11,8 @@ import re
 class Datafetch(object):
 
     def _init_tabix(self):
-        self.vcfs_imputed = defaultdict(lambda: [file for file in self.conf['vcf_files']['imputed_data']])
-        self.vcfs_chip = defaultdict(lambda: [file for file in self.conf['vcf_files']['chip_data']])
+        self.vcfs_imputed = self.conf['vcf_files']['imputed_data']
+        self.vcfs_chip = self.conf['vcf_files']['chip_data']
 
     def _init_db(self):
         self.conn = defaultdict(lambda: sqlite3.connect(self.conf['sqlite_db']))
@@ -31,9 +31,9 @@ class Datafetch(object):
         info.index = info['FINNGENID']
 
         if select_chip:
-            vcf = self.vcfs_chip[threading.get_ident()][0]
+            vcf = self.vcfs_chip[0]
         else:
-            vcf = self.vcfs_imputed[threading.get_ident()][0]
+            vcf = self.vcfs_imputed[0]
         
         tabix_iter = pysam.TabixFile(vcf, parser=None)
 
@@ -103,10 +103,10 @@ class Datafetch(object):
     def _get_genotype_data(self, chr, pos, ref, alt, data_type):
         chr_var = chr if chr != 23 else 'X'
         if data_type == 'imputed':
-            vcf = self.vcfs_imputed[threading.get_ident()][chr-1]
+            vcf = self.vcfs_imputed[chr-1]
             samples = list(self.samples_imput['row_id'])
         else:
-            vcf = self.vcfs_chip[threading.get_ident()][chr-1]
+            vcf = self.vcfs_chip[chr-1]
             samples = list(self.samples_chip['row_id'])
 
         tabix_iter = pysam.TabixFile(vcf, parser=None).fetch('chr'+str(chr_var), pos-1, pos)
