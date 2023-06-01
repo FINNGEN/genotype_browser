@@ -42,7 +42,8 @@ export const VariantClusterPlot = () => {
                 } else if (response.status == 500){
                     var error = "Internal server error, let us know."
                     throw new Error(error)
-                } else{
+                }
+                else {
                     const data = await response.blob()
                     setError(null)
                     setServerData(data)
@@ -54,6 +55,12 @@ export const VariantClusterPlot = () => {
         }
         getData();
     }, [gbData])
+
+    useEffect (() => {
+        if (variants.length > 1){
+            setDropPlot(true)
+        }
+    })
 
     useEffect (() => {
         if (serverData.length !== 0){
@@ -138,7 +145,7 @@ export const VariantClusterPlot = () => {
                     <p style={{color: 'red'}}>{errorMessage}</p> 
                 </div> : null
             }
-            {serverData.length !== 0 && dataTotal.length !== 0 && chr !== undefined && (<>
+            {serverData.length !== 0 && dataTotal.length !== 0 && chr !== undefined && !dropPlot && (<>
                 <Header 
                     chr={chr} 
                     pos={pos} 

@@ -11,8 +11,8 @@ import re
 class Datafetch(object):
 
     def _init_tabix(self):
-        self.tabix_files_imputed = defaultdict(lambda: [pysam.TabixFile(file, parser=None) for file in self.conf['vcf_files']['imputed_data']])
-        self.tabix_files_chip = defaultdict(lambda: [pysam.TabixFile(file, parser=None) for file in self.conf['vcf_files']['chip_data']])
+        self.vcfs_imputed = self.conf['vcf_files']['imputed_data']
+        self.vcfs_chip = self.conf['vcf_files']['chip_data']
 
     def _init_db(self):
         self.conn = defaultdict(lambda: sqlite3.connect(self.conf['sqlite_db']))
@@ -31,9 +31,11 @@ class Datafetch(object):
         info.index = info['FINNGENID']
 
         if select_chip:
-            tabix_iter = self.tabix_files_chip[threading.get_ident()][0]
+            vcf = self.vcfs_chip[0]
         else:
-            tabix_iter = self.tabix_files_imputed[threading.get_ident()][0]
+            vcf = self.vcfs_imputed[0]
+        
+        tabix_iter = pysam.TabixFile(vcf, parser=None)
 
         # get the header from vcf files
         h = tabix_iter.header[len(tabix_iter.header) - 1].split('\t')
@@ -97,15 +99,17 @@ class Datafetch(object):
             return dict(res)
         else:
             raise utils.NotFoundException(str(chr) + '-' + str(pos) + '-' + ref + '-' + alt)
-        
+
     def _get_genotype_data(self, chr, pos, ref, alt, data_type):
         chr_var = chr if chr != 23 else 'X'
         if data_type == 'imputed':
-            tabix_iter = self.tabix_files_imputed[threading.get_ident()][chr-1].fetch('chr'+str(chr_var), pos-1, pos)
+            vcf = self.vcfs_imputed[chr-1]
             samples = list(self.samples_imput['row_id'])
         else:
-            tabix_iter = self.tabix_files_chip[threading.get_ident()][chr-1].fetch('chr'+str(chr_var), pos-1, pos)
+            vcf = self.vcfs_chip[chr-1]
             samples = list(self.samples_chip['row_id'])
+
+        tabix_iter = pysam.TabixFile(vcf, parser=None).fetch('chr'+str(chr_var), pos-1, pos)
 
         var_data = None
         for row in tabix_iter:
@@ -268,10 +272,12 @@ class Datafetch(object):
         hom_i = set(hom_i)
         wt_hom_i = set(wt_hom_i)
         missing_i = set(missing_i)
+
         # maybe treat multiheterozygotes as homozygotes
         if 'hethom' in filters and filters['hethom']:
             multihet = [i for i in het_cnt if het_cnt[i] > 1]
             hom_i = set().union(hom_i, multihet)
+            
         # if an individual is homozygous for a variant, don't count as heterozygous for other variants
         het = info_df.iloc[[i for i in het_i if i not in hom_i]]
         hom = info_df.iloc[list(hom_i)]
@@ -401,7 +407,7 @@ class Datafetch(object):
         vars_data = []
         anno = []
         vars = []
-        
+       
         for variant in variants.split(','):
             chr, pos, ref, alt = utils.parse_variant(variant)
             var_data = self._get_genotype_data(chr, pos, ref, alt, data_type)
@@ -409,6 +415,7 @@ class Datafetch(object):
                 vars_data.append(var_data)
                 vars.append('-'.join([str(s) for s in [chr, pos, ref, alt]]))
                 anno.append(self._get_annotation(chr, pos, ref, alt, data_type))
+                
         if len(vars_data) == 0:
             raise utils.NotFoundException()
         fetch_time = timeit.default_timer() - start_time
@@ -421,6 +428,7 @@ class Datafetch(object):
                 del filters['gtgp']
         data = self._count_gt(vars_data, filters, chips, data_type)
         munge_time = timeit.default_timer() - start_time
+
         return {
             'variants': vars,
             'annotation': anno,
