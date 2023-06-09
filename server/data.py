@@ -102,8 +102,9 @@ class Datafetch(object):
 
     def __init__(self, conf):
         self.conf=conf
-        self.token_retrieval_time = time.time()
+        self.token_retrieval_time = 0
         self.read_vcf_from_bucket = conf['vcf_files']['read_from_bucket']
+        self._refresh_gcs_auth_token_if_needed()
         self._init_tabix()
         self._init_db()
         self._init_geo_data()
@@ -128,7 +129,7 @@ class Datafetch(object):
     def _get_genotype_data(self, chr, pos, ref, alt, data_type):
 
         self._refresh_gcs_auth_token_if_needed()
-        
+
         chr_var = chr if chr != 23 else 'X'
         if data_type == 'imputed':
             vcf = self.vcfs_imputed[chr-1]
