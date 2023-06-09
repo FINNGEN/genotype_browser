@@ -24,21 +24,16 @@ class Datafetch(object):
         with open(self.conf['geojson'], 'r') as f:
             self.geo_data = geojson.load(f)
     
-    def _init_gcs_auth(self):
-        self.read_vcf_from_bucket = self.conf['vcf_files']['read_from_bucket']
-        if self.read_vcf_from_bucket:
-            self.token_retrieval_time = 0
-            self._refresh_gcs_auth_token()
-    
-    def _update_token_retrieval_time(self):
-        self.token_retrieval_time = time.time()
-    
-    def _refresh_gcs_auth_token(self):
-        current_time = time.time() 
-        if current_time - self.token_retrieval_time < 3600:
-            return
+    def _refresh_gcs_auth_token_if_needed(self):
 
-        self._update_token_retrieval_time()
+        current_time = time.time()
+        
+        # if not read from the bucket or token expiration time is reached 
+        if not self.read_vcf_from_bucket or current_time - self.token_retrieval_time < 3600:
+            return 
+        
+        # Update token retrieval time
+        self.token_retrieval_time = time.time()
 
         # Initialize empty credentials
         credentials, _ = google.auth.default()
@@ -62,10 +57,6 @@ class Datafetch(object):
             vcf = self.vcfs_chip[0]
         else:
             vcf = self.vcfs_imputed[0]
-
-        # update access token if needed
-        if self.read_vcf_from_bucket:
-            self._refresh_gcs_auth_token()
 
         tabix_iter = pysam.TabixFile(vcf, parser=None)
 
@@ -111,10 +102,11 @@ class Datafetch(object):
 
     def __init__(self, conf):
         self.conf=conf
+        self.token_retrieval_time = time.time()
+        self.read_vcf_from_bucket = conf['vcf_files']['read_from_bucket']
         self._init_tabix()
         self._init_db()
         self._init_geo_data()
-        self._init_gcs_auth()
         self.info, self.info_orig, self.cohort_list, self.region_list, self.info_columns, \
             self.samples_imput = self._init_info(select_chip=False)
         self.info_chip, self.info_orig_chip, self.cohort_list_chip, self.region_list_chip, \
@@ -135,10 +127,8 @@ class Datafetch(object):
 
     def _get_genotype_data(self, chr, pos, ref, alt, data_type):
 
-        # update access token if needed
-        if self.read_vcf_from_bucket:
-            self._refresh_gcs_auth_token()
-
+        self._refresh_gcs_auth_token_if_needed()
+        
         chr_var = chr if chr != 23 else 'X'
         if data_type == 'imputed':
             vcf = self.vcfs_imputed[chr-1]
