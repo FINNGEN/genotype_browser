@@ -12,6 +12,7 @@ geojson = 'finmap.geojson'
 release_version = 'DF9'
 
 vcf_files = {
+    "read_from_bucket": False,
     "imputed_data": [
         '1.vcf.gz',
         '2.vcf.gz',

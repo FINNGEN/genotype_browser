@@ -12,6 +12,7 @@ geojson = '/finngen/library-green/map-coordinates/finmap.geojson'
 release_version = 'DF11'
 
 vcf_files = {
+    "read_from_bucket": False,
     "imputed_data": [
         'gs://finngen-production-library-red/finngen_R11/genotype_1.0/data/finngen_R11_chr1.vcf.gz',
         'gs://finngen-production-library-red/finngen_R11/genotype_1.0/data/finngen_R11_chr2.vcf.gz',

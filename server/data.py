@@ -7,19 +7,47 @@ import geojson
 import json
 import utils
 import re
+import google.auth.transport.requests
+import google.auth
+import time
 
 class Datafetch(object):
 
     def _init_tabix(self):
         self.vcfs_imputed = self.conf['vcf_files']['imputed_data']
         self.vcfs_chip = self.conf['vcf_files']['chip_data']
-
+    
     def _init_db(self):
         self.conn = defaultdict(lambda: sqlite3.connect(self.conf['sqlite_db']))
 
     def _init_geo_data(self):
         with open(self.conf['geojson'], 'r') as f:
             self.geo_data = geojson.load(f)
+    
+    def _init_gcs_auth(self):
+        self.read_vcf_from_bucket = self.conf['vcf_files']['read_from_bucket']
+        if self.read_vcf_from_bucket:
+            self.token_retrieval_time = 0
+            self._refresh_gcs_auth_token()
+    
+    def _update_token_retrieval_time(self):
+        self.token_retrieval_time = time.time()
+    
+    def _refresh_gcs_auth_token(self):
+        current_time = time.time() 
+        if current_time - self.token_retrieval_time < 3600:
+            return
+
+        self._update_token_retrieval_time()
+
+        # Initialize empty credentials
+        credentials, _ = google.auth.default()
+        
+        # Refresh actual credentials
+        auth_request = google.auth.transport.requests.Request()
+        credentials.refresh(auth_request)
+
+        os.environ["GCS_OAUTH_TOKEN"] = credentials.token
  
     def _init_info(self, select_chip):
         if (self.conf['use_gcp_buckets']):
@@ -34,7 +62,11 @@ class Datafetch(object):
             vcf = self.vcfs_chip[0]
         else:
             vcf = self.vcfs_imputed[0]
-        
+
+        # update access token if needed
+        if self.read_vcf_from_bucket:
+            self._refresh_gcs_auth_token()
+
         tabix_iter = pysam.TabixFile(vcf, parser=None)
 
         # get the header from vcf files
@@ -82,11 +114,12 @@ class Datafetch(object):
         self._init_tabix()
         self._init_db()
         self._init_geo_data()
+        self._init_gcs_auth()
         self.info, self.info_orig, self.cohort_list, self.region_list, self.info_columns, \
             self.samples_imput = self._init_info(select_chip=False)
         self.info_chip, self.info_orig_chip, self.cohort_list_chip, self.region_list_chip, \
             self.info_columns_chip, self.samples_chip = self._init_info(select_chip=True)
-
+        
     def _get_annotation(self, chr, pos, ref, alt, data_type):
         in_data = 1 if data_type == 'imputed' else 2
         if self.conn[threading.get_ident()].row_factory is None:
@@ -101,6 +134,11 @@ class Datafetch(object):
             raise utils.NotFoundException(str(chr) + '-' + str(pos) + '-' + ref + '-' + alt)
 
     def _get_genotype_data(self, chr, pos, ref, alt, data_type):
+
+        # update access token if needed
+        if self.read_vcf_from_bucket:
+            self._refresh_gcs_auth_token()
+
         chr_var = chr if chr != 23 else 'X'
         if data_type == 'imputed':
             vcf = self.vcfs_imputed[chr-1]

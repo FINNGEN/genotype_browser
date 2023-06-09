@@ -9,3 +9,4 @@ google-cloud-storage>=1.43.0
 fsspec>=2021.11.1
 gcsfs>=2021.11.1
 geojson
+google-auth>=2.18.1
