@@ -36,7 +36,7 @@ class Datafetch(object):
         self.token_retrieval_time = time.time()
 
         # Initialize empty credentials
-        credentials, _ = google.auth.default()
+        credentials, _ = google.auth.default(scopes=['https://www.googleapis.com/auth/cloud-platform'])
         
         # Refresh actual credentials
         auth_request = google.auth.transport.requests.Request()
