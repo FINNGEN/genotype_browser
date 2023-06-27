@@ -387,17 +387,18 @@ class Datafetch(object):
 
             # if specified the type of variants to be saved
             df = pd.DataFrame(columns = het.columns.values.tolist())
-            if json.loads(filters['hom']):
-                df = df.append(hom_alt, ignore_index=True)
             
+            if json.loads(filters['hom']):
+                df = pd.concat([df, hom_alt], ignore_index=True)
+                           
             if json.loads(filters['het']):
-                df = df.append(het, ignore_index=True)
+                df = pd.concat([df, het], ignore_index=True)
             
             if json.loads(filters['wt_hom']):
-                df = df.append(wt_hom, ignore_index=True)
+                df = pd.concat([df, wt_hom], ignore_index=True)
             
             if json.loads(filters['missing']):
-                df = df.append(missing, ignore_index=True)
+                df = pd.concat([df, missing], ignore_index=True)
 
             # append data frames
             df = self._filter(df, filters, chips)

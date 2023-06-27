@@ -1,4 +1,4 @@
-pandas>=1.1.4
+pandas>=2.0.0
 flask>=1.1.2
 flask-compress>=1.8.0
 cython>=0.29.21
