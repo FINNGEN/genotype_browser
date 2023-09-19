@@ -1,0 +1,23 @@
+# The path for all the outputs of the prepare_inputs_GT.sh, default is "out" in current directory
+OUTPUT_PATH=
+
+# The release number to be added to the output files in the forms of r11 or R11
+RELEASE_PREFIX=R11
+
+# *colon-separated file containing FinnGen factory pass samples and additional informatioon on the batch, cohort, number of variants, etc. usually found in red library 
+FGFACTORY_PASS_SAMPLES=gs://fgfactory-staging-input-data/genotype_browser/finngen_R11/fgfactory_pass_samples_R11.txt
+
+# *Finngen endpoint usually found in red library 
+FINNGEN_ENDPOINT=gs://fgfactory-staging-input-data/genotype_browser/finngen_R11/finngen_R11_endpoint_1.0.txt.gz
+
+# *FINNGEN_MINIMUM_COHORT_DATA
+FINNGEN_MINIMUM_COHORT_DATA=gs://fgfactory-staging-input-data/genotype_browser/finngen_R11/finngen_R11_minimum_extended_1.0.txt.gz
+
+# *variant annotation file for imputed variants done by the analysis's teams' scrape wdl 
+IMPU_RELEASE_VARIANT_ANNOTATION_FILE=gs://fgfactory-staging-input-data/genotype_browser/finngen_R11/R11_annotated_variants_v1.gz
+
+# *variant annotation file for chip variants done by the analysis's teams' scrape wdl 
+CHIP_RELEASE_VARIANT_ANNOTATION_FILE=gs://fgfactory-staging-input-data/genotype_browser/finngen_R11/R11_annotated_variants_chip.tsv.gz
+
+#gene annotation file in GTF format, e.g. GENCODE annotation file, defualt is v38 from  http://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_38/gencode.v38.annotation.gtf.gz
+GENE_ANNOTATION_REFERENCE_FILE_GTF=
