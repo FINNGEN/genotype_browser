@@ -126,7 +126,9 @@ export const VariantClusterPlot = () => {
                 rows.forEach(row => {
                     const rowID = row.split("\t")[indexID]
                     const rowFull = dataInitial.filter(datum => datum.FINNGENID === rowID)[0]
-                    newDataExternal.push(rowFull)
+                    if (rowFull !== undefined){
+                        newDataExternal.push(rowFull)
+                    }
                 })
 
                 setDataExternal(newDataExternal)
