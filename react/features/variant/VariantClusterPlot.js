@@ -126,8 +126,10 @@ export const VariantClusterPlot = () => {
                 rows.forEach(row => {
                     const rowID = row.split("\t")[indexID]
                     const rowFull = dataInitial.filter(datum => datum.FINNGENID === rowID)[0]
-                    if (rowFull !== undefined){
-                        newDataExternal.push(rowFull)
+                    if (rowFull !== undefined) newDataExternal.push(rowFull)
+                    else {
+                        console.log('Error: ' + rowID + ' not found in the original dataset.');
+                        d3.select('#h_external_error').style('display', 'block');
                     }
                 })
 
