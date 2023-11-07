@@ -33,7 +33,7 @@ function Info (props) {
     function exportData(data, button) {
         const data_export_tsv_header = Object.keys(data[0]).join('\t'), 
             data_export_tsv_rows = data.map(el => Object.values(el).join('\t')).join('\n'),
-            data_export_tsv = data_export_tsv_header + '\n' + data_export_tsv_rows;
+            data_export_tsv = data_export_tsv_header + '\n' + data_export_tsv_rows  + '\n';
 
         const blob = new Blob([data_export_tsv], {type: 'text/tsv'})        
         d3.select(button).attr('download', chr + "_" + pos + "_" + vRef + "_" + vAlt + "_cp_"+ props.date + '.tsv')

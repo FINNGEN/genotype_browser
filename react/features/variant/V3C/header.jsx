@@ -16,12 +16,12 @@ function Header (props) {
         d3.select('v3c-body').style('background-color', '#EEE');
         
         d3.select('#h_external')
-            .on('mouseenter', ()=>{d3.select('#h_external_alert').style('display', 'block')})
-            .on('mouseleave', ()=>{d3.select('#h_external_alert').style('display', 'none')})
+            .on('mouseenter', ()=>d3.select('#h_external_alert').style('display', 'block'))
+            .on('mouseleave', ()=>d3.selectAll('#h_external_alert, #h_external_error').style('display', 'none'));
 
         d3.select('#h_reset')
-            .on('mouseenter', ()=>{d3.select('#h_reset_alert').style('display', 'block')})
-            .on('mouseleave', ()=>{d3.select('#h_reset_alert').style('display', 'none')})
+            .on('mouseenter', ()=>d3.select('#h_reset_alert').style('display', 'block'))
+            .on('mouseleave', ()=>d3.select('#h_reset_alert').style('display', 'none'));
 
     })
 
@@ -40,6 +40,7 @@ function Header (props) {
                     <input id="b_external" type="file" className="inputfile"/>
                     <label className='v3c-label' htmlFor="b_external">Upload external selection</label>
                     <div id="h_external_alert" className="h_alert">Upload only TSV files with an "ID" or "FINNGENID" column.</div>
+                    <div id="h_external_error" className="h_alert">Some errors occurred. Please, check the console.</div>
                 </div>
                 <div id="h_reset" style={{display: manual ? 'block' : 'none'}}>
                     <button id='b_reset' className="button_white">Reset dataset</button>
