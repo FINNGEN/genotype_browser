@@ -21,7 +21,7 @@ app = Flask(__name__, template_folder='../templates', static_folder='../static')
 
 config = {}
 try:
-	_conf_module = imp.load_source('config', '../config.py')
+	_conf_module = imp.load_source('config', 'config.testing.py')
 except Exception as e:
 	print('Could not load config.py')
 	raise

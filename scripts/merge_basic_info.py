@@ -25,7 +25,7 @@ def main():
     data = gt_samples.merge(death, how='left', on='FINNGENID',suffixes=(None, "_y"))
     data = data.merge(minimum, how='left', on='FINNGENID',suffixes=(None, "_y"))
     data = data.merge(array, how='left', on='FINNGENID',suffixes=(None, "_y"))
-    data['AGE_AT_DEATH_OR_NOW'] = np.where(data['DEATH']==1, data['DEATH_AGE'], data['BL_AGE'] + datetime.now().year - data['BL_YEAR'])
+    data['AGE_AT_DEATH_OR_NOW'] = np.where(data['DEATH']==1, data['DEATH_FU_AGE'], data['BL_AGE'] + datetime.now().year - data['BL_YEAR'])
     data = data[['FINNGENID', 'DEATH', 'SEX', 'AGE_AT_DEATH_OR_NOW', 'regionofbirthname', 'cohort', 'BATCH', 'CHIP']]
     
     data = data.round({'AGE_AT_DEATH_OR_NOW': 1})

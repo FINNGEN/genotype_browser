@@ -1,0 +1,30 @@
+# R12 Genotype Browser data
+# The path for all the outputs of the prepare_inputs_GT.sh, default is "out" in current directory
+OUTPUT_PATH=output_data
+
+# The release number to be added to the output files in the forms of r11 or R11
+RELEASE_PREFIX=R12
+
+# *colon-separated file containing FinnGen factory pass samples and additional informatioon on the batch, cohort, number of variants, etc. usually found in red library 
+FGFACTORY_PASS_SAMPLES=gs://r12-data/fgfactory_pass_samples/R12_fgfactory_pass_samples.txt
+
+# *Finngen endpoint usually found in red library 
+FINNGEN_ENDPOINT=gs://finngen-production-library-red/finngen_R12/phenotype_1.0/data/finngen_R12_endpoint_1.0.txt.gz
+
+# *FINNGEN_MINIMUM_COHORT_DATA
+FINNGEN_MINIMUM_COHORT_DATA=gs://finngen-production-library-red/finngen_R12/phenotype_1.0/data/finngen_R12_minimum_extended_1.0.txt.gz
+
+# *variant annotation file for imputed variants done by the analysis's teams' scrape wdl 
+IMPU_RELEASE_VARIANT_ANNOTATION_FILE=gs://finngen-production-library-green/finngen_R12/finngen_R12_analysis_data/annotations/R12_annotated_variants_v0.gz
+
+# *variant annotation file for chip variants done by the analysis's teams' scrape wdl 
+CHIP_RELEASE_VARIANT_ANNOTATION_FILE=gs://r12-data/chip/R12_annotated_variants_chip.tsv.gz
+
+#gene annotation file in GTF format, e.g. GENCODE annotation file, defualt is v38 from  http://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_38/gencode.v38.annotation.gtf.gz
+GENE_ANNOTATION_REFERENCE_FILE_GTF=
+
+# FILES REQUIRED FOR TESTING
+IMPU_RELEASE_VCF_CHR=gs://finngen-production-library-red/finngen_R12/genotype_2.0/data/finngen_R12_chr#CHR#.vcf.gz
+CHIP_RELEASE_VCF_CHR=gs://finngen-production-library-red/finngen_R12/chipd_1.0/data/vcf/r12_axiom_chr#CHR#_subset.vcf.gz
+GEOJSON=gs://fgfactory-staging-input-data/genotype_browser/finmap.geojson
+

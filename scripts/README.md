@@ -6,6 +6,8 @@
  
 The inputs needed for preparing the sqlite database for genotype browser should be given in a text file (e.g. see ‘GB_input_R11.txt’ in this folder). These inputs include the following:
 
+**NOTE** In case either of your input files FINNGEN_MINIMUM_COHORT_DATA FGFACTORY_PASS_SAMPLES are read from the production library red bucket, run authentication command `gcloud auth login --update-adc` before running the scripts - even though the method is outdated in gcloud this is required to avoid vpc organization policy error when reading data by pandas package directly from the bucket.
+
 1.	**OUTPUT_PATH**: The path for all the outputs of the ‘prepare_genotypeB_input.sh’, default is "$HOME/GB_out_$RELEASE_PREFIX". 
 
 2.	**RELEASE_PREFIX**: The release number to be added to the output files in the format ^[rR][0-9]+$  e.g r9 or R9

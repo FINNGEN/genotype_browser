@@ -64,63 +64,135 @@ mkdir -p "$OUTPUT_PATH"
 
 echo "Extracting SAMPLE_LIST from FGFACTRORY_PASS_SAMPLES"
 
-if beginswith gs: "$FGFACTORY_PASS_SAMPLES"; then 
-	gsutil cat "$FGFACTORY_PASS_SAMPLES" | zcat -f | tail -n +2 | cut -d ":" -f 6 >"${OUTPUT_PATH}/SAMPLE_LIST_${RELEASE_PREFIX}.txt"
-else
-        zcat -f "$FGFACTORY_PASS_SAMPLES" | tail -n +2 | cut -d ":" -f 6 >"${OUTPUT_PATH}/SAMPLE_LIST_${RELEASE_PREFIX}.txt"
+
+if [ ! -f "${OUTPUT_PATH}/SAMPLE_LIST_${RELEASE_PREFIX}.txt" ]; then
+   echo -e "File ${OUTPUT_PATH}/SAMPLE_LIST_${RELEASE_PREFIX}.txt does not exist - create\n";
+   if beginswith gs: "$FGFACTORY_PASS_SAMPLES"; then 
+      gsutil cat "$FGFACTORY_PASS_SAMPLES" | zcat -f | tail -n +2 | cut -d ":" -f 6 >"${OUTPUT_PATH}/SAMPLE_LIST_${RELEASE_PREFIX}.txt";
+   else
+      zcat -f "$FGFACTORY_PASS_SAMPLES" | tail -n +2 | cut -d ":" -f 6 >"${OUTPUT_PATH}/SAMPLE_LIST_${RELEASE_PREFIX}.txt"
+   fi
 fi
+
 
 echo "Extracting death from endpoint"
 
-if beginswith gs: "$FINNGEN_ENDPOINT"; then
-	gsutil cat "$FINNGEN_ENDPOINT" | zcat -f | cut -f 1-10 >"${OUTPUT_PATH}/FINNGEN_ENDPOINT_DEATH_EXTRACTED_${RELEASE_PREFIX}.txt"
-else
-	zcat -f "$FINNGEN_ENDPOINT" |  cut -f 1-10 >"${OUTPUT_PATH}/FINNGEN_ENDPOINT_DEATH_EXTRACTED_${RELEASE_PREFIX}.txt"
+if [ ! -f "${OUTPUT_PATH}/FINNGEN_ENDPOINT_DEATH_EXTRACTED_${RELEASE_PREFIX}.txt" ]; then
+   echo -e "File ${OUTPUT_PATH}/FINNGEN_ENDPOINT_DEATH_EXTRACTED_${RELEASE_PREFIX}.txt does not exist - create\n";
+   if beginswith gs: "$FINNGEN_ENDPOINT"; then
+      gsutil cat "$FINNGEN_ENDPOINT" | zcat -f | cut -f 1-10 >"${OUTPUT_PATH}/FINNGEN_ENDPOINT_DEATH_EXTRACTED_${RELEASE_PREFIX}.txt";
+   else
+      zcat -f "$FINNGEN_ENDPOINT" |  cut -f 1-10 >"${OUTPUT_PATH}/FINNGEN_ENDPOINT_DEATH_EXTRACTED_${RELEASE_PREFIX}.txt"
+   fi
 fi
 
 echo "STEP 1: Prepare basic info phenotype file"
 #the paths can be gcs paths as long as pandas version >=0.24 is used and pip install gcsfs
 # make sure you are in the scripts directory or give the full path of the scripts
 
-python3 merge_basic_info.py -s "${OUTPUT_PATH}/SAMPLE_LIST_${RELEASE_PREFIX}.txt" -d "${OUTPUT_PATH}/FINNGEN_ENDPOINT_DEATH_EXTRACTED_${RELEASE_PREFIX}.txt" \
--m "$FINNGEN_MINIMUM_COHORT_DATA" -a "$FGFACTORY_PASS_SAMPLES" -o "${OUTPUT_PATH}/BASIC_INFO_PHENOTYPE_FILE_${RELEASE_PREFIX}.txt"
+
+if [ -f "${OUTPUT_PATH}/BASIC_INFO_PHENOTYPE_FILE_${RELEASE_PREFIX}.txt" ]; then
+   echo -e "File ${OUTPUT_PATH}/BASIC_INFO_PHENOTYPE_FILE_${RELEASE_PREFIX}.txt exists - skip\n";
+else
+   python3 merge_basic_info.py -s "${OUTPUT_PATH}/SAMPLE_LIST_${RELEASE_PREFIX}.txt" -d "${OUTPUT_PATH}/FINNGEN_ENDPOINT_DEATH_EXTRACTED_${RELEASE_PREFIX}.txt" \
+   -m "$FINNGEN_MINIMUM_COHORT_DATA" -a "$FGFACTORY_PASS_SAMPLES" -o "${OUTPUT_PATH}/BASIC_INFO_PHENOTYPE_FILE_${RELEASE_PREFIX}.txt"
+fi
+
 
 echo "STEP 2. Prepare chips"
 
-bash get_chip_from_anno.sh "$IMPU_RELEASE_VARIANT_ANNOTATION_FILE" "${OUTPUT_PATH}/CHIPVARS_FILE_${RELEASE_PREFIX}.txt.gz"
+if [ -f "${OUTPUT_PATH}/CHIPVARS_FILE_${RELEASE_PREFIX}.txt.gz" ]; then
+   echo -e "File ${OUTPUT_PATH}/CHIPVARS_FILE_${RELEASE_PREFIX}.txt.gz exists - skip\n";
+else
+   bash get_chip_from_anno.sh "$IMPU_RELEASE_VARIANT_ANNOTATION_FILE" "${OUTPUT_PATH}/CHIPVARS_FILE_${RELEASE_PREFIX}.txt.gz"
+fi
 
 echo "STEP 3. Prepare gene annotation table"
 
-python3 prepare_gene_ann.py -a "$GENE_ANNOTATION_REFERENCE_FILE_GTF" -o "${OUTPUT_PATH}/GENE_ANNOTATION_FILE.csv"
+
+if [ -f "${OUTPUT_PATH}/GENE_ANNOTATION_FILE.csv" ]; then
+   echo -e "File ${OUTPUT_PATH}/GENE_ANNOTATION_FILE.csv exists - skip\n";
+else
+   python3 prepare_gene_ann.py -a "$GENE_ANNOTATION_REFERENCE_FILE_GTF" -o "${OUTPUT_PATH}/GENE_ANNOTATION_FILE.csv"
+fi
+
 
 echo "STEP 4. Prepare combined variant annotation file"
 
-python3 combine_imputed_and_rawchip_vars.py \
--c "$CHIP_RELEASE_VARIANT_ANNOTATION_FILE" \
--i "$IMPU_RELEASE_VARIANT_ANNOTATION_FILE" \
--o "${OUTPUT_PATH}/VARIANT_ANNOTATION_FILE_COMBINED_IMPUTED_CHIP_${RELEASE_PREFIX}.csv"
+if [ ! -f "${OUTPUT_PATH}/VARIANT_ANNOTATION_FILE_COMBINED_IMPUTED_CHIP_${RELEASE_PREFIX}.csv.gz" ]; then
+   
+   echo -e "File ${OUTPUT_PATH}/VARIANT_ANNOTATION_FILE_COMBINED_IMPUTED_CHIP_${RELEASE_PREFIX}.csv.gz does not exist - create\n";
+   
+   if [ ! -f "${OUTPUT_PATH}/VARIANT_ANNOTATION_FILE_COMBINED_IMPUTED_CHIP_${RELEASE_PREFIX}.csv" ]; then 
+      echo -e "File ${OUTPUT_PATH}/VARIANT_ANNOTATION_FILE_COMBINED_IMPUTED_CHIP_${RELEASE_PREFIX}.csv exists - skip\n";
+      python3 combine_imputed_and_rawchip_vars.py \
+         -c "$CHIP_RELEASE_VARIANT_ANNOTATION_FILE" \
+         -i "$IMPU_RELEASE_VARIANT_ANNOTATION_FILE" \
+         -o "${OUTPUT_PATH}/VARIANT_ANNOTATION_FILE_COMBINED_IMPUTED_CHIP_${RELEASE_PREFIX}.csv"
+      gzip -f "${OUTPUT_PATH}/VARIANT_ANNOTATION_FILE_COMBINED_IMPUTED_CHIP_${RELEASE_PREFIX}.csv" 
+   fi
+
+fi
+
+
+echo "STEP 5. Populate variant annotation database"
+
+if [ -f "${OUTPUT_PATH}/fgq.${RELEASE_PREFIX#,,}.1.db" ]; then
+    echo -e "File ${OUTPUT_PATH}/fgq.${RELEASE_PREFIX#,,}.1.db exists - skip\n";
+else  
+   python3 populate_sqlite.py \
+   --variant_annotation_file "${OUTPUT_PATH}/VARIANT_ANNOTATION_FILE_COMBINED_IMPUTED_CHIP_${RELEASE_PREFIX}.csv.gz" \
+   --variant_chip_file "${OUTPUT_PATH}/CHIPVARS_FILE_${RELEASE_PREFIX}.txt.gz" \
+   --genes_anno_file "${OUTPUT_PATH}/GENE_ANNOTATION_FILE.csv" \
+   --sqlite_db ${OUTPUT_PATH}/fgq.${RELEASE_PREFIX#,,}.1.db
+fi
+
 
 echo "Random sampling of variants for testing at STEP 6"
 
 # get 20(this value can be changed) random variants for testing in STEP 6
 # from the "${OUTPUT_PATH}/VARIANT_ANNOTATION_FILE_COMBINED_IMPUTED_CHIP_${RELEASE_PREFIX}.csv"
 
-time awk 'BEGIN{srand();k=20} NR==1 {next} {i = int(NR * rand()) } i < k { a[i] = $1 }END {for (i in a) {print a[i];}}' "${OUTPUT_PATH}/VARIANT_ANNOTATION_FILE_COMBINED_IMPUTED_CHIP_${RELEASE_PREFIX}.csv" > "${OUTPUT_PATH}/random_impvariant_sample.txt"
-
-gzip "${OUTPUT_PATH}/VARIANT_ANNOTATION_FILE_COMBINED_IMPUTED_CHIP_${RELEASE_PREFIX}.csv"
-
-
-echo "STEP 5. Populate variant annotation database"
-
-python3 populate_sqlite.py \
---variant_annotation_file "${OUTPUT_PATH}/VARIANT_ANNOTATION_FILE_COMBINED_IMPUTED_CHIP_${RELEASE_PREFIX}.csv.gz" \
---variant_chip_file "${OUTPUT_PATH}/CHIPVARS_FILE_${RELEASE_PREFIX}.txt.gz" \
---genes_anno_file "${OUTPUT_PATH}/GENE_ANNOTATION_FILE.csv" \
---sqlite_db ${OUTPUT_PATH}/fgq.${RELEASE_PREFIX#,,}.1.db
+time zcat "${OUTPUT_PATH}/VARIANT_ANNOTATION_FILE_COMBINED_IMPUTED_CHIP_${RELEASE_PREFIX}.csv" | \
+   awk 'BEGIN{srand();k=20} NR==1 {next} {i = int(NR * rand()) } i < k { a[i] = $1 }END {for (i in a) {print a[i];}}' \
+   > "${OUTPUT_PATH}/random_impvariant_sample.txt"
 
 echo "STEP 6. Test the genotypes in the genotype browser are the same as those we get from the vcfs"
 echo "IF the test fails, please inform the genotypebrowser developers."
 echo "Please also attach the test result file that is saved in the output directory you specified as test_result_<date>.txt"
+
+# populate config template with recently created files
+cp config.template.py config.testing.py
+DB=${OUTPUT_PATH}/fgq.${RELEASE_PREFIX#,,}.1.db
+BASIC_INFO_PHENOTYPE_FILE="${OUTPUT_PATH}/BASIC_INFO_PHENOTYPE_FILE_${RELEASE_PREFIX}.txt"
+sed -i "s|#DB#|$DB|g" config.testing.py 
+sed -i "s|#BASIC_INFO_PHENOTYPE_FILE#|$BASIC_INFO_PHENOTYPE_FILE|g" config.testing.py 
+
+if beginswith gs: "$GEOJSON"; then 
+   gsutil cp "$GEOJSON" ${OUTPUT_PATH}/ ;
+   GEOJSON_LOC="${OUTPUT_PATH}/$(basename $GEOJSON)"
+else
+   GEOJSON_LOC=$GEOJSON
+fi
+sed -i "s|#GEOJSON#|$GEOJSON_LOC|g" config.testing.py 
+
+VCF_FILES_IMUTED=()
+VCF_FILES_CHIP=()
+for chr in $(seq 1 23); do 
+   vcf_imput=$(echo -e \"$IMPU_RELEASE_VCF_CHR\"| sed -e "s|#CHR#|$chr|g");
+   vcf_chip=$(echo -e \"$CHIP_RELEASE_VCF_CHR\"| sed -e "s|#CHR#|$chr|g");
+   VCF_FILES_IMUTED+=($vcf_imput)
+   VCF_FILES_CHIP+=($vcf_chip)
+done
+
+# join into string and populate config template
+IFS=, eval 'JOINED_IMPUTED="${VCF_FILES_IMUTED[*]}"'
+IFS=, eval 'JOINED_CHIP="${VCF_FILES_CHIP[*]}"'
+sed -i "s|#IMPU_RELEASE_VCFS#|$JOINED_IMPUTED|g" config.testing.py
+sed -i "s|#CHIP_RELEASE_VCFS#|$JOINED_CHIP|g" config.testing.py 
+
+# copy configs to the output folder
+echo "Finished creating test config.testing.py file for running integration test"
 
 # arrays of the possible filters to randomly choose from
 data_type=("imputed" "chip" "both")
@@ -170,6 +242,9 @@ while read -r line; do
   printf '\n\n'
 
 done < "${OUTPUT_PATH}/random_impvariant_sample.txt"
+
+mv config.testing.py ${OUTPUT_PATH}/
+echo "Finished testing, used config file is available under ${OUTPUT_PATH}/ output folder"
 
 FINISH=$(date "+%s")
 ELAPSED_SEC=$((FINISH - START))
