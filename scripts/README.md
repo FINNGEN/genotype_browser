@@ -1,4 +1,18 @@
 # DATA PREPARATION FOR THE GENOTYPE BROWSER
+
+## Summary of data resources needed
+1) Imputed genotype data (vcf files) 
+2) Chip genotype data (vcf files)
+3) Chip data cluster plots (TSV files)
+4) Chip genotype annotations (Requiered in ETL)
+5) Imputation genotype annotation (Requiered in ETL)
+6) FACTORY PASS SAMPLES. Genotyping metadata (Requiered in ETL)
+7) Phenotype data: FINNGEN_ENDPOINT (Requiered in ETL)
+8) Phenotype data FINNGEN_MINIMUM_COHORT_DATA (Requiered in ETL)
+9) Public gene annotation reference GENE_ANNOTATION_REFERENCE_FILE_GTF (Requiered in ETL)
+10) Configuration file to specifying  inputs (example attached)
+
+
 ## Requirements:
  -      make sure you have cloned the genotype browser repo and that you have installed the required packages (please refer to the main readme)
  -	tabix package: sudo apt-get update && sudo apt-get install tabix
