@@ -8,7 +8,7 @@ import {
 } from '../data/dataSlice'
 
 import { setOption } from '../data/dataSlice'
-
+import { VariantQC } from './VariantQC'
 
 export const Variant = (props) => {
 
@@ -129,6 +129,7 @@ export const Variant = (props) => {
 		   </div>
 		   {show_panel_content}
 		   <VariantPlots />
+		   <VariantQC props={data.variants}/>
 		   </div>
 		   </div>)
     }
