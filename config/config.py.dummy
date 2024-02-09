@@ -11,6 +11,8 @@ intensity_files_location = 'intensity_plots/'
 geojson = 'finmap.geojson'
 release_version = 'DF9'
 
+qc = ''
+
 vcf_files = {
     "read_from_bucket": False,
     "imputed_data": [
