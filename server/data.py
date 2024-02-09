@@ -10,6 +10,7 @@ import re
 import google.auth.transport.requests
 import google.auth
 import time
+from collections import Counter
 
 class Datafetch(object):
 
@@ -112,6 +113,10 @@ class Datafetch(object):
             self.samples_imput = self._init_info(select_chip=False)
         self.info_chip, self.info_orig_chip, self.cohort_list_chip, self.region_list_chip, \
             self.info_columns_chip, self.samples_chip = self._init_info(select_chip=True)
+        self.qc = pd.read_csv(self.conf['qc'], header=0, sep="\t", low_memory=False)
+
+        axiom = self.info[self.info['BATCH'].apply(lambda x: 'Axiom' in x)]
+        self.total_axiom_batch_count = len(axiom['BATCH'].drop_duplicates())
         
     def _get_annotation(self, chr, pos, ref, alt, data_type):
         in_data = 1 if data_type == 'imputed' else 2
@@ -596,4 +601,45 @@ class Datafetch(object):
         }
 
         return src
-    
+
+    def check_qc_varaints(self, vars):
+        varaints = vars.split(',')        
+        res = []
+        for variant in varaints:
+            v = f"chr{variant.replace('-', '_')}"
+            excl = self.qc[self.qc['VARIANT'].isin([v])].copy()
+            excl = excl[excl['BATCH'].apply(lambda x: x != 'AxiomGT1')]
+            gr = excl.groupby(by = 'PIPELINE')
+            pipeline_exclusion_list = []
+            for g in gr:
+                pipeline = g[0]
+                df = g[1]
+                exclusion_list = []
+                for r in df.groupby(by = "REASON"):
+                    reason = r[0]
+                    data = r[1]
+                    batches = list(data['BATCH'])
+                    batches_list = list(set([b.split("_")[1] for b in batches]))
+                    p = {
+                        'reason': r[0],
+                        'batches_count': len(batches_list),
+                        'batches': ','.join(batches_list),
+                        'batches_full': ','.join(list(excl['BATCH']))
+                    }
+                    exclusion_list.append(p)
+                
+                pipeline_exclusion_list.append({ 
+                    'pipeline': pipeline, 
+                    'pipeline_exclusions': exclusion_list 
+                })
+            
+            res.append({
+                'variant': variant, 
+                'exclusions': pipeline_exclusion_list, 
+                'total_axiom_batch_count': self.total_axiom_batch_count
+            })
+        
+        return res
+
+
+

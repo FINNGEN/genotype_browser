@@ -15,7 +15,7 @@ Compress(app)
 
 config = {}
 try:
-    _conf_module = imp.load_source('config', 'config.py')
+    _conf_module = imp.load_source('config', 'config.r12.py')
 except Exception as e:
     print('Could not load config.py')
     raise
@@ -133,6 +133,15 @@ def clusterplot(variant):
         else:
             return {}
     return data
+
+
+@app.route('/api/v1/qc/<varaints>')
+def qc(varaints):
+    try:
+        result = fetch.check_qc_varaints(varaints)
+    except Exception as e:
+        abort(404)
+    return jsonify(result)
 
 if __name__ == '__main__':
     app.run()
