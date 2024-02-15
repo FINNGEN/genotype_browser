@@ -1,3 +1,10 @@
 **/node_modules
 **/__pycache__
 static/bundle.js
+finngen_R12*
+r12*
+dummy/*
+data_gb/*
+config*
+scripts/other/*
+tests/*
