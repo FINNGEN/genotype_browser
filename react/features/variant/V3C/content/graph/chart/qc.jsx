@@ -7,7 +7,7 @@ function QC(props) {
         color = props.color,
         dataTotal = props.dataTotal
 
-    const dataQC = dataTotal.filter(el => el.excluded === 1);
+    const dataQC = dataTotal.filter(el => el.excluded === 0);
 
     useEffect(()=> {
 
