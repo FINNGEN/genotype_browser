@@ -72,8 +72,8 @@ function Content (props) {
             }
         },
         qc: function(a) {
-            if (a === 1) return 'Fail'
-            else if (a === 0 ) return 'Pass'
+            if (a === 1) return 'Pass'
+            else if (a === 0 ) return 'Fail'
             else return 'Null'
         },
         generic: function(a) {
@@ -98,8 +98,8 @@ function Content (props) {
             else return color.midgray
         },
         qc: function(a) {
-            if (a === 1) return color.red
-            else if (a === 0) return '#FFF'
+            if (a === 1) return '#FFF'
+            else if (a === 0) return color.red
             else return color.midgray;
         }
     }
