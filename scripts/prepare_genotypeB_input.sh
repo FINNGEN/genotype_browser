@@ -85,6 +85,23 @@ echo "STEP 1: Prepare basic info phenotype file"
 python3 merge_basic_info.py -s "${OUTPUT_PATH}/SAMPLE_LIST_${RELEASE_PREFIX}.txt" -d "${OUTPUT_PATH}/FINNGEN_ENDPOINT_DEATH_EXTRACTED_${RELEASE_PREFIX}.txt" \
 -m "$FINNGEN_MINIMUM_COHORT_DATA" -a "$FGFACTORY_PASS_SAMPLES" -o "${OUTPUT_PATH}/BASIC_INFO_PHENOTYPE_FILE_${RELEASE_PREFIX}.txt"
 
+
+# compare batches in the basic QC and chip table from the db
+echo "DIFFERENCES BETWEEN BATCH NAMES IN THE CREATED CHIP TABLE, DB AND BASIC INFO FILE"
+diff \
+   <(zcat "${OUTPUT_PATH}/CHIPVARS_FILE_${RELEASE_PREFIX}.txt.gz" | cut -f 2 | sort | uniq) \
+   <(cat "${OUTPUT_PATH}/BASIC_INFO_PHENOTYPE_FILE_${RELEASE_PREFIX}.txt" | cut -f 7 | tail -n+2 | sort | uniq) > \
+   "${OUTPUT_PATH}/diffs_batches_in_chip_and_basic_info_files.txt"
+
+if [ -z "${OUTPUT_PATH}/diffs_batches_in_chip_and_basic_info_files.txt" ]
+then 
+   echo "NO differences between the batches."
+else
+   echo -e "\nWARN: differences between the files - check your inputs!"
+   cat  "${OUTPUT_PATH}/diffs_batches_in_chip_and_basic_info_files.txt" 
+fi
+
+
 echo "STEP 2. Prepare chips"
 
 bash get_chip_from_anno.sh "$IMPU_RELEASE_VARIANT_ANNOTATION_FILE" "${OUTPUT_PATH}/CHIPVARS_FILE_${RELEASE_PREFIX}.txt.gz"
@@ -118,9 +135,43 @@ python3 populate_sqlite.py \
 --genes_anno_file "${OUTPUT_PATH}/GENE_ANNOTATION_FILE.csv" \
 --sqlite_db ${OUTPUT_PATH}/fgq.${RELEASE_PREFIX#,,}.1.db
 
+
 echo "STEP 6. Test the genotypes in the genotype browser are the same as those we get from the vcfs"
 echo "IF the test fails, please inform the genotypebrowser developers."
 echo "Please also attach the test result file that is saved in the output directory you specified as test_result_<date>.txt"
+
+# populate config template with recently created files
+cp config.template.py config.testing.py
+DB=${OUTPUT_PATH}/fgq.${RELEASE_PREFIX#,,}.1.db
+BASIC_INFO_PHENOTYPE_FILE="${OUTPUT_PATH}/BASIC_INFO_PHENOTYPE_FILE_${RELEASE_PREFIX}.txt"
+sed -i "s|#DB#|$DB|g" config.testing.py 
+sed -i "s|#BASIC_INFO_PHENOTYPE_FILE#|$BASIC_INFO_PHENOTYPE_FILE|g" config.testing.py 
+
+if beginswith gs: "$GEOJSON"; then 
+   gsutil cp "$GEOJSON" ${OUTPUT_PATH}/ ;
+   GEOJSON_LOC="${OUTPUT_PATH}/$(basename $GEOJSON)"
+else
+   GEOJSON_LOC=$GEOJSON
+fi
+sed -i "s|#GEOJSON#|$GEOJSON_LOC|g" config.testing.py 
+
+VCF_FILES_IMUTED=()
+VCF_FILES_CHIP=()
+for chr in $(seq 1 23); do 
+   vcf_imput=$(echo -e \"$IMPU_RELEASE_VCF_CHR\"| sed -e "s|#CHR#|$chr|g");
+   vcf_chip=$(echo -e \"$CHIP_RELEASE_VCF_CHR\"| sed -e "s|#CHR#|$chr|g");
+   VCF_FILES_IMUTED+=($vcf_imput)
+   VCF_FILES_CHIP+=($vcf_chip)
+done
+
+# join into string and populate config template
+IFS=, eval 'JOINED_IMPUTED="${VCF_FILES_IMUTED[*]}"'
+IFS=, eval 'JOINED_CHIP="${VCF_FILES_CHIP[*]}"'
+sed -i "s|#IMPU_RELEASE_VCFS#|$JOINED_IMPUTED|g" config.testing.py
+sed -i "s|#CHIP_RELEASE_VCFS#|$JOINED_CHIP|g" config.testing.py 
+
+# copy configs to the output folder
+echo "Finished creating test config.testing.py file for running integration test"
 
 # arrays of the possible filters to randomly choose from
 data_type=("imputed" "chip" "both")
@@ -171,6 +222,11 @@ while read -r line; do
 
 done < "${OUTPUT_PATH}/random_impvariant_sample.txt"
 
+mv config.testing.py ${OUTPUT_PATH}/
+echo "Finished testing, used config file is available under ${OUTPUT_PATH}/ output folder"
+
 FINISH=$(date "+%s")
 ELAPSED_SEC=$((FINISH - START))
 echo >&2 "Elapsed time for $(basename "$0") ${ELAPSED_SEC} s"
+
+printf  "`date`\t Finished preparation of the inputs.\n\n"

@@ -1,10 +1,26 @@
 # DATA PREPARATION FOR THE GENOTYPE BROWSER
+
+## Summary of data resources needed
+1) Imputed genotype data (vcf files) 
+2) Chip genotype data (vcf files)
+3) Chip data cluster plots (TSV files)
+4) Chip genotype annotations (Requiered in ETL)
+5) Imputation genotype annotation (Requiered in ETL)
+6) FACTORY PASS SAMPLES. Genotyping metadata (Requiered in ETL)
+7) Phenotype data: FINNGEN_ENDPOINT (Requiered in ETL)
+8) Phenotype data FINNGEN_MINIMUM_COHORT_DATA (Requiered in ETL)
+9) Public gene annotation reference GENE_ANNOTATION_REFERENCE_FILE_GTF (Requiered in ETL)
+10) Configuration file to specifying  inputs (example attached)
+
+
 ## Requirements:
  -      make sure you have cloned the genotype browser repo and that you have installed the required packages (please refer to the main readme)
  -	tabix package: sudo apt-get update && sudo apt-get install tabix
  -	to use pandas read_csv (>=0.24) to read gcs objects : pip install gcsfs 
  
 The inputs needed for preparing the sqlite database for genotype browser should be given in a text file (e.g. see ‘GB_input_R11.txt’ in this folder). These inputs include the following:
+
+**NOTE** In case either of your input files FINNGEN_MINIMUM_COHORT_DATA or FGFACTORY_PASS_SAMPLES are read from the production library red bucket, run authentication command `gcloud auth login --update-adc` before running the scripts - even though the method is outdated in gcloud this is required to avoid vpc organization policy error when reading data by pandas package directly from the production bucket.
 
 1.	**OUTPUT_PATH**: The path for all the outputs of the ‘prepare_genotypeB_input.sh’, default is "$HOME/GB_out_$RELEASE_PREFIX". 
 
