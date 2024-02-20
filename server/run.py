@@ -22,7 +22,7 @@ def run_gunicorn(app, args):
         'reload': False,
         'workers': args.num_workers,
         'accesslog': args.accesslog,
-        'access_log_format': '%(t)s | %(s)s | %(L)ss | %(m)s %(U)s | resp_len:%(B)s | referrer:"%(f)s" | ip:%(h)s | agent:%(a)s',
+        'access_log_format': 'Sandbox-GB-log: %(t)s | %(s)s | %(L)ss | %(m)s %(U)s | resp_len:%(B)s | referrer:"%(f)s" | ip:%(h)s | agent:%(a)s',
         'loglevel': args.loglevel,
         'timeout': 120,
         'worker_class': 'sync',
