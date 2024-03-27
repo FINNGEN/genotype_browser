@@ -15,7 +15,7 @@ Compress(app)
 
 config = {}
 try:
-    _conf_module = imp.load_source('config', 'config.r12.py')
+    _conf_module = imp.load_source('config', 'config.py')
 except Exception as e:
     print('Could not load config.py')
     raise
