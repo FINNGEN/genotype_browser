@@ -14,7 +14,7 @@ function Alert (props) {
 
     d3.groups(dataTotal, el => el.batch).forEach(batch => {
         const QCtypes = Array.from(d3.rollup(batch[1], v => v.length, d => d.excluded).keys())
-        if (QCtypes.length === 1 && QCtypes[0] === 1) QCfail.push(batch[0])
+        if (QCtypes.length === 1 && QCtypes[0] === 0) QCfail.push(batch[0])
     })
 
     QCfail.length > 0 && QCfail.forEach((el, i) => {

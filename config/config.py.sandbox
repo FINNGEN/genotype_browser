@@ -68,3 +68,15 @@ vcf_files = {
 }
 
 log_level = logging.INFO
+
+
+class CustomFilter(logging.Filter):
+    def filter(self, record):
+        message = record.getMessage().split('|')[3]
+        method = message.split(' ')[1]
+        path = message.split(' ')[2]
+        result = not (path == '/' and method == 'GET')
+        return result
+
+logging.getLogger('gunicorn.access').addFilter(CustomFilter())
+

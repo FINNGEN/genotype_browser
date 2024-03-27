@@ -92,8 +92,9 @@ function FilterV3C (props) {
 
     d3.groups(dataTotal, el => el.batch).forEach(batch => {
         const QCtypes = Array.from(d3.rollup(batch[1], v => v.length, d => d.excluded).keys())
-        if (QCtypes.length === 1 && QCtypes[0] === 1) QCfail.push(batch[0])
-        else if ((QCtypes.length === 1 && QCtypes[0] === 0)) QCpass.push(batch[0])
+        if (QCtypes.length === 1 && QCtypes[0] === 0) QCfail.push(batch[0])
+        else if ((QCtypes.length === 1 && QCtypes[0] === 1)) QCpass.push(batch[0])
+
     })
 
     function renameButton(id, datum){
@@ -174,7 +175,7 @@ function FilterV3C (props) {
             d3.select('#p_filter_excluded').selectAll('.button_secondary').classed('button_secondary_active', visible)
             d3.select(id).classed('button_secondary_active', !visible)
         }
-        if (datum === 1) {
+        if (datum === 0) {
             d3.selectAll('.qcfail').classed('button_secondary_active', !visible)
             d3.selectAll('.qcpass').classed('button_secondary_active', visible)
             if (visible) {
@@ -182,10 +183,10 @@ function FilterV3C (props) {
                 visibility.excluded = []
             } else {
                 visibility.batch = QCfail
-                visibility.excluded = [1]
+                visibility.excluded = [0]
             }
         }
-        else if (datum === 0) {
+        else if (datum === 1) {
             d3.selectAll('.qcpass').classed('button_secondary_active', !visible)
             d3.selectAll('.qcfail').classed('button_secondary_active', visible)
             if (visible) {
@@ -193,7 +194,7 @@ function FilterV3C (props) {
                 visibility.excluded = []
             } else {
                 visibility.batch = QCpass
-                visibility.excluded = [0]
+                visibility.excluded = [1]
             }
         }
     }
