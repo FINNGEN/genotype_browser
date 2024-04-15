@@ -85,6 +85,9 @@ echo "STEP 1: Prepare basic info phenotype file"
 python3 merge_basic_info.py -s "${OUTPUT_PATH}/SAMPLE_LIST_${RELEASE_PREFIX}.txt" -d "${OUTPUT_PATH}/FINNGEN_ENDPOINT_DEATH_EXTRACTED_${RELEASE_PREFIX}.txt" \
 -m "$FINNGEN_MINIMUM_COHORT_DATA" -a "$FGFACTORY_PASS_SAMPLES" -o "${OUTPUT_PATH}/BASIC_INFO_PHENOTYPE_FILE_${RELEASE_PREFIX}.txt"
 
+echo "STEP 2. Prepare chips"
+
+bash get_chip_from_anno.sh "$IMPU_RELEASE_VARIANT_ANNOTATION_FILE" "${OUTPUT_PATH}/CHIPVARS_FILE_${RELEASE_PREFIX}.txt.gz"
 
 # compare batches in the basic QC and chip table from the db
 echo "DIFFERENCES BETWEEN BATCH NAMES IN THE CREATED CHIP TABLE, DB AND BASIC INFO FILE"
@@ -100,11 +103,6 @@ else
    echo -e "\nWARN: differences between the files - check your inputs!"
    cat  "${OUTPUT_PATH}/diffs_batches_in_chip_and_basic_info_files.txt" 
 fi
-
-
-echo "STEP 2. Prepare chips"
-
-bash get_chip_from_anno.sh "$IMPU_RELEASE_VARIANT_ANNOTATION_FILE" "${OUTPUT_PATH}/CHIPVARS_FILE_${RELEASE_PREFIX}.txt.gz"
 
 echo "STEP 3. Prepare gene annotation table"
 
