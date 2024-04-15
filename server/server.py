@@ -56,7 +56,7 @@ def find(query):
 def variants(variants):
     try:
         data_type = request.args.get('data_type')
-        data_src = fetch.get_var_sources(variants, data_type)
+        data_src = fetch.get_var_sources(variants)
         fetch_dtype = data_type
         if data_type == 'imputed':
             # if variant exists in chip but not in imputed
@@ -115,8 +115,7 @@ def clusterplot(variant):
         arr = var.split('_')
         arr[0] = 'X' if arr[0] == '23' else arr[0] 
         exists_in_chip = fetch.vcf_contains_var(variant, 'chip')
-        chr = arr[0]
-        filename = config['intensity_files_location'] + '/' + chr + '/' + '_'.join(arr) + '.tsv'
+        filename = config['intensity_files_location'] + '/' + arr[0] + '/' + '_'.join(arr) + '.tsv'
         filename = re.sub('//', '/', filename)
         if (config['use_gcp_buckets']):
             data = cloud_storage.read_bytes(config['red_bucket'], filename)
@@ -138,7 +137,7 @@ def clusterplot(variant):
 @app.route('/api/v1/qc/<varaints>')
 def qc(varaints):
     try:
-        result = fetch.check_qc_varaints(varaints)
+        result = fetch.get_qc_varaints(varaints)
     except Exception as e:
         abort(404)
     return jsonify(result)

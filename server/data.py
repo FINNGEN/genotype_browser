@@ -1,3 +1,4 @@
+import io
 from flask import make_response
 import gzip, pysam, threading, logging, timeit, os, sqlite3
 import pandas as pd
@@ -11,6 +12,7 @@ import google.auth.transport.requests
 import google.auth
 import time
 from collections import Counter
+from cloud_storage import CloudStorage
 
 class Datafetch(object):
 
@@ -113,10 +115,21 @@ class Datafetch(object):
             self.samples_imput = self._init_info(select_chip=False)
         self.info_chip, self.info_orig_chip, self.cohort_list_chip, self.region_list_chip, \
             self.info_columns_chip, self.samples_chip = self._init_info(select_chip=True)
-        self.qc = pd.read_csv(self.conf['qc'], header=0, sep="\t", low_memory=False)
+        
+        qc_data = [pd.read_csv(file, header=0, sep="\t", low_memory=False) for file in self.conf['qc']]
+        if len(qc_data) == 0:
+            qc = pd.DataFrame(columns = ['BATCH', 'VARIANT', 'REASON', 'VALUE'])
+        else:
+            qc = pd.concat(qc_data)
+            qc['VARIANT'] = qc['VARIANT'].apply(lambda x: x.replace('chr', '').replace('_', ':'))
+            qc = qc[qc.BATCH.isin(list(self.info.BATCH))]
+        self.qc = qc
 
         axiom = self.info[self.info['BATCH'].apply(lambda x: 'Axiom' in x)]
+        legacy = self.info[self.info['BATCH'].apply(lambda x: 'Axiom' not in x)]
+
         self.total_axiom_batch_count = len(axiom['BATCH'].drop_duplicates())
+        self.total_legacy_batch_count = len(legacy['BATCH'].drop_duplicates())
         
     def _get_annotation(self, chr, pos, ref, alt, data_type):
         in_data = 1 if data_type == 'imputed' else 2
@@ -134,8 +147,8 @@ class Datafetch(object):
     def _get_genotype_data(self, chr, pos, ref, alt, data_type):
 
         self._refresh_gcs_auth_token_if_needed()
-
         chr_var = chr if chr != 23 else 'X'
+
         if data_type == 'imputed':
             vcf = self.vcfs_imputed[chr-1]
             samples = list(self.samples_imput['row_id'])
@@ -170,8 +183,15 @@ class Datafetch(object):
         else: # variant doesn't exist in the table if it's not on any chip
             return set()
     
-    def _filter(self, df, filters, chips):
+    def _filter(self, df, filters, chips, qcd_batches):
         _df = df.copy()
+        if 'impchip' in filters:
+            if filters['impchip'] == 'chip':
+                chips = list(chips)
+                chips.extend(qcd_batches)
+                _df = _df.loc[_df['BATCH'].isin(chips)]
+            elif filters['impchip'] == 'imp':
+                _df = _df.loc[~_df['BATCH'].isin(chips)]
         if 'alive' in filters:
             if filters['alive'] == 'alive':
                 _df = _df.loc[_df['DEATH'] == 0]
@@ -181,17 +201,12 @@ class Datafetch(object):
             if filters['sex'] == 'female':
                 _df = _df.loc[_df['SEX'] == 1]
             elif filters['sex'] == 'male':
-                _df = _df.loc[_df['SEX'] == 0]
+                _df = _df.loc[_df['SEX'] == 0] 
         if 'array' in filters:
             if filters['array'] == 'finngen':
                 _df = _df.loc[_df['ARRAY'] == 1]
             elif filters['array'] == 'legacy':
-                _df = _df.loc[_df['ARRAY'] == 0]
-        if 'impchip' in filters:
-            if filters['impchip'] == 'chip':
-                _df = _df.loc[_df['BATCH'].isin(chips)]
-            elif filters['impchip'] == 'imp':
-                _df = _df.loc[~_df['BATCH'].isin(chips)]
+                _df = _df.loc[_df['ARRAY'] == 0] 
         return _df
 
     def _is_homozygous_alt(self, gt):
@@ -206,14 +221,14 @@ class Datafetch(object):
     def _gt_passes_threshold(self, gt_probability, gt_probability_thres):
         return gt_probability >= float(gt_probability_thres)
 
-    def _get_het_hom_index(self, data, index, use_gt, gp_thres, calc_info):
+    def _get_het_hom_index(self, data, index, use_gt, gp_thres, calc_info, sample_qcd):
         het_i = []
         hom_alt_i = []
         sum_eij = 0
         sum_fij_minus_eij2 = 0
         wt_hom_i = []
         missing_i = []
-        for i in index:
+        for k, i in enumerate(index):
             #GT:DS:GP
             #0|0:0:1,0,0
             s = data[i].split(':')
@@ -226,23 +241,29 @@ class Datafetch(object):
                 fij_minus_eij2 = 4*gp[2] + gp[1] - dosage*dosage
                 sum_fij_minus_eij2 = sum_fij_minus_eij2 + fij_minus_eij2
             if use_gt:
-                if self._is_homozygous_alt(gt):
-                    hom_alt_i.append(i)
-                elif self._is_heterozygous(gt):
-                    het_i.append(i)
-                elif self._is_homozygous_wt(gt):
-                    wt_hom_i.append(i)
-                else:
+                if sample_qcd[k]:
                     missing_i.append(i)
+                else:
+                    if self._is_homozygous_alt(gt):
+                        hom_alt_i.append(i)
+                    elif self._is_heterozygous(gt):
+                        het_i.append(i)
+                    elif self._is_homozygous_wt(gt):
+                        wt_hom_i.append(i)
+                    else:
+                        missing_i.append(i)
             else:
-                if self._is_homozygous_alt(gt) and self._gt_passes_threshold(gp[2], gp_thres):
-                    hom_alt_i.append(i)
-                elif self._is_heterozygous(gt) and self._gt_passes_threshold(gp[1], gp_thres):
-                    het_i.append(i)
-                elif self._is_homozygous_wt(gt) and self._gt_passes_threshold(gp[0], gp_thres):
-                    wt_hom_i.append(i)
-                else:
+                if sample_qcd[k]:
                     missing_i.append(i)
+                else:
+                    if self._is_homozygous_alt(gt) and self._gt_passes_threshold(gp[2], gp_thres):
+                        hom_alt_i.append(i)
+                    elif self._is_heterozygous(gt) and self._gt_passes_threshold(gp[1], gp_thres):
+                        het_i.append(i)
+                    elif self._is_homozygous_wt(gt) and self._gt_passes_threshold(gp[0], gp_thres):
+                        wt_hom_i.append(i)
+                    else:
+                        missing_i.append(i)
 
         if calc_info and len(index)>0:
             theta_hat = sum_eij / (2*len(index))
@@ -276,31 +297,41 @@ class Datafetch(object):
             agg[type[0]] = {'names': type[2], 'gt_counts': gt_count, 'num_indiv': num_indiv, 'af': af}
         return agg
     
-    def _count_gt(self, data, filters, chips, data_type):
+    def _count_gt(self, data, filters, chips, data_type, qcd_batches):
+
         if data_type == 'imputed':
-            filtered_basic_info = self._filter(self.info, filters, chips)
+            filtered_basic_info = self._filter(self.info, filters, chips, qcd_batches)
             info_df = self.info
             info_columns = self.info_columns
         else:
-            filtered_basic_info = self._filter(self.info_chip, filters, chips)
+            filtered_basic_info = self._filter(self.info_chip, filters, chips, qcd_batches)
             info_df = self.info_chip
             info_columns = self.info_columns_chip
 
-        # extract data freeze number from the data
         id_index = list(filtered_basic_info.index)
+        if data_type == 'imputed' and filters['impchip'] == 'chip':
+            sample_qcd = filtered_basic_info.BATCH.isin(qcd_batches).values
+        else:
+            sample_qcd = [False]*len(id_index)
+
         het_i = []
         hom_i = []
         wt_hom_i = []
         missing_i = []
-        for d in data:
+        for i, d in enumerate(data):     
             if data_type == 'imputed':
-                het_i_d, hom_i_d, wt_hom_i_d, missing_i_d, info = self._get_het_hom_index(d, id_index, filters['gtgp'] == 'gt', filters['gpThres'], len(data) == 1)
+                het_i_d, hom_i_d, wt_hom_i_d, missing_i_d, info = self._get_het_hom_index(
+                    d, id_index, filters['gtgp'] == 'gt', filters['gpThres'], len(data) == 1, sample_qcd
+                )
             else:
-                het_i_d, hom_i_d, wt_hom_i_d, missing_i_d, info = self._get_het_hom_index(d, id_index, True, None, False)
+                het_i_d, hom_i_d, wt_hom_i_d, missing_i_d, info = self._get_het_hom_index(
+                    d, id_index, True, None, False, sample_qcd
+                )
             het_i.extend(het_i_d)
             hom_i.extend(hom_i_d)
             wt_hom_i.extend(wt_hom_i_d)
             missing_i.extend(missing_i_d)
+
         het_cnt = Counter(het_i)        
         het_i = set(het_i)
         hom_i = set(hom_i)
@@ -319,12 +350,13 @@ class Datafetch(object):
         missing = info_df.iloc[list(missing_i)]
         agg = self._aggregate_het_hom(het, hom, filtered_basic_info, data_type)
         total_af = (len(het) + 2*len(hom))/len(filtered_basic_info)/2 if len(filtered_basic_info) > 0 else -1
+        total_indiv = len(het) + len(hom) + len(wt_hom) + len(missing)
+
         het = het.to_numpy().T.tolist()
         hom = hom.to_numpy().T.tolist()
-
-        # add wt hom and missing data
         wt_hom = wt_hom.to_numpy().T.tolist()
-        missing = missing.to_numpy().T.tolist()        
+        missing = missing.to_numpy().T.tolist()
+
         return {
             'het': het if len(het) > 0 else [[] for i in info_columns],
             'hom_alt': hom if len(hom) > 0 else [[] for i in info_columns],
@@ -334,28 +366,39 @@ class Datafetch(object):
             'agg': agg,
             'total_af': total_af,
             'info': info,
-            'total_indiv': len(filtered_basic_info),
+            'total_indiv': total_indiv,
             'filters': filters,
             'data_type': data_type
         }
     
-    def _count_gt_for_write(self, variants, data, filters, chips, data_type):
+    def _count_gt_for_write(self, variants, data, filters, chips, data_type, qcd_batches):
+
         start_time = timeit.default_timer()
         df_list = []
         cohort_source = 'Genobrowser[' + self.conf['release_version'] + ']'
         if data_type == 'imputed':
-            filtered_basic_info = self._filter(self.info, filters, chips)
+            filtered_basic_info = self._filter(self.info, filters, chips, qcd_batches)
             info_orig = self.info_orig
         else:
-            filtered_basic_info = self._filter(self.info_chip, filters, chips)
+            filtered_basic_info = self._filter(self.info_chip, filters, chips, qcd_batches)
             info_orig = self.info_orig_chip
         id_index = list(filtered_basic_info.index) 
+
+        if data_type == 'imputed' and filters['impchip'] == 'chip':
+            sample_qcd = filtered_basic_info.BATCH.isin(qcd_batches).values
+        else:
+            sample_qcd = [False]*len(id_index)
+
         for i, d in enumerate(data):
             # get indices of het/hom individuals in genotype data
             if data_type == 'imputed':
-                het_i, hom_alt_i, wt_hom_i, missing_i, info = self._get_het_hom_index(d, id_index, filters['gtgp'] == 'gt', filters['gpThres'], len(data) == 1)
+                het_i, hom_alt_i, wt_hom_i, missing_i, info = self._get_het_hom_index(
+                    d, id_index, filters['gtgp'] == 'gt', filters['gpThres'], len(data) == 1, sample_qcd
+                )
             else:
-                het_i, hom_alt_i, wt_hom_i, missing_i, info = self._get_het_hom_index(d, id_index, True, None, False)
+                het_i, hom_alt_i, wt_hom_i, missing_i, info = self._get_het_hom_index(
+                    d, id_index, True, None, False, sample_qcd
+                )
             gt = [element.split(':')[0] for element in d ]
             gt_arr = np.array(gt)
             gt_het = list(gt_arr[het_i])
@@ -406,7 +449,7 @@ class Datafetch(object):
                 df = pd.concat([df, missing], ignore_index=True)
 
             # append data frames
-            df = self._filter(df, filters, chips)
+            # df = self._filter(df, filters, chips, qcd_batches)
             df['variant'] = variants[i].replace('-', ':')
             df['COHORT_SOURCE'] = cohort_source
             df['COHORT_NAME'] = df['variant'] + '-' + df['gt']            
@@ -442,7 +485,6 @@ class Datafetch(object):
         vars_data = []
         anno = []
         vars = []
-       
         for variant in variants.split(','):
             chr, pos, ref, alt = utils.parse_variant(variant)
             var_data = self._get_genotype_data(chr, pos, ref, alt, data_type)
@@ -461,7 +503,9 @@ class Datafetch(object):
                 del filters['impchip']
             if 'gtgp' in filters:
                 del filters['gtgp']
-        data = self._count_gt(vars_data, filters, chips, data_type)
+        
+        qcd = self._get_qcd_batches("%s:%s:%s:%s" % (chr, pos, ref, alt))  if len(vars_data) == 1 else []
+        data = self._count_gt(vars_data, filters, chips, data_type, qcd)
         munge_time = timeit.default_timer() - start_time
 
         return {
@@ -476,22 +520,71 @@ class Datafetch(object):
             'release_version': self.conf['release_version']
         }
     
-    def write_variants(self, variants, filters, data_type):
+    def _get_qcd_batches(self, variant):
+        v = utils.format_variant(variant)
+        qc = self.qc[self.qc['VARIANT'].isin([v])].copy()        
+        qc = qc[~qc['BATCH'].duplicated()].copy()
+        return [] if qc.empty else qc.BATCH.values
+    
+    def _get_intensity_data(self, variant):
+        chr, pos, ref, alt = utils.parse_variant(variant)
+        chrom = chr if chr != 23 else 'X' 
+        var = "%s_%s_%s_%s" % (chrom, pos, ref, alt)
+        filename = '%s/%s/%s.tsv' % (self.conf['intensity_files_location'], chrom, var)
+        filename = re.sub('//', '/', filename)
+        fields = self.conf['intensity_data_fields']
+        cloud_storage = CloudStorage()
+        clust = cloud_storage.read_bytes(self.conf['red_bucket'], filename)
+        
+        if clust is None:
+            return pd.DataFrame(columns = [f.upper() for f in fields])
+        else:
+            clustdata = pd.read_csv(io.StringIO(clust.decode()), sep="\t",  usecols=fields)
+            clustdata.columns = [c.upper() for c in clustdata.columns]
+        
+        return clustdata
+    
+    def format_variant(variant):
+        chr, pos, ref, alt = utils.parse_variant(variant)
+        chrom = chr if chr != 23 else 'X' 
+        v = "%s:%s:%s:%s" % (chrom, pos, ref, alt)
+        return v
 
+    def write_variants(self, variants, filters, data_type):
         vars_data = []
         for variant in variants.split(','):
             chr, pos, ref, alt = utils.parse_variant(variant)
             var_data = self._get_genotype_data(chr, pos, ref, alt, data_type)
             if var_data is not None:
                 vars_data.append(var_data)
+            
         chips = self._get_chips(chr, pos, ref, alt) if len(vars_data) == 1 else set()
-        data = self._count_gt_for_write(variants.split(','), vars_data, filters, chips, data_type)
+        qcd = self._get_qcd_batches("%s:%s:%s:%s" % (chr, pos, ref, alt))  if len(vars_data) == 1 else []
+        data_ = self._count_gt_for_write(variants.split(','), vars_data, filters, chips, data_type, qcd)
+
+        result = []
+        for v in variants.split(','):
+            qcd_batches = self._get_qcd_batches(v)
+            if len(qcd_batches) > 0:
+                qc = pd.DataFrame({
+                    'BATCH': qcd_batches, 
+                    'QC_FAILED': [1]*len(qcd_batches)}) 
+            else:
+                qc = pd.DataFrame(columns=['BATCH', 'QC_FAILED'])
+            clustdata = self._get_intensity_data(variant)
+            vardata = data_[data_['variant'].isin([utils.format_variant(v)])].copy()
+            vardata = pd.merge(vardata, qc, how='outer', left_on=['BATCH'], right_on=['BATCH'])
+            vardata = pd.merge(vardata, clustdata, how='outer', left_on=['FINNGENID'], right_on=['ID'])
+            result.append(vardata)
+        
+        data = pd.concat(result)
+        data['QC_FAILED'] = np.where(data.apply(lambda x: pd.isna(x.QC_FAILED), axis = 1), 0, 1)
 
         gt_download_keys = ['het', 'hom', 'wt_hom', 'missing']
         gt_download = '_'.join([k.replace('_', '') for k in gt_download_keys if filters[k] == 'true'])
         for key in gt_download_keys:
                 del filters[key]
-
+                
         if data_type == 'imputed':
             del filters['data_type']
             filename = variants.replace(',', '_') + '__imputed_data__' + '_'.join([k+'_'+v for k,v in filters.items()]) + '_' + gt_download + '.tsv'
@@ -500,10 +593,14 @@ class Datafetch(object):
                 del filters[key]
             filename = variants.replace(',', '_') + '__rawchip_data__' + '_'.join([k+'_'+v for k,v in filters.items()]) + '_' + gt_download + '.tsv'
 
-        data = data.drop(columns=['AGE_AT_DEATH_OR_NOW'])
+        data = data.drop(columns=['AGE_AT_DEATH_OR_NOW', 'ID'])
         data['SEX'] = np.where(data['SEX'] == 1, 'female', 'male')
-        data = data.sort_values(by=['FINNGENID'])           
-    
+        if data_type == 'imputed' and filters['impchip'] != 'chip':
+            data['SOURCE'] = np.where(data['QC_FAILED'] == 0, 'chip', 'imputed')
+        else:
+            data['SOURCE'] = 'chip'
+        data = data.sort_values(by=['FINNGENID'])
+
         try:
             data.to_csv(sep='\t', index=False, na_rep='NA')
             output = make_response(data.to_csv(sep='\t', index=False, na_rep='NA'))
@@ -572,7 +669,7 @@ class Datafetch(object):
         else:
             return False
 
-    def get_var_sources(self, variants, search_data_type):
+    def get_var_sources(self, variants):
 
         # extract possible datatypes for the variants in a query
         # if var is not in the {data type} vcf or anno db, src is 0
@@ -602,43 +699,39 @@ class Datafetch(object):
 
         return src
 
-    def check_qc_varaints(self, vars):
-        varaints = vars.split(',')        
+    def get_qc_varaints(self, vars):
+        varaints = vars.split(',')
         res = []
         for variant in varaints:
-            v = f"chr{variant.replace('-', '_')}"
-            excl = self.qc[self.qc['VARIANT'].isin([v])].copy()
-            excl = excl[excl['BATCH'].apply(lambda x: x != 'AxiomGT1')]
-            gr = excl.groupby(by = 'PIPELINE')
-            pipeline_exclusion_list = []
-            for g in gr:
-                pipeline = g[0]
-                df = g[1]
-                exclusion_list = []
-                for r in df.groupby(by = "REASON"):
-                    reason = r[0]
-                    data = r[1]
-                    batches = list(data['BATCH'])
-                    batches_list = list(set([b.split("_")[1] for b in batches]))
-                    p = {
-                        'reason': r[0],
-                        'batches_count': len(batches_list),
-                        'batches': ','.join(batches_list),
-                        'batches_full': ','.join(list(excl['BATCH']))
-                    }
-                    exclusion_list.append(p)
-                
-                pipeline_exclusion_list.append({ 
-                    'pipeline': pipeline, 
-                    'pipeline_exclusions': exclusion_list 
-                })
-            
+            chr, pos, ref, alt = utils.parse_variant(variant)
+            if chr == 23:
+                chrom = 'X'
+            elif chr == 24:
+                chrom = 'Y'
+            elif chr == 26:
+                chrom = 'MT'
+            else:
+                chrom = chr
+            v = "%s:%s:%s:%s" % (chrom, pos, ref, alt)
+
+            qc = self.qc[self.qc['VARIANT'].isin([v])].copy()
+            exclusion_list = []
+            for r in qc.groupby(by = "REASON"):
+                data = r[1]
+                p = {
+                    'reason': r[0],
+                    'axiom_batches': [b.split('_')[1] for b in data['BATCH'].values if 'Axiom' in b],
+                    'legacy_batches': [b.split('_')[1] for b in data['BATCH'].values if 'Axiom' not in b]
+                }
+                exclusion_list.append(p)
+
             res.append({
                 'variant': variant, 
-                'exclusions': pipeline_exclusion_list, 
-                'total_axiom_batch_count': self.total_axiom_batch_count
+                'exclusions': exclusion_list, 
+                'total_axiom_batch_count': self.total_axiom_batch_count,
+                'total_legacy_batch_count': self.total_legacy_batch_count
             })
-        
+
         return res
 
 

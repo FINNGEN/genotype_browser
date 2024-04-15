@@ -9,7 +9,7 @@ basic_info_file = 'genotype_browser_dummy_data_50k_1.txt.gz'
 intensity_files_location = 'intensity_plots/'
 
 geojson = 'finmap.geojson'
-release_version = 'DF9'
+release_version = 'DF6'
 
 qc = ''
 
@@ -67,6 +67,8 @@ vcf_files = {
     ]    
 }
 
-write_dir = 'out'
+
+qc = []
+
 
 log_level = logging.INFO

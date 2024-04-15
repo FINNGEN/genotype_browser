@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { VariantPlots } from './VariantPlots'
 import {
@@ -8,7 +8,6 @@ import {
 } from '../data/dataSlice'
 
 import { setOption } from '../data/dataSlice'
-import { VariantQC } from './VariantQC'
 
 export const Variant = (props) => {
 
@@ -34,7 +33,6 @@ export const Variant = (props) => {
 	    const unordered = {...data.filters, ...data.serverOptions, ...{'data_type': dtype}}
 	    const ordered = {}
 	    Object.keys(unordered).sort().forEach(key => { ordered[key] = unordered[key] })
-		// console.log('Variant.js:', `${props.props.variant}+${JSON.stringify(ordered)}`)
 		const stored = sessionStorage.getItem(`${props.props.variant}+${JSON.stringify(ordered)}`)
 	    if (stored) {
 			dispatch(setData(JSON.parse(stored)))
@@ -46,7 +44,7 @@ export const Variant = (props) => {
     }, [data.filters, data.serverOptions, props, data.data_type])
 
     const optionChanged = (opt, event) => {
-	dispatch(setOption({opt: opt, content: event.target.value}))
+		dispatch(setOption({opt: opt, content: event.target.value}))
     }
 
     let content = (<div>loading...</div>)
@@ -61,15 +59,12 @@ export const Variant = (props) => {
 	content = (<div style={{color: 'red'}}>{errorMsg}</div>)
     }
     if (data.status == 'done') {
-	//after info score, there's a bug though that this doesn't currently update because it's not in data.data
-	//<tr><td>wall time</td><td style={{textAlign: 'right'}}>{`${data.time.fetch.toPrecision(3)}+${data.time.munge.toPrecision(3)}`}</td></tr>
 	
 	var impscore = null
 	if (dtype == 'imputed') {
 		impscore = (<tr><td>imputation info score</td><td style={{textAlign: 'right'}}>{data.data.info < 0 ? 'NA' : data.data.info.toPrecision(3)}</td></tr>)
 	} 
 
-	// <div className="hl" style={{borderTop: "1px solid #dddddd", marginTop: "0px", marginBottom: "10px"}}></div>
 	var show_panel_content = (
 		<div style={{display: 'flex', flexDirection: 'column', width: 'max-content'}}>
 		    <div><h3 style={{marginBottom: "10px", marginTop: "20px"}}>Show</h3></div>
@@ -106,7 +101,7 @@ export const Variant = (props) => {
 		 </div>
 		</div>
 	)
-	
+
 	content = (<div>
 		   <div style={{display: 'flex', flexDirection: 'column'}}>
 		   <div><h3 style={{marginTop: "20px", marginBottom: "10px"}}>Result summary statistics</h3></div>
@@ -127,9 +122,9 @@ export const Variant = (props) => {
 			   </tbody>
 			   </table>
 		   </div>
+			
 		   {show_panel_content}
 		   <VariantPlots />
-		   <VariantQC props={data.variants}/>
 		   </div>
 		   </div>)
     }

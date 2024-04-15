@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { setFilter, setOption, setServerOption, setDataType, setDownloadOption } from '../data/dataSlice'
 import './styles.css'
+import { VariantQC } from './VariantQC'
 
 
 export const VariantForm = (props) => {
@@ -14,8 +15,8 @@ export const VariantForm = (props) => {
     const data = useSelector(state => state.data)
     const data_freeze = useSelector(state => state.data.data_freeze)
     const downloadOptions = useSelector(state => state.data.downloadOptions)
-	// const search_status = useSelector(state => state.data.status)
 	const search_status = useSelector(state => state.search.status)
+	const [showQCSummary, setShowQCSummary] = useState(false)
 
 	useEffect(() => {
 		dispatch(setDataType({content: data.data_type}))
@@ -57,11 +58,11 @@ export const VariantForm = (props) => {
     }
 
     const gpThresChanged = event => {
-	setGP(event.target.value.trim())
+		setGP(event.target.value.trim())
     }
 
     const hethomChanged = event => {
-	dispatch(setServerOption({opt: 'hethom', content: event.target.checked}))
+		dispatch(setServerOption({opt: 'hethom', content: event.target.checked}))
     }
 
     const downloadRequested = event => {
@@ -331,12 +332,20 @@ export const VariantForm = (props) => {
 				    </div>
 			    </div>
 			    {hethom}
-
 			    </div>
-				
-			    </div> 
 
+				<div className="vl" style={{height: "100%", borderLeft: "1px solid #dddddd", marginLeft: "20px", marginRight: "20px"}}></div>
+				<div style={{display: 'flex', flexDirection: 'column'}}>
+					<div><h3 style={{marginBottom: "10px", marginTop: "0px"}}>QC exclusion</h3></div>
+					<div className="hl" style={{width: "100%", borderTop: "1px solid #dddddd", marginTop: "0px", marginBottom: "10px"}}></div>
+					<div style={{display: 'flex', flexDirection: 'row'}}>
+					<input type="checkbox" checked={showQCSummary} onChange={() => setShowQCSummary(!showQCSummary) }/>
+					<span>Show batch exclusion summary</span>
+					</div>
+				</div>
 			    </div>
+			    </div>
+				{data.variants && showQCSummary && <VariantQC props={data.variants}/>}
 			    </div>
 		</div>
 	)
