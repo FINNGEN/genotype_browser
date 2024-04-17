@@ -8,7 +8,7 @@ class NotFoundException(Exception):
 
 def parse_chr(chr):
     chr = re.sub(r'^0', '', str(chr))
-    return int(chr.lower().replace('chr', '').replace('x', '23'))
+    return int(chr.lower().replace('chr', '').replace('x', '23').replace('y', '24').replace('m', '26'))
 
 def parse_variant(variant):
     s = re.compile('-|_|:').split(variant)
@@ -39,6 +39,13 @@ def parse_region(region):
 
 def format_variant(variant):
     chr, pos, ref, alt = parse_variant(variant)
-    chrom = chr if chr != 23 else 'X' 
+    if chr == 23:
+        chrom = 'X'
+    elif chr == 24:
+        chrom = 'Y'
+    elif chr == 26:
+        chrom = 'M'
+    else:
+        chrom = chr
     v = "%s:%s:%s:%s" % (chrom, pos, ref, alt)
     return v

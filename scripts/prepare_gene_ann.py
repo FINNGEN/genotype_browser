@@ -49,7 +49,7 @@ def main():
     res['chr'] = res['chr'].apply(lambda x: x.replace('chr', ''))
     res['chr'] = res['chr'].apply(lambda x: '23' if x == 'X' else x)
     res['chr'] = res['chr'].apply(lambda x: '24' if x == 'Y' else x)
-    res['chr'] = res['chr'].apply(lambda x: '25' if x == 'M' else x)
+    res['chr'] = res['chr'].apply(lambda x: '26' if x == 'M' else x)
 
     # remove duplicates (leave only a single copy) and save to a file
     res_filt_dups = res.drop_duplicates(subset='gene_name', keep='first')

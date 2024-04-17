@@ -147,14 +147,27 @@ class Datafetch(object):
     def _get_genotype_data(self, chr, pos, ref, alt, data_type):
 
         self._refresh_gcs_auth_token_if_needed()
-        chr_var = chr if chr != 23 else 'X'
+        if chr == 23:
+            chr_var = 'X'
+        elif chr == 24:
+            chr_var = 'Y'
+        elif chr == 26:
+            chr_var = 'M'
+        else:
+            chr_var = chr
 
         if data_type == 'imputed':
-            vcf = self.vcfs_imputed[chr-1]
-            samples = list(self.samples_imput['row_id'])
+            if chr > len(self.vcfs_imputed):
+                return None
+            else:
+                vcf = self.vcfs_imputed[chr-1]
+            samples = list(self.samples_imput['row_id'].copy())
         else:
-            vcf = self.vcfs_chip[chr-1]
-            samples = list(self.samples_chip['row_id'])
+            if chr > len(self.vcfs_chip):
+                return None
+            else:
+                vcf = self.vcfs_chip[chr-1]
+            samples = list(self.samples_chip['row_id'].copy())
 
         tabix_iter = pysam.TabixFile(vcf, parser=None).fetch('chr'+str(chr_var), pos-1, pos)
 
@@ -210,13 +223,13 @@ class Datafetch(object):
         return _df
 
     def _is_homozygous_alt(self, gt):
-        return gt == '1|1' or gt == '1/1'
+        return gt == '1|1' or gt == '1/1' or gt == '1'
 
     def _is_heterozygous(self, gt):
-        return gt == '1|0' or gt == '1/0' or gt == '0|1' or gt == '0/1'
+        return gt == '1|0' or gt == '1/0' or gt == '0|1' or gt == '0/1' or gt == '2'
 
     def _is_homozygous_wt(self, gt):
-        return gt == '0|0' or gt =='0/0'
+        return gt == '0|0' or gt =='0/0' or gt == '0'
 
     def _gt_passes_threshold(self, gt_probability, gt_probability_thres):
         return gt_probability >= float(gt_probability_thres)
@@ -498,6 +511,7 @@ class Datafetch(object):
         fetch_time = timeit.default_timer() - start_time
         start_time = timeit.default_timer()
         chips = self._get_chips(chr, pos, ref, alt) if len(vars_data) == 1 else set()
+
         if data_type == 'chip':
             if 'impchip' in filters:
                 del filters['impchip']
@@ -521,34 +535,40 @@ class Datafetch(object):
         }
     
     def _get_qcd_batches(self, variant):
-        v = utils.format_variant(variant)
+        v = utils.format_variant(variant)        
         qc = self.qc[self.qc['VARIANT'].isin([v])].copy()        
         qc = qc[~qc['BATCH'].duplicated()].copy()
         return [] if qc.empty else qc.BATCH.values
     
     def _get_intensity_data(self, variant):
         chr, pos, ref, alt = utils.parse_variant(variant)
-        chrom = chr if chr != 23 else 'X' 
+        if chr == 23:
+            chrom = 'X'
+        elif chr == 24:
+            chrom = 'Y'
+        elif chr == 26:
+            chrom = 'MT'
+        else:
+            chrom = chr
+
         var = "%s_%s_%s_%s" % (chrom, pos, ref, alt)
         filename = '%s/%s/%s.tsv' % (self.conf['intensity_files_location'], chrom, var)
         filename = re.sub('//', '/', filename)
-        fields = self.conf['intensity_data_fields']
         cloud_storage = CloudStorage()
         clust = cloud_storage.read_bytes(self.conf['red_bucket'], filename)
+        fields = self.conf['intensity_data_fields']
         
         if clust is None:
-            return pd.DataFrame(columns = [f.upper() for f in fields])
+            clustdata = pd.DataFrame(columns = [f.upper() for f in fields])
         else:
-            clustdata = pd.read_csv(io.StringIO(clust.decode()), sep="\t",  usecols=fields)
-            clustdata.columns = [c.upper() for c in clustdata.columns]
+            try:
+                clustdata = pd.read_csv(io.StringIO(clust.decode()), sep="\t", usecols=fields)
+            except Exception as e:
+                raise utils.ParseException()
+            else:
+                clustdata.columns = [c.upper() for c in clustdata.columns]
         
         return clustdata
-    
-    def format_variant(variant):
-        chr, pos, ref, alt = utils.parse_variant(variant)
-        chrom = chr if chr != 23 else 'X' 
-        v = "%s:%s:%s:%s" % (chrom, pos, ref, alt)
-        return v
 
     def write_variants(self, variants, filters, data_type):
         vars_data = []
@@ -561,7 +581,7 @@ class Datafetch(object):
         chips = self._get_chips(chr, pos, ref, alt) if len(vars_data) == 1 else set()
         qcd = self._get_qcd_batches("%s:%s:%s:%s" % (chr, pos, ref, alt))  if len(vars_data) == 1 else []
         data_ = self._count_gt_for_write(variants.split(','), vars_data, filters, chips, data_type, qcd)
-
+        
         result = []
         for v in variants.split(','):
             qcd_batches = self._get_qcd_batches(v)
@@ -571,10 +591,11 @@ class Datafetch(object):
                     'QC_FAILED': [1]*len(qcd_batches)}) 
             else:
                 qc = pd.DataFrame(columns=['BATCH', 'QC_FAILED'])
+
             clustdata = self._get_intensity_data(variant)
-            vardata = data_[data_['variant'].isin([utils.format_variant(v)])].copy()
+            vardata = data_[data_['variant'].isin([v.replace('-', ':')])].copy()
             vardata = pd.merge(vardata, qc, how='outer', left_on=['BATCH'], right_on=['BATCH'])
-            vardata = pd.merge(vardata, clustdata, how='outer', left_on=['FINNGENID'], right_on=['ID'])
+            vardata = pd.merge(vardata, clustdata, how='outer', left_on=['FINNGENID'], right_on=['ID'])            
             result.append(vardata)
         
         data = pd.concat(result)
@@ -592,14 +613,16 @@ class Datafetch(object):
             for key in ['array', 'impchip', 'data_type']:
                 del filters[key]
             filename = variants.replace(',', '_') + '__rawchip_data__' + '_'.join([k+'_'+v for k,v in filters.items()]) + '_' + gt_download + '.tsv'
-
+        
         data = data.drop(columns=['AGE_AT_DEATH_OR_NOW', 'ID'])
+
         data['SEX'] = np.where(data['SEX'] == 1, 'female', 'male')
         if data_type == 'imputed' and filters['impchip'] != 'chip':
             data['SOURCE'] = np.where(data['QC_FAILED'] == 0, 'chip', 'imputed')
         else:
             data['SOURCE'] = 'chip'
         data = data.sort_values(by=['FINNGENID'])
+        data = data[data.apply(lambda x: not pd.isna(x['FINNGENID']), axis=1)]
 
         try:
             data.to_csv(sep='\t', index=False, na_rep='NA')
@@ -703,17 +726,7 @@ class Datafetch(object):
         varaints = vars.split(',')
         res = []
         for variant in varaints:
-            chr, pos, ref, alt = utils.parse_variant(variant)
-            if chr == 23:
-                chrom = 'X'
-            elif chr == 24:
-                chrom = 'Y'
-            elif chr == 26:
-                chrom = 'MT'
-            else:
-                chrom = chr
-            v = "%s:%s:%s:%s" % (chrom, pos, ref, alt)
-
+            v = utils.format_variant(variant)
             qc = self.qc[self.qc['VARIANT'].isin([v])].copy()
             exclusion_list = []
             for r in qc.groupby(by = "REASON"):
@@ -721,7 +734,7 @@ class Datafetch(object):
                 p = {
                     'reason': r[0],
                     'axiom_batches': [b.split('_')[1] for b in data['BATCH'].values if 'Axiom' in b],
-                    'legacy_batches': [b.split('_')[1] for b in data['BATCH'].values if 'Axiom' not in b]
+                    'legacy_batches': [ '_'.join(b.split('_')[0:2]) for b in data['BATCH'].values if 'Axiom' not in b]
                 }
                 exclusion_list.append(p)
 
