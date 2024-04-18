@@ -47,5 +47,15 @@ def format_variant(variant):
         chrom = 'M'
     else:
         chrom = chr
-    v = "%s:%s:%s:%s" % (chrom, pos, ref, alt)
-    return v
+    return "%s:%s:%s:%s" % (chrom, pos, ref, alt)
+
+def get_vcf_file(flist, chr):
+    match = None
+    pattern = 'chr' + str(chr)
+    for i, f in enumerate(flist):
+        matches = re.findall('chr[0-9]*', f)
+        for m in matches:
+            if m == pattern:
+                match = flist[i]
+                break
+    return match
