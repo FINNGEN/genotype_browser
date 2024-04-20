@@ -9,24 +9,16 @@ export const VariantQC = (props) => {
     const [variantsNoExclusion, setViaraintsNoExclusion] = useState([]);
     const [tableRows, setTableRows] = useState([]);
 
-    const getData = async () => { 
+    useEffect(() => {
         const url = '/api/v1/qc/' + variants.join(',');
-        try {
-            const response = await fetch(url);
-            if (response.status != 200){
-                throw new Error('QC data not found');
-            } else {
-                const data = await response.json();
-                setDataQC(data);
-                setError(null);
-            }            
-        } catch(err){
-            setError(err.message);
-        }
-    }
+        fetch(url).then((response) => response.json()).then(data => {
+            setDataQC(data);
+            setError(null);
+        }).catch(error => setError(error.message));
+    }, [variants]);
 
     useEffect(() => { errorMessage && console.error(errorMessage) },[errorMessage]);
-    useEffect(() => { getData() }, [variants]);
+
     useEffect(() => { 
         if (dataQC) {
             setViaraintsNoExclusion(dataQC.filter(variant => variant.exclusions.length == 0)) ;
@@ -68,36 +60,40 @@ export const VariantQC = (props) => {
             {
                 errorMessage === null ?
                 <div>
-                <h3>Batch exclusion summary</h3>
                 {
-                    dataQC !== null && dataQC.length > 0 && tableRows.length > 0 ? 
-                    <table className="anno">
-                        <tbody>
-                            <tr>
-                            <th>Variant</th>
-                            <th>QC fail reason</th>
-                            <th>Number of batches with failed QC</th>
-                            <th>Batches</th>
-                            </tr>
-                            {
-                                tableRows.map( rows => { return (
+                    tableRows.length ? <h3>Batch exclusion summary</h3> : null
+                }
+                {
+                    tableRows.length > 0 ? 
+                        dataQC && dataQC.length > 0 ? 
+                        <table className="anno">
+                            <tbody>
                                 <tr>
-                                    {
-                                        rows.map( cell => { return (
-                                            <td rowSpan = {cell.rowSpan}> {cell.cellValue} </td>
-                                        )})
-                                    }
+                                <th>Variant</th>
+                                <th>QC fail reason</th>
+                                <th>Number of batches with failed QC</th>
+                                <th>Batches</th>
                                 </tr>
-                                ) })
-                            }
+                                {
+                                    tableRows.map( rows => { return (
+                                    <tr>
+                                        {
+                                            rows.map( cell => { return (
+                                                <td rowSpan = {cell.rowSpan}> {cell.cellValue} </td>
+                                            )})
+                                        }
+                                    </tr>
+                                    ) })
+                                }
 
-                        </tbody>
-                        </table> : <p>All batches PASS QC.</p> 
+                            </tbody>
+                            </table> : <p>All batches PASS QC.</p> 
+                    : null
                 }
                 {
                     variantsNoExclusion.length > 0 && tableRows.length > 0 ? 
-                        <div style={{marginTop: "10px"}}>
-                            No batch exclusions found for the variant{variantsNoExclusion.length > 1 ? 's' : ''}: 
+                        <div style={{margin: "10px 0px 0px 5px"}}>
+                            No batch exclusions found for the variant{variantsNoExclusion.length > 1 ? 's' : ''}:  
                                 {variantsNoExclusion.map(element => element.variant).join(', ')}</div>: null
                 }
                 </div> : "ERROR :: " + errorMessage
