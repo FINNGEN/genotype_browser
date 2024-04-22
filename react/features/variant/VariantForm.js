@@ -18,6 +18,20 @@ export const VariantForm = (props) => {
     const downloadOptions = useSelector(state => state.data.downloadOptions)
 	const search_status = useSelector(state => state.search.status)
 	const [showQCSummary, setShowQCSummary] = useState(false)
+	const [dataQC, setDataQC] = useState(null)
+	const [errorMessage, setError] = useState(null);
+
+	useEffect(() => {
+        if(data.variants){
+			const url = '/api/v1/qc/' + data.variants.join(',');
+			fetch(url).then((response) => response.json()).then(data => {
+				setDataQC(data);
+				setError(null);
+			}).catch(error => setError(error.message));
+		}
+    }, [data.variants]);
+
+	useEffect(() => { errorMessage && console.error(errorMessage) },[errorMessage]);
 
 	useEffect(() => {
 		dispatch(setDataType({content: data.data_type}))
@@ -354,7 +368,7 @@ export const VariantForm = (props) => {
 				</div>
 			    </div>
 			    </div>
-				{data.variants && showQCSummary && <VariantQC props={data.variants}/>}
+				{data.variants && showQCSummary && <VariantQC data={dataQC} error={errorMessage}/>}
 			    </div>
 		</div>
 	)

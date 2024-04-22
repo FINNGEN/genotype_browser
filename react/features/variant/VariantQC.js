@@ -3,21 +3,11 @@ import React, { useState, useEffect } from 'react'
 
 export const VariantQC = (props) => { 
 
-    const [variants, setVariants] = useState(props.props);
-    const [dataQC, setDataQC] = useState(null);
-    const [errorMessage, setError] = useState(null);
+    const [dataQC, setDataQC] = useState(props.data);
+    const [error, setError] = useState(props.error);
     const [variantsNoExclusion, setViaraintsNoExclusion] = useState([]);
     const [tableRows, setTableRows] = useState([]);
-
-    useEffect(() => {
-        const url = '/api/v1/qc/' + variants.join(',');
-        fetch(url).then((response) => response.json()).then(data => {
-            setDataQC(data);
-            setError(null);
-        }).catch(error => setError(error.message));
-    }, [variants]);
-
-    useEffect(() => { errorMessage && console.error(errorMessage) },[errorMessage]);
+    const [tableRendered, setTableRendered] = useState(false);
 
     useEffect(() => { 
         if (dataQC) {
@@ -51,6 +41,7 @@ export const VariantQC = (props) => {
             });
     
             setTableRows(trows);
+            setTableRendered(true);
         }
 
     }, [dataQC]);
@@ -58,14 +49,14 @@ export const VariantQC = (props) => {
     return(
         <div>
             {
-                errorMessage === null ?
+                error === null ?
                 <div>
                 {
-                    tableRows.length ? <h3>Batch exclusion summary</h3> : null
+                    tableRendered ? <h3>Batch exclusion summary</h3> : null
                 }
                 {
-                    tableRows.length > 0 ? 
-                        dataQC && dataQC.length > 0 ? 
+                    tableRendered ? 
+                        dataQC && tableRows.length > 0 && dataQC.length > 0 ? 
                         <table className="anno">
                             <tbody>
                                 <tr>
@@ -75,11 +66,11 @@ export const VariantQC = (props) => {
                                 <th>Batches</th>
                                 </tr>
                                 {
-                                    tableRows.map( rows => { return (
-                                    <tr>
+                                    tableRows.map( (rows, index) => { return (
+                                    <tr key={index}>
                                         {
-                                            rows.map( cell => { return (
-                                                <td rowSpan = {cell.rowSpan}> {cell.cellValue} </td>
+                                            rows.map( (cell, i) => { return (
+                                                <td key={i} rowSpan = {cell.rowSpan}> {cell.cellValue} </td>
                                             )})
                                         }
                                     </tr>

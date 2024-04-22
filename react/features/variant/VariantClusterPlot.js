@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux'
 import Header from './V3C/header.jsx'
 import Content from './V3C/content.jsx'
 import * as d3 from "d3";
-import './v3c.css'
+import './styles.css'
 
 export const VariantClusterPlot = () => {
 

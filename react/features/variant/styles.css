@@ -84,8 +84,8 @@ table.anno td {
 }
 
 .tooltip-icon {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   border-radius: 10px;
   color: white;
   justify-content: center;
@@ -94,7 +94,7 @@ table.anno td {
   border-width: 1px;
   border-color: white;
   border-style: solid;
-  margin: 5px;
+  margin: 0px 5px 0px 5px;
 }
 
 .black {
@@ -104,9 +104,6 @@ table.anno td {
 
 .tooltip-icon:hover {
   font-weight:bold;
-  border-width: 2px;
-  width: 17px;
-  height: 17px;
 }
 
 .tooltip-container {
