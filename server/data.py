@@ -593,15 +593,15 @@ class Datafetch(object):
 
             clustdata = self._get_intensity_data(variant)
             vardata = data_[data_['variant'].isin([v.replace('-', ':')])].copy()
-            vardata = pd.merge(vardata, qc, how='outer', left_on=['BATCH'], right_on=['BATCH'])
-            vardata = pd.merge(vardata, clustdata, how='outer', left_on=['FINNGENID'], right_on=['ID'])
+            vardata = pd.merge(vardata, qc, how='left', left_on=['BATCH'], right_on=['BATCH'])
+            vardata = pd.merge(vardata, clustdata, how='left', left_on=['FINNGENID'], right_on=['ID'])
 
             if data_type == 'imputed':
                 chr, pos, ref, alt = utils.parse_variant(v)
                 chip_gt = self._get_genotype_data(chr, pos, ref, alt, 'chip')
                 chip_gt = pd.DataFrame({'FINNGENID': list(self.samples_chip.finngen_id), 'gt_chip': chip_gt})
-                vardata = pd.merge(vardata, chip_gt, how='inner', left_on=['FINNGENID'], right_on=['FINNGENID'])
-
+                vardata = pd.merge(vardata, chip_gt, how='left', left_on=['FINNGENID'], right_on=['FINNGENID'])
+            
             result.append(vardata)
         
         data = pd.concat(result)
@@ -611,7 +611,6 @@ class Datafetch(object):
         gt_download = '_'.join([k.replace('_', '') for k in gt_download_keys if filters[k] == 'true'])
         for key in gt_download_keys:
                 del filters[key]
-                
         if data_type == 'imputed':
             del filters['data_type']
             filename = variants.replace(',', '_') + '__imputed_data__' + '_'.join([k+'_'+v for k,v in filters.items()]) + '_' + gt_download + '.tsv'
@@ -631,10 +630,8 @@ class Datafetch(object):
             data['SOURCE'] = 'chip'
 
         data = data.sort_values(by=['FINNGENID'])
-        data = data[data.apply(lambda x: not pd.isna(x['FINNGENID']), axis=1)]
-        data = data.drop(columns=['AGE_AT_DEATH_OR_NOW', 'ID'])
-        if 'gt_chip' in data.columns:
-            data = data.drop(columns=['gt_chip'])
+        drop_cols = set(data.columns).intersection(set(['AGE_AT_DEATH_OR_NOW', 'ID', 'gt_chip']))
+        data = data.drop(columns=drop_cols)
         
         try:
             data.to_csv(sep='\t', index=False, na_rep='NA')
