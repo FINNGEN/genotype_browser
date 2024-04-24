@@ -632,7 +632,9 @@ class Datafetch(object):
 
         data = data.sort_values(by=['FINNGENID'])
         data = data[data.apply(lambda x: not pd.isna(x['FINNGENID']), axis=1)]
-        data = data.drop(columns=['AGE_AT_DEATH_OR_NOW', 'ID', 'gt_chip'])
+        data = data.drop(columns=['AGE_AT_DEATH_OR_NOW', 'ID'])
+        if 'gt_chip' in data.columns:
+            data = data.drop(columns=['gt_chip'])
         
         try:
             data.to_csv(sep='\t', index=False, na_rep='NA')
