@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { setFilter, setOption, setServerOption, setDataType, setDownloadOption } from '../data/dataSlice'
-import './styles.css'
 import { VariantQC } from './VariantQC'
 import img from '../../public/img/image.png'
-import { center } from '@turf/turf'
+import './styles.css'
 
 export const VariantForm = (props) => {
     const dispatch = useDispatch()
@@ -29,12 +28,13 @@ export const VariantForm = (props) => {
 				setError(null);
 			}).catch(error => setError(error.message));
 		}
-    }, [data.variants]);
+    }, [data.data]);
 
 	useEffect(() => { errorMessage && console.error(errorMessage) },[errorMessage]);
 
 	useEffect(() => {
 		dispatch(setDataType({content: data.data_type}))
+		setShowQCSummary(false)
 	}, [data.data])
 
     var source = null,
@@ -236,7 +236,7 @@ export const VariantForm = (props) => {
 				disabled={disable_chip_btn} checked={dtype == 'chip'} 
 				onChange={handleDataTypeChange} />
 			<label style={{ color: disable_chip_btn ? "#D4D4D4" : "black"}} >Raw FinnGen chip data</label>
-			<div className='tooltip-container'>
+			<div className='flex-container'>
 				<a className='tooltip-right'>
 				<div className='tooltip-icon black'>?</div>
 				<span>

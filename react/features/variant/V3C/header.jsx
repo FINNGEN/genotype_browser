@@ -37,7 +37,7 @@ function Header (props) {
             </div>
             
             <div id="h_buttons">
-                <div className='tooltip-container'>
+                <div className='flex-container'>
                     <p>How are samples selected for cluster plot</p>
                     <a className='tooltip-center'>
                     <div className='tooltip-icon'>?</div>

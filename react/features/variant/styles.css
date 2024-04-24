@@ -15,21 +15,60 @@ table.anno td {
 	border: 1px solid #ddd;
 	padding: 8px;
 	text-align: center;
+  max-width: 700px;
+}
+
+.tooltip-top {
+  position: relative;
+  display: inline-block;
+  border-bottom: 1px dotted black;
+}
+
+.tooltip-top .tooltiptext {
+  visibility: hidden;
+  background-color: black;
+  color: #fff;
+  text-align: justify;
+  border-radius: 6px;
+  padding: 5px;
+  position: absolute;
+  z-index: 1;
+  width: fit-content;
+  white-space: nowrap;
+  transform: translateX(-50%);
+  bottom: 100%;
+  left: 50%;
+  margin-bottom: 5px;
+}
+
+.tooltip-top:hover .tooltiptext {
+  visibility: visible;
+}
+
+.tooltip-top .tooltiptext::after {
+  content: " ";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: black transparent transparent transparent;
 }
 
 
 .tooltip-center, .tooltip-right {
-    text-decoration:none;
-    position:relative;
+  text-decoration:none;
+  position:relative;
 }
 
 .tooltip-center span, .tooltip-right span {
     display:none;
     color:black;
-    background:white; 
+    background-color: white;
 }
 
-.tooltip-center span {
+.tooltip-top span,  .tooltip-center span {
   -moz-border-radius:5px;
   -webkit-border-radius:5px;
   border-radius:5px;
@@ -42,10 +81,11 @@ table.anno td {
   position:absolute;
   top: 0px;
   left: 105%;
-  width:auto;
+  width:fit-content;
   height:auto;
   border:2px solid black;
   padding:0px;
+  z-index: 1000;
 }
 
 .tooltip-center:hover span {
@@ -76,7 +116,7 @@ table.anno td {
   content: " ";
   position: absolute;
   bottom: 100%;
-  margin-bottom: -22px;
+  margin-bottom: -16px;
   right: 100%; /* To the left of the tooltip */
   border-width: 5px;
   border-style: solid;
@@ -106,12 +146,16 @@ table.anno td {
   font-weight:bold;
 }
 
-.tooltip-container {
+.flex-container {
   justify-content: center;
   align-items: center;
   display: flex;
   flex-direction: row;
+  flex-wrap: wrap;
 }
+
+
+
 
 /* ----------- V3C ----------- */
 @font-face {

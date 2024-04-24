@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
-
+import './styles.css'
+import img from '../../public/img/qc_exclusion_reasons.png'
 
 export const VariantQC = (props) => { 
 
@@ -19,21 +20,51 @@ export const VariantQC = (props) => {
                 var varRowsNumb = variant['exclusions'].length;
                 variant['exclusions'].map((e, index) => { 
                     var row = [];
-                    const batches = [];
-        
+                    
                     const axiom_batches = e.axiom_batches.length === 0 ? null : 
-                        e.axiom_batches.length === variant.total_axiom_batch_count ? 'All Axiom' : e.axiom_batches.join(',');
+                        e.axiom_batches.length === variant.total_axiom_batch_count ? 
+                        <div key="all-axiom" style={{margin: '0px 5px 0px 5px'}}>
+                        <a className='tooltip-top'>
+                            <div>All Axiom Batches</div>
+                            <span className='tooltiptext'><b>Value:</b> {e.axiom_batches[0]['VALUE']}</span>
+                        </a>
+                        </div> : 
+                        e.axiom_batches.map((element, index) => {
+                            return <div key={`"${index}-axiom"`} style={{margin: '0px 5px 0px 5px'}}>
+                                <a className='tooltip-top'>
+                                    <div>{element['BATCH'].split('_')[1]}</div>
+                                    <span className='tooltiptext'><b>Value:</b> {element['VALUE']}</span>
+                                </a>
+                                </div>
+                        });
                     
-                    const leagacy_batches = e.legacy_batches.length === 0 ? null : 
-                        e.legacy_batches.length === variant.total_legacy_batch_count ? 'All legacy' : e.legacy_batches.join(',');
-                    
-                    axiom_batches && batches.push(axiom_batches);
-                    leagacy_batches && batches.push(leagacy_batches);
+                    const legacy_batches = e.legacy_batches.length === 0 ? null : 
+                        e.legacy_batches.length === variant.total_legacy_batch_count ? 
+                        <div key="all-legacy" style={{margin: '0px 5px 0px 5px'}}>
+                        <a className='tooltip-top'>
+                            <div>All Legacy Batches</div>
+                            <span className='tooltiptext'><b>Value:</b> {e.axiom_batches[0]['VALUE']}</span>
+                        </a>
+                        </div> : 
+                        e.legacy_batches.map((element, index) => {                            
+                            return <div key={`"${index}-leg"`} style={{margin: '0px 5px 0px 5px'}}>
+                                <a className='tooltip-top'>
+                                    <div>{element['BATCH']}</div>
+                                    <span className='tooltiptext'><b>Value:</b> {element['VALUE']}</span>
+                                </a>
+                            </div>
+                        });
+
+                    const content = <div className='flex-container'>
+                        {e.axiom_batches.length > 0 ? axiom_batches : null}
+                        {e.legacy_batches.length > 0 ? legacy_batches : null}
+                    </div>
         
                     varRowsNumb > 0 ? row.push({'rowSpan': varRowsNumb, 'cellValue': variant.variant}) : null;
                     row.push({'rowSpan': "", 'cellValue': e.reason});
                     row.push({'rowSpan': "", 'cellValue': e.axiom_batches.length + e.legacy_batches.length});
-                    row.push({'rowSpan': "", 'cellValue': batches.join(',')});
+                    row.push({'rowSpan': "", 'cellValue': content
+                    });
                     varRowsNumb = 0;
                     trows.push(row);
                 });
@@ -52,7 +83,17 @@ export const VariantQC = (props) => {
                 error === null ?
                 <div>
                 {
-                    tableRendered ? <h3>Batch exclusion summary</h3> : null
+                    tableRendered ? 
+                    <div className='flex-container' style={{justifyContent: "left"}}>
+                    <h3>Batch exclusion summary</h3> 
+                        <a className='tooltip-right'>
+                        <div className='tooltip-icon black'>?</div>
+                        <span>
+                            <img src={img} width="850px"/>
+                        </span>
+                        </a>
+                    </div>
+                    : null
                 }
                 {
                     tableRendered ? 
@@ -62,7 +103,7 @@ export const VariantQC = (props) => {
                                 <tr>
                                 <th>Variant</th>
                                 <th>QC fail reason</th>
-                                <th>Number of batches with failed QC</th>
+                                <th>Number of batches</th>
                                 <th>Batches</th>
                                 </tr>
                                 {

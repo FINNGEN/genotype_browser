@@ -226,6 +226,9 @@ class Datafetch(object):
 
     def _is_homozygous_wt(self, gt):
         return gt == '0|0' or gt =='0/0' or gt == '0'
+    
+    def _is_missing(self, gt):
+        return gt == '.|.' or gt =='./.' or gt == '.'
 
     def _gt_passes_threshold(self, gt_probability, gt_probability_thres):
         return gt_probability >= float(gt_probability_thres)
@@ -532,7 +535,7 @@ class Datafetch(object):
     
     def _get_qcd_batches(self, variant):
         v = utils.format_variant(variant)        
-        qc = self.qc[self.qc['VARIANT'].isin([v])].copy()        
+        qc = self.qc[self.qc['VARIANT'].isin([v])].copy()
         qc = qc[~qc['BATCH'].duplicated()].copy()
         return [] if qc.empty else qc.BATCH.values
     
@@ -591,7 +594,14 @@ class Datafetch(object):
             clustdata = self._get_intensity_data(variant)
             vardata = data_[data_['variant'].isin([v.replace('-', ':')])].copy()
             vardata = pd.merge(vardata, qc, how='outer', left_on=['BATCH'], right_on=['BATCH'])
-            vardata = pd.merge(vardata, clustdata, how='outer', left_on=['FINNGENID'], right_on=['ID'])            
+            vardata = pd.merge(vardata, clustdata, how='outer', left_on=['FINNGENID'], right_on=['ID'])
+
+            if data_type == 'imputed':
+                chr, pos, ref, alt = utils.parse_variant(v)
+                chip_gt = self._get_genotype_data(chr, pos, ref, alt, 'chip')
+                chip_gt = pd.DataFrame({'FINNGENID': list(self.samples_chip.finngen_id), 'gt_chip': chip_gt})
+                vardata = pd.merge(vardata, chip_gt, how='inner', left_on=['FINNGENID'], right_on=['FINNGENID'])
+
             result.append(vardata)
         
         data = pd.concat(result)
@@ -610,16 +620,20 @@ class Datafetch(object):
                 del filters[key]
             filename = variants.replace(',', '_') + '__rawchip_data__' + '_'.join([k+'_'+v for k,v in filters.items()]) + '_' + gt_download + '.tsv'
         
-        data = data.drop(columns=['AGE_AT_DEATH_OR_NOW', 'ID'])
-
         data['SEX'] = np.where(data['SEX'] == 1, 'female', 'male')
+
         if data_type == 'imputed' and filters['impchip'] != 'chip':
-            data['SOURCE'] = np.where(data['QC_FAILED'] == 0, 'chip', 'imputed')
+            missing = data.apply(lambda x: self._is_missing(x['gt_chip']) and not np.isna(x['gt_chip']), axis = 1)
+            nas = data.apply(lambda x: pd.isna(x['gt_chip']), axis = 1)
+            data['SOURCE'] = np.where(missing, 'imputed', 'chip') # missing in chip data (either excluded batch or missing)
+            data['SOURCE'] = np.where(nas, 'imputed', 'chip') # not in chip data (all batches excluded or fully imputed)
         else:
             data['SOURCE'] = 'chip'
+
         data = data.sort_values(by=['FINNGENID'])
         data = data[data.apply(lambda x: not pd.isna(x['FINNGENID']), axis=1)]
-
+        data = data.drop(columns=['AGE_AT_DEATH_OR_NOW', 'ID', 'gt_chip'])
+        
         try:
             data.to_csv(sep='\t', index=False, na_rep='NA')
             output = make_response(data.to_csv(sep='\t', index=False, na_rep='NA'))
@@ -727,10 +741,12 @@ class Datafetch(object):
             exclusion_list = []
             for r in qc.groupby(by = "REASON"):
                 data = r[1]
+                axiom = data[data.apply(lambda x: 'Axiom' in x['BATCH'], axis = 1)].copy()
+                legacy = data[data.apply(lambda x: 'Axiom' not in x['BATCH'], axis = 1)].copy()
                 p = {
                     'reason': r[0],
-                    'axiom_batches': [b.split('_')[1] for b in data['BATCH'].values if 'Axiom' in b],
-                    'legacy_batches': [ '_'.join(b.split('_')[0:2]) for b in data['BATCH'].values if 'Axiom' not in b]
+                    'axiom_batches': axiom.to_dict('records'),
+                    'legacy_batches': legacy.to_dict('records')
                 }
                 exclusion_list.append(p)
 
