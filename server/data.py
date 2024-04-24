@@ -624,8 +624,9 @@ class Datafetch(object):
         if data_type == 'imputed' and filters['impchip'] != 'chip':
             missing = data.apply(lambda x: self._is_missing(x['gt_chip']) and not pd.isna(x['gt_chip']), axis = 1)
             nas = data.apply(lambda x: pd.isna(x['gt_chip']), axis = 1)
-            data['SOURCE'] = np.where(missing, 'imputed', 'chip') # missing in chip data (either excluded batch or missing)
-            data['SOURCE'] = np.where(nas, 'imputed', 'chip') # not in chip data (all batches excluded or fully imputed)
+            data['SOURCE'] = 'chip'
+            data.loc[missing, 'SOURCE'] = 'imputed' # missing in chip data (either excluded batch or missing)
+            data.loc[nas, 'SOURCE'] = 'imputed' # missing in chip data (either excluded batch or missing)
         else:
             data['SOURCE'] = 'chip'
 
