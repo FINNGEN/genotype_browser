@@ -66,7 +66,7 @@ def main():
 
     # select colnames for combining matrices
     cols = [col for col in matr_impute.columns if col in matr_chip_uniq.columns]
-    matr_imp_chip = matr_impute[cols].append(matr_chip_uniq[cols])
+    matr_imp_chip = pd.concat([matr_impute[cols], matr_chip_uniq[cols]])
     stats = collections.Counter(matr_imp_chip['in_data'])
 
     # stats
