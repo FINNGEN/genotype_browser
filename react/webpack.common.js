@@ -44,6 +44,14 @@ module.exports = {
               options: { presets: ['@babel/env','@babel/preset-react'] }
             },
             {
+            test: /\.(png|jpe?g|gif)$/i,
+            use: [
+                {
+                loader: 'file-loader',
+                },
+            ],
+            },
+            {
             test: /\.(woff(2)?|ttf|eot|svg)(\?v=\d+\.\d+\.\d+)?$/,
             use: [
                 {

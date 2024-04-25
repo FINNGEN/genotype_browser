@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { setFilter, setOption, setServerOption, setDataType, setDownloadOption } from '../data/dataSlice'
+import img from '../../public/img/image.png'
 import './styles.css'
-
 
 export const VariantForm = (props) => {
     const dispatch = useDispatch()
@@ -14,13 +14,11 @@ export const VariantForm = (props) => {
     const data = useSelector(state => state.data)
     const data_freeze = useSelector(state => state.data.data_freeze)
     const downloadOptions = useSelector(state => state.data.downloadOptions)
-	// const search_status = useSelector(state => state.data.status)
 	const search_status = useSelector(state => state.search.status)
-
 	useEffect(() => {
 		dispatch(setDataType({content: data.data_type}))
 	}, [data.data])
-
+	
     var source = null,
 		disable_imputed_btn = false,
 		disable_chip_btn = false;
@@ -211,7 +209,7 @@ export const VariantForm = (props) => {
 
 	var render_content = (
 		<div>
-			<div style={{paddingRight: '10px'}}>
+			<div style={{paddingRight: '10px', display: 'flex', flexDirection: 'row', alignItems: 'center'}}>
 			<input type="radio" value="imputed" id="imputed" name="dtype" 
 				disabled={disable_imputed_btn} checked={dtype == 'imputed'} 
 				onChange={handleDataTypeChange} />
@@ -220,6 +218,16 @@ export const VariantForm = (props) => {
 				disabled={disable_chip_btn} checked={dtype == 'chip'} 
 				onChange={handleDataTypeChange} />
 			<label style={{ color: disable_chip_btn ? "#D4D4D4" : "black"}} >Raw FinnGen chip data</label>
+
+			<div className='flex-container'>
+				<a className='tooltip-right'>
+				<div className='tooltip-icon black'>?</div>
+				<span>
+					<img src={img} width="1000px"/>
+				</span>
+				</a>
+			</div>
+
 			</div>
 		
 		<div><h3>{data_freeze} { variants != undefined ? variants.join(',') : props.props['variant']}</h3></div>
