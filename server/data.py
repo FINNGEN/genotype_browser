@@ -129,14 +129,23 @@ class Datafetch(object):
     def _get_genotype_data(self, chr, pos, ref, alt, data_type):
 
         self._refresh_gcs_auth_token_if_needed()
-
-        chr_var = chr if chr != 23 else 'X'
-        if data_type == 'imputed':
-            vcf = self.vcfs_imputed[chr-1]
-            samples = list(self.samples_imput['row_id'])
+        if chr == 23:
+            chr_var = 'X'
+        elif chr == 24:
+            chr_var = 'Y'
+        elif chr == 26:
+            chr_var = 'M'
         else:
-            vcf = self.vcfs_chip[chr-1]
-            samples = list(self.samples_chip['row_id'])
+            chr_var = chr
+                    
+        if data_type == 'imputed':
+            samples = list(self.samples_imput['row_id'].copy())
+            vcf = utils.get_vcf_file(self.vcfs_imputed, chr)
+        else:
+            samples = list(self.samples_chip['row_id'].copy())
+            vcf = utils.get_vcf_file(self.vcfs_chip, chr)
+        if not vcf:
+            return None
 
         tabix_iter = pysam.TabixFile(vcf, parser=None).fetch('chr'+str(chr_var), pos-1, pos)
 

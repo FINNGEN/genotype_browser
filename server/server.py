@@ -114,9 +114,17 @@ def clusterplot(variant):
         var = re.sub('-', '_', variant)
         arr = var.split('_')
         arr[0] = 'X' if arr[0] == '23' else arr[0] 
+        if arr[0] == '23':
+            chrom = 'X'
+        elif arr[0] == '24':
+            chrom = 'Y'
+        elif arr[0] == '26':
+            chrom = 'MT'
+        else:
+            chrom = arr[0]
+        arr[0] = chrom
         exists_in_chip = fetch.vcf_contains_var(variant, 'chip')
-        chr = arr[0]
-        filename = config['intensity_files_location'] + '/' + chr + '/' + '_'.join(arr) + '.tsv'
+        filename = config['intensity_files_location'] + '/' + arr[0] + '/' + '_'.join(arr) + '.tsv'
         filename = re.sub('//', '/', filename)
         if (config['use_gcp_buckets']):
             data = cloud_storage.read_bytes(config['red_bucket'], filename)
