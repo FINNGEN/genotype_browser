@@ -85,26 +85,23 @@ echo "STEP 1: Prepare basic info phenotype file"
 python3 merge_basic_info.py -s "${OUTPUT_PATH}/SAMPLE_LIST_${RELEASE_PREFIX}.txt" -d "${OUTPUT_PATH}/FINNGEN_ENDPOINT_DEATH_EXTRACTED_${RELEASE_PREFIX}.txt" \
 -m "$FINNGEN_MINIMUM_COHORT_DATA" -a "$FGFACTORY_PASS_SAMPLES" -o "${OUTPUT_PATH}/BASIC_INFO_PHENOTYPE_FILE_${RELEASE_PREFIX}.txt"
 
-
-# compare batches in the basic QC and chip table from the db
-echo "DIFFERENCES BETWEEN BATCH NAMES IN THE CREATED CHIP TABLE, DB AND BASIC INFO FILE"
-diff \
-   <(zcat "${OUTPUT_PATH}/CHIPVARS_FILE_${RELEASE_PREFIX}.txt.gz" | cut -f 2 | sort | uniq) \
-   <(cat "${OUTPUT_PATH}/BASIC_INFO_PHENOTYPE_FILE_${RELEASE_PREFIX}.txt" | cut -f 7 | tail -n+2 | sort | uniq) > \
-   "${OUTPUT_PATH}/diffs_batches_in_chip_and_basic_info_files.txt"
-
-if [ -z "${OUTPUT_PATH}/diffs_batches_in_chip_and_basic_info_files.txt" ]
-then 
-   echo "NO differences between the batches."
-else
-   echo -e "\nWARN: differences between the files - check your inputs!"
-   cat  "${OUTPUT_PATH}/diffs_batches_in_chip_and_basic_info_files.txt" 
-fi
-
-
 echo "STEP 2. Prepare chips"
 
 bash get_chip_from_anno.sh "$IMPU_RELEASE_VARIANT_ANNOTATION_FILE" "${OUTPUT_PATH}/CHIPVARS_FILE_${RELEASE_PREFIX}.txt.gz"
+
+# compare batches in the basic QC and chip table from the db
+echo "Check differences between batch names in chipvars file and basic info file"
+comm -1 -3 \
+   <(zcat "${OUTPUT_PATH}/CHIPVARS_FILE_${RELEASE_PREFIX}.txt.gz" | cut -f 2 | sort | uniq) \
+   <(cat "${OUTPUT_PATH}/BASIC_INFO_PHENOTYPE_FILE_${RELEASE_PREFIX}.txt" | cut -f 7 | tail -n+2 | sort | uniq) \
+   > "${OUTPUT_PATH}/diffs_batches_in_chip_and_basic_info_files.txt"
+
+if [ -z "${OUTPUT_PATH}/diffs_batches_in_chip_and_basic_info_files.txt" ]
+then 
+   echo "NO differences detected."
+else
+   echo -e "\nWARN: differences between the files detected - some functionaliy might be disabled (e.g. filtering by chip type: axiom/legacy). Diffs file: ${OUTPUT_PATH}/diffs_batches_in_chip_and_basic_info_files.txt"
+fi
 
 echo "STEP 3. Prepare gene annotation table"
 
@@ -141,7 +138,7 @@ echo "IF the test fails, please inform the genotypebrowser developers."
 echo "Please also attach the test result file that is saved in the output directory you specified as test_result_<date>.txt"
 
 # populate config template with recently created files
-cp config.template.py config.testing.py
+cp ../config/config.template.py config.testing.py
 DB=${OUTPUT_PATH}/fgq.${RELEASE_PREFIX#,,}.1.db
 BASIC_INFO_PHENOTYPE_FILE="${OUTPUT_PATH}/BASIC_INFO_PHENOTYPE_FILE_${RELEASE_PREFIX}.txt"
 sed -i "s|#DB#|$DB|g" config.testing.py 

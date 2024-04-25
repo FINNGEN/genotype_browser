@@ -5,6 +5,6 @@ finngen_R12*
 r12*
 dummy/*
 data_gb/*
-config*
+config.*
 scripts/other/*
 tests/*

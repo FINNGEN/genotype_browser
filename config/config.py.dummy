@@ -67,4 +67,6 @@ vcf_files = {
 
 write_dir = 'out'
 
+qc = []
+
 log_level = logging.INFO
