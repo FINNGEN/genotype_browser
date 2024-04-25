@@ -7,6 +7,7 @@ green_bucket = ''
 sqlite_db = 'fgq.r6.4.db'
 basic_info_file = 'genotype_browser_dummy_data_50k_1.txt.gz'
 intensity_files_location = 'intensity_plots/'
+intensity_data_fields = ['ID', 'intensity_ref', 'intensity_alt']
 
 geojson = 'finmap.geojson'
 release_version = 'DF9'
