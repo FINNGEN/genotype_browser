@@ -56,7 +56,7 @@ def find(query):
 def variants(variants):
     try:
         data_type = request.args.get('data_type')
-        data_src = fetch.get_var_sources(variants, data_type)
+        data_src = fetch.get_var_sources(variants)
         fetch_dtype = data_type
         if data_type == 'imputed':
             # if variant exists in chip but not in imputed
@@ -133,6 +133,14 @@ def clusterplot(variant):
         else:
             return {}
     return data
+
+@app.route('/api/v1/qc/<varaints>')
+def qc(varaints):
+    try:
+        result = fetch.get_qc_varaints(varaints)
+    except Exception as e:
+        abort(404)
+    return jsonify(result)
 
 if __name__ == '__main__':
     app.run()

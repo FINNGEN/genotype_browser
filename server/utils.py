@@ -35,3 +35,15 @@ def parse_region(region):
     except ValueError:
         raise ParseException()
     return (chr, start, end)
+
+def format_variant(variant):
+    chr, pos, ref, alt = parse_variant(variant)
+    if chr == 23:
+        chrom = 'X'
+    elif chr == 24:
+        chrom = 'Y'
+    elif chr == 26:
+        chrom = 'M'
+    else:
+        chrom = chr
+    return "%s:%s:%s:%s" % (chrom, pos, ref, alt)

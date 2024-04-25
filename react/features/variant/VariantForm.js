@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { setFilter, setOption, setServerOption, setDataType, setDownloadOption } from '../data/dataSlice'
 import './styles.css'
+import { VariantQC } from './VariantQC'
 
 
 export const VariantForm = (props) => {
@@ -16,9 +17,26 @@ export const VariantForm = (props) => {
     const downloadOptions = useSelector(state => state.data.downloadOptions)
 	// const search_status = useSelector(state => state.data.status)
 	const search_status = useSelector(state => state.search.status)
+	const [showQCSummary, setShowQCSummary] = useState(false)
+	const [dataQC, setDataQC] = useState(null)
+	const [errorMessage, setError] = useState(null)
+
+	useEffect(() => {
+        if(data.variants){
+			const url = '/api/v1/qc/' + data.variants.join(',');
+			fetch(url).then((response) => response.json()).then(data => {
+				setDataQC(data);
+				setError(null);
+			}).catch(error => setError(error.message));
+		}
+    }, [data.data]);
+
+	useEffect(() => { errorMessage && console.error(errorMessage) },[errorMessage]);
+
 
 	useEffect(() => {
 		dispatch(setDataType({content: data.data_type}))
+		setShowQCSummary(false)
 	}, [data.data])
 
     var source = null,
@@ -333,11 +351,21 @@ export const VariantForm = (props) => {
 			    {hethom}
 
 			    </div>
-				
-			    </div> 
 
+				<div className="vl" style={{height: "100%", borderLeft: "1px solid #dddddd", marginLeft: "20px", marginRight: "20px"}}></div>
+				<div style={{display: 'flex', flexDirection: 'column'}}>
+					<div><h3 style={{marginBottom: "10px", marginTop: "0px"}}>QC exclusion</h3></div>
+					<div className="hl" style={{width: "100%", borderTop: "1px solid #dddddd", marginTop: "0px", marginBottom: "10px"}}></div>
+					<div style={{display: 'flex', flexDirection: 'row'}}>
+					<input type="checkbox" checked={showQCSummary} onChange={() => setShowQCSummary(!showQCSummary) }/>
+					<span>Show batch exclusion summary</span>
+					</div>
+				</div>
 			    </div>
 			    </div>
+				{data.variants && showQCSummary && <VariantQC data={dataQC} error={errorMessage}/>}
+			    </div>
+				
 		</div>
 	)
 
