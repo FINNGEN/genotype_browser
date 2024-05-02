@@ -164,6 +164,8 @@ export const dataSlice = createSlice({
 })
 
 export const { setFilter, setOption, setServerOption, setData, setDataType, setDownloadOption, resetData } = dataSlice.actions
-export const gtCount = state => (state.data.data && [state.data.data.het[0].length, state.data.data.hom_alt[0].length, state.data.data.wt_hom[0].length, state.data.data.missing[0].length])
+export const gtCount = state => (state.data.data && [state.data.data.het[0].length, 
+		state.data.data.hom_alt[0].length, state.data.data.wt_hom[0].length, 
+		state.data.data.missing[0].length, state.data.data.qcd[0].length])
 
 export default dataSlice.reducer

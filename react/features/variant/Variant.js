@@ -106,18 +106,21 @@ export const Variant = (props) => {
 		 </div>
 		</div>
 	)
-	
+
 	content = (<div>
 		   <div style={{display: 'flex', flexDirection: 'column'}}>
 		   <div><h3 style={{marginTop: "20px", marginBottom: "10px"}}>Result summary statistics</h3></div>
 		   <div style={{display: 'flex', flexDirection: 'row'}}>
 			   <table style={{width: '200px'}}>
 			   <tbody>
-			   <tr><td style={{textAlign: 'right'}}>{data.data.total_indiv}</td><td>individual{data.data.total_indiv == 1 ? null : 's'}</td></tr>
+			   <tr><td style={{textAlign: 'right'}}>{data.data.total_indiv}</td><td> individual{data.data.total_indiv == 1 ? null : 's'}</td></tr>
 			   <tr><td style={{textAlign: 'right'}}>{gtCnt[0]}</td><td>heterozygote{gtCnt[0] == 1 ? null : 's'}</td></tr>
 			   <tr><td style={{textAlign: 'right'}}>{gtCnt[1]}</td><td>homozygote{gtCnt[1] == 1 ? null : 's'}</td></tr>
 			   <tr><td style={{textAlign: 'right'}}>{gtCnt[2]}</td><td>WT homozygote{gtCnt[2] == 1 ? null : 's'}</td></tr>
-			   <tr><td style={{textAlign: 'right'}}>{gtCnt[3]}</td><td>missing GT</td></tr> 
+			   <tr><td style={{textAlign: 'right'}}>{gtCnt[3]}</td><td>missing GT{gtCnt[3] == 1 ? null : 's'}</td></tr>
+			   { dtype == 'imputed' && data.filters.impchip === 'chip' ? 
+			   		<tr><td style={{textAlign: 'right'}}>{gtCnt[4]}</td><td>chip genotypes QCd out and filled by imputation{gtCnt[4] == 1 ? null : 's'}</td></tr> 
+					: null}
 			   </tbody>
 			   </table>
 			   <table style={{paddingLeft: '20px'}}>
@@ -125,7 +128,7 @@ export const Variant = (props) => {
 			   <tr><td>allele frequency</td><td style={{textAlign: 'right'}}>{data.data.total_af < 0 ? 'NA' : data.data.total_af.toPrecision(3)}</td></tr>
 			   {impscore}
 			   </tbody>
-			   </table>
+			   </table>			   
 		   </div>
 		   {show_panel_content}
 		   <VariantPlots />
