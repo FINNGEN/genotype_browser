@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import { setFilter, setOption, setServerOption, setDataType, setDownloadOption } from '../data/dataSlice'
+import { setFilter, setOption, setServerOption, setDataType, setDownloadOption, resetData } from '../data/dataSlice'
 import './styles.css'
 import { VariantQC } from './VariantQC'
 
@@ -33,9 +33,8 @@ export const VariantForm = (props) => {
 
 	useEffect(() => { errorMessage && console.error(errorMessage) },[errorMessage]);
 
-
 	useEffect(() => {
-		dispatch(setDataType({content: data.data_type}))
+		// dispatch(setDataType({content: data.data_type}))
 		setShowQCSummary(false)
 	}, [data.data])
 
@@ -63,7 +62,7 @@ export const VariantForm = (props) => {
     }
 
     const handleDataTypeChange = (event) => {
-		dispatch(setDataType({content: event.target.value}))
+		dispatch(resetData()) && dispatch(setDataType({content: event.target.value}))
     }
 
     const optionChanged = (opt, event) => {

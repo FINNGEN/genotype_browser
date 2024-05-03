@@ -119,7 +119,7 @@ export const Variant = (props) => {
 			   <tr><td style={{textAlign: 'right'}}>{gtCnt[2]}</td><td>WT homozygote{gtCnt[2] == 1 ? null : 's'}</td></tr>
 			   <tr><td style={{textAlign: 'right'}}>{gtCnt[3]}</td><td>missing GT{gtCnt[3] == 1 ? null : 's'}</td></tr>
 			   { dtype == 'imputed' && data.filters.impchip === 'chip' ? 
-			   		<tr><td style={{textAlign: 'right'}}>{gtCnt[4]}</td><td>chip genotypes QCd out and filled by imputation{gtCnt[4] == 1 ? null : 's'}</td></tr> 
+			   		<tr><td style={{textAlign: 'right'}}>{gtCnt[4]}</td><td>chip genotype{gtCnt[4] == 1 ? null : 's'}QCd out and filled by imputation</td></tr> 
 					: null}
 			   </tbody>
 			   </table>
