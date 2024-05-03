@@ -182,7 +182,7 @@ class Datafetch(object):
         else: # variant doesn't exist in the table if it's not on any chip
             return set()
     
-    def _filter(self, df, filters, chips):
+    def _filter(self, df, filters, chips, variant):
         _df = df.copy()
         if 'alive' in filters:
             if filters['alive'] == 'alive':
@@ -195,10 +195,11 @@ class Datafetch(object):
             elif filters['sex'] == 'male':
                 _df = _df.loc[_df['SEX'] == 0] 
         if 'impchip' in filters:
+            missing = self.get_chip_gt(_df.copy(), variant)
             if filters['impchip'] == 'chip':
-                _df = _df.loc[_df['BATCH'].isin(chips)]
+                _df = _df.loc[_df['BATCH'].isin(chips) & ~missing]
             elif filters['impchip'] == 'imp':
-                _df = _df.loc[~_df['BATCH'].isin(chips)]
+                _df = _df.loc[~_df['BATCH'].isin(chips) | missing]
         if 'array' in filters:
             if filters['array'] == 'finngen':
                 _df = _df.loc[_df['ARRAY'] == 1]
@@ -220,6 +221,19 @@ class Datafetch(object):
 
     def _gt_passes_threshold(self, gt_probability, gt_probability_thres):
         return gt_probability >= float(gt_probability_thres)
+    
+    def get_chip_gt(self, dat, variant):
+        if variant != None:
+            chr, pos, ref, alt = utils.parse_variant(variant)
+            chip_gt = self._get_genotype_data(chr, pos, ref, alt, 'chip')
+            samples = self.samples_chip.copy()
+            chipdat = pd.DataFrame({'FINNGENID': samples.finngen_id.values, 'gt_chip': chip_gt})
+            vardat = self.info_orig.loc[dat.index].copy()
+            chipdat = pd.merge(vardat, chipdat, how = 'left', left_on=['FINNGENID'], right_on=['FINNGENID'])
+            missing = chipdat.apply(lambda x: self._is_missing(x.gt_chip) and not pd.isna(x.gt_chip) and 'Axiom' in x.BATCH, axis = 1).values
+        else:
+            missing = [False]*len(dat)
+        return np.array(missing)
 
     def _get_het_hom_index(self, data, index, use_gt, gp_thres, calc_info):
         het_i = []
@@ -241,6 +255,7 @@ class Datafetch(object):
                 fij_minus_eij2 = 4*gp[2] + gp[1] - dosage*dosage
                 sum_fij_minus_eij2 = sum_fij_minus_eij2 + fij_minus_eij2
             if use_gt:
+                
                 if self._is_homozygous_alt(gt):
                     hom_alt_i.append(i)
                 elif self._is_heterozygous(gt):
@@ -292,17 +307,17 @@ class Datafetch(object):
         return agg
     
     def _count_gt(self, data, filters, chips, data_type, variants):
+        vars = variants.split(',')
         if data_type == 'imputed':
-            filtered_basic_info = self._filter(self.info, filters, chips)
+            filtered_basic_info = self._filter(self.info, filters, chips, vars[0] if len(vars) == 1 else None)
             info_df = self.info
             info_columns = self.info_columns
         else:
-            filtered_basic_info = self._filter(self.info_chip, filters, chips)
+            filtered_basic_info = self._filter(self.info_chip, filters, chips, None)
             info_df = self.info_chip
             info_columns = self.info_columns_chip
 
         id_index = list(filtered_basic_info.index)
-        vars = variants.split(',')
         het_i = []
         hom_i = []
         wt_hom_i = []
@@ -367,13 +382,13 @@ class Datafetch(object):
         df_list = []
         cohort_source = 'Genobrowser[' + self.conf['release_version'] + ']'
         if data_type == 'imputed':
-            filtered_basic_info = self._filter(self.info, filters, chips)
+            filtered_basic_info = self._filter(self.info, filters, chips, variants[0] if len(variants) == 1 else None)
             info_orig = self.info_orig
         else:
-            filtered_basic_info = self._filter(self.info_chip, filters, chips)
+            filtered_basic_info = self._filter(self.info_chip, filters, chips, None)
             info_orig = self.info_orig_chip
         id_index = list(filtered_basic_info.index) 
-        
+
         for i, d in enumerate(data):
             # get indices of het/hom individuals in genotype data
             if data_type == 'imputed':
@@ -498,7 +513,7 @@ class Datafetch(object):
         chips = list(chips)
         chips.extend(qcd_batches)
         df = self.info_orig.copy()
-        df = self._filter(df, filters, chips)
+        df = self._filter(df, filters, chips, None)
         df = df.loc[df.BATCH.isin(qcd_batches)]
         return df.index
 
@@ -525,10 +540,8 @@ class Datafetch(object):
         start_time = timeit.default_timer()
         chips = self._get_chips(chr, pos, ref, alt) if len(vars_data) == 1 else set()
         if data_type == 'chip':
-            if 'impchip' in filters:
-                del filters['impchip']
-            if 'gtgp' in filters:
-                del filters['gtgp']
+            for key in ['impchip', 'gtgp', 'gpThres']:
+                del filters[key]
         data = self._count_gt(vars_data, filters, chips, data_type, variants)
         munge_time = timeit.default_timer() - start_time
 
@@ -553,6 +566,10 @@ class Datafetch(object):
             if var_data is not None:
                 vars_data.append(var_data)
         chips = self._get_chips(chr, pos, ref, alt) if len(vars_data) == 1 else set()
+
+        if data_type == 'chip':
+            for key in ['impchip', 'gtgp', 'gpThres']:
+                del filters[key]      
         data_ = self._count_gt_for_write(variants.split(','), vars_data, filters, chips, data_type)
 
         result = []
@@ -573,14 +590,22 @@ class Datafetch(object):
             varchips = list(self._get_chips(chr, pos, ref, alt))
             varchips.extend(qcd_batches)
             vardata['BATCH_IN_CHIPS'] = np.where(vardata.BATCH.isin(varchips), 1, 0)
+
+            # add chip gt data to correct for missing genotypes
+            chip_gt = self._get_genotype_data(chr, pos, ref, alt, 'chip')
+            chip_gt = pd.DataFrame({'FINNGENID': self.samples_chip.finngen_id.values, 'gt_chip': chip_gt})
+            vardata = pd.merge(vardata, chip_gt, how='left', left_on=['FINNGENID'], right_on=['FINNGENID'])
+        
             result.append(vardata)
 
-        data = pd.concat(result)        
+        data = pd.concat(result)
         data['BATCH_QC_FAILED'] = np.where(data.apply(lambda x: pd.isna(x.BATCH_QC_FAILED), axis = 1), 0, 1)
 
         if data_type == 'imputed':
             data['SOURCE'] = 'imputed'
             data.loc[data.apply(lambda x: x.BATCH_IN_CHIPS == 1 and x.BATCH_QC_FAILED == 0, axis = 1), 'SOURCE'] = 'chip'
+            missing = data.apply(lambda x: self._is_missing(x.gt_chip) and not pd.isna(x.gt_chip) and 'Axiom' in x.BATCH, axis = 1)
+            data.loc[missing, 'SOURCE'] = 'imputed'
         else:
             data['SOURCE'] = 'chip'
 
@@ -593,13 +618,13 @@ class Datafetch(object):
             del filters['data_type']
             filename = variants.replace(',', '_') + '__imputed_data__' + '_'.join([k+'_'+v for k,v in filters.items()]) + '_' + gt_download + '.tsv'
         else:
-            for key in ['array', 'impchip', 'data_type']:
+            for key in ['array', 'data_type']:
                 del filters[key]
             filename = variants.replace(',', '_') + '__rawchip_data__' + '_'.join([k+'_'+v for k,v in filters.items()]) + '_' + gt_download + '.tsv'
 
         data['SEX'] = np.where(data['SEX'] == 1, 'female', 'male')
         data = data.sort_values(by=['FINNGENID'])           
-        drop_cols = set(data.columns).intersection(set(['AGE_AT_DEATH_OR_NOW', 'ID', 'BATCH_IN_CHIPS']))
+        drop_cols = set(data.columns).intersection(set(['AGE_AT_DEATH_OR_NOW', 'ID', 'BATCH_IN_CHIPS', 'gt_chip']))
         data = data.drop(columns=drop_cols)
     
         try:
