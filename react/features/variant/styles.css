@@ -1,4 +1,3 @@
-
 table.anno {
   border-collapse: collapse;
 }
@@ -85,3 +84,101 @@ table.anno td {
   flex-direction: row;
   flex-wrap: wrap;
 }
+
+.tooltip-center, .tooltip-right {
+  text-decoration:none;
+  position:relative;
+}
+
+.tooltip-center span, .tooltip-right span {
+    display:none;
+    color:black;
+    background-color: white;
+}
+
+.tooltip-top span,  .tooltip-center span {
+  -moz-border-radius:5px;
+  -webkit-border-radius:5px;
+  border-radius:5px;
+}
+
+.tooltip-right:hover span {
+  display:flex;
+  justify-content: center;
+  align-items: center;
+  position:absolute;
+  top: 0px;
+  left: 105%;
+  width:fit-content;
+  height:auto;
+  border:2px solid black;
+  padding:0px;
+  z-index: 1000;
+}
+
+.tooltip-center:hover span {
+  display:block;
+  position:absolute;
+  border:1px solid black;
+  padding:8px;
+  margin-top:2px;
+  width: 260px;
+  top: 100%;
+  left: 50%;
+  margin-left: -130px;
+  text-align: justify;
+}
+
+.tooltip-center span::after {
+  content: " ";
+  position: absolute;
+  bottom: 100%;  /* At the top of the tooltip */
+  left: 50%;
+  margin-left: -13px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: transparent transparent white transparent;
+}
+
+.tooltip-right span::after {
+  content: " ";
+  position: absolute;
+  bottom: 100%;
+  margin-bottom: -16px;
+  right: 100%; /* To the left of the tooltip */
+  border-width: 5px;
+  border-style: solid;
+  border-color: transparent black transparent transparent;
+}
+
+.tooltip-icon {
+  width: 18px;
+  height: 18px;
+  border-radius: 10px;
+  color: white;
+  justify-content: center;
+  align-items: center;
+  display: flex;
+  border-width: 1px;
+  border-color: white;
+  border-style: solid;
+  margin: 0px 5px 0px 5px;
+}
+
+.black {
+  color: black;
+  border-color: black;
+}
+
+.tooltip-icon:hover {
+  font-weight:bold;
+}
+
+.flex-container {
+  justify-content: center;
+  align-items: center;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
