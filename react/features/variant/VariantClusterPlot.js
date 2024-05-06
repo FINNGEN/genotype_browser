@@ -58,7 +58,7 @@ export const VariantClusterPlot = () => {
         }
         getData();
         return () => (isSubscribed = false)
-    }, [gbData])
+    }, [gbData.data])
 
     useEffect (() => {
         if (variants.length > 1){
