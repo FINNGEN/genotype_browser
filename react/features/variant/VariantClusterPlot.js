@@ -29,6 +29,7 @@ export const VariantClusterPlot = () => {
     const varName = variants[0].replaceAll('-', '_')
 
     useEffect (() => {
+        let isSubscribed = true;
         const getData = async () => { 
             try {
                 const response = await fetch('/api/v1/clusterplot/' + variants[0])
@@ -44,16 +45,19 @@ export const VariantClusterPlot = () => {
                     throw new Error(error)
                 }
                 else {
-                    const data = await response.blob()
-                    setError(null)
-                    setServerData(data)
-                    setDropPlot(false)
+                    if (isSubscribed){
+                        const data = await response.blob()
+                        setError(null);
+                        setServerData(data);
+                        setDropPlot(false);
+                    }
                 }            
             } catch(err){
                 setError(err.message);
             }
         }
         getData();
+        return () => (isSubscribed = false)
     }, [gbData])
 
     useEffect (() => {
