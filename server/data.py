@@ -609,6 +609,10 @@ class Datafetch(object):
 
         data = pd.concat(result)
         data['BATCH_QC_FAILED'] = np.where(data.apply(lambda x: pd.isna(x.BATCH_QC_FAILED), axis = 1), 0, 1)
+        data['gtsum'] = '1'
+        data.loc[data['gt'].isin(['1/1', '1|1']), 'gtsum'] = '2'
+        data.loc[data['gt'].isin(['0/0', '0|0']), 'gtsum'] = '0'
+        data.loc[data['gt'].isin(['./.', '.|.']), 'gtsum'] = '.'
 
         if data_type == 'imputed':
             data['SOURCE'] = 'imputed'
