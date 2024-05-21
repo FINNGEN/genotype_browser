@@ -1,8 +1,8 @@
 import logging
 
-use_gcp_buckets = False
-red_bucket = ''
-green_bucket = ''
+use_gcp_buckets = True
+red_bucket = 'finngen-production-library-red'
+green_bucket = 'finngen-production-library-green'
 
 sqlite_db = '/finngen/library-green/finngen_R12/finngen_R12_analysis_data/annotations/fgq.R12.1.db'
 basic_info_file = '/finngen/library-red/finngen_R12/phenotype_1.0/data/finngen_R12_gt_samples_info.txt.gz'
@@ -13,7 +13,7 @@ geojson = '/finngen/library-green/map-coordinates/finmap.geojson'
 release_version = 'DF12'
 
 vcf_files = {
-    "read_from_bucket": False,
+    "read_from_bucket": True,
     "imputed_data": [
         'gs://finngen-production-library-red/finngen_R12/genotype_2.0/data/finngen_R12_chr1.vcf.gz',
         'gs://finngen-production-library-red/finngen_R12/genotype_2.0/data/finngen_R12_chr2.vcf.gz',
