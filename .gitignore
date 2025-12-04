@@ -1,6 +1,8 @@
 **/node_modules
 **/__pycache__
 static/bundle.js
+static/bundle.js.LICENSE.txt
+static/*.png
 finngen_R12*
 r12*
 dummy/*

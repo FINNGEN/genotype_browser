@@ -1,5 +1,5 @@
 import React from 'react'
-import ReactDOM from 'react-dom'
+import ReactDOM from 'react-dom/client'
 import {
     BrowserRouter,
     Route,
@@ -16,8 +16,8 @@ import { Variants } from './features/variants/Variants'
 import { Gene } from './features/gene/Gene'
 import { Range } from './features/range/Range'
 
-
-ReactDOM.render(
+const root = ReactDOM.createRoot(document.getElementById('reactEntry'));
+root.render(
         <Provider store={store}>
         <BrowserRouter>
         <div style={{display: 'flex', flexDirection: 'column', height: '100%'}}>
@@ -33,4 +33,4 @@ ReactDOM.render(
         </div>
         </BrowserRouter>
         </Provider>
-    , document.getElementById('reactEntry'))
+    )
